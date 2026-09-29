@@ -64,7 +64,7 @@ window.qualiaLoadEscape=setTimeout(()=>{if(window.qualiaFinishLoading)window.qua
   #light-toggle svg { grid-area:1/1; width:20px; height:20px; transition:opacity .25s,transform .4s; }
   #light-toggle[data-mode="day"] .sun-icon, #light-toggle[data-mode="night"] .moon-icon { opacity:0; transform:rotate(-25deg) scale(.65); }
   button:focus-visible, a:focus-visible { outline:2px solid #c5e9ff; outline-offset:4px; }
-  .foot { position:absolute; left:var(--edge-left); right:var(--edge-right); bottom:calc(var(--safe-bottom) + 16px); margin-inline:auto; width:auto; max-width:640px; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; }
+  .foot { position:absolute; left:var(--edge-left); right:var(--edge-right); bottom:max(calc(var(--safe-bottom) + 16px),var(--footer-gap,16px)); margin-inline:auto; width:auto; max-width:640px; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; }
   .sub { position:relative; top:-19px; margin:14px auto 0; text-shadow:0 1px 8px #14213780; width:min(640px,calc(var(--wordmark-width) * .78)); max-width:100%; font:400 clamp(18px,1.6vw,22px)/1.35 "Libre Baskerville",Baskerville,Georgia,serif; font-size:clamp(11px,calc(var(--wordmark-width) * .037),22px); letter-spacing:0; color:#e4eaf1; white-space:nowrap; text-wrap:nowrap; }
   .sub span, .sub-secondary span { display:inline-block; }
   .sub-secondary { margin:0 auto 2px; max-width:100%; font:400 clamp(11px,1.05vw,14px)/1.4 "Libre Baskerville",Baskerville,Georgia,serif; letter-spacing:0; color:#bac7d6; text-wrap:balance; text-shadow:0 1px 8px #14213780; }
@@ -76,7 +76,7 @@ window.qualiaLoadEscape=setTimeout(()=>{if(window.qualiaFinishLoading)window.qua
   .signal-link .arrow { display:block; width:28px; height:22px; flex:none; }
   @media(max-width:420px) { .mark { font-size:clamp(4.8rem,23vw,6rem); } }
   @media(max-height:480px) and (min-width:600px) {
-    .foot { right:var(--edge-right); bottom:calc(var(--safe-bottom) + 8px); max-width:none; display:grid; grid-template-columns:1fr auto; column-gap:24px; row-gap:2px; text-align:left; }
+    .foot { right:var(--edge-right); bottom:max(calc(var(--safe-bottom) + 8px),var(--footer-gap,8px)); max-width:none; display:grid; grid-template-columns:1fr auto; column-gap:24px; row-gap:2px; text-align:left; }
     .sub { font-size:18px; }
     .meta { grid-column:1; justify-content:flex-start; }
     .signal-link { grid-column:2; grid-row:1 / 3; }
@@ -239,7 +239,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 <dialog id="faq-dialog" aria-labelledby="faq-heading">
   <header class="faq-header"><h2 id="faq-heading" tabindex="-1"><span class="paq-title-ink">PAQ</span><span class="faq-heading-subtitle">Pre-emptively Answered Questions</span></h2><p class="faq-authorship">The following words were written by a human</p></header><button id="faq-close" type="button" aria-label="Close questions" autofocus>×</button>
   <div class="faq-answers">
-    <details class="faq-item" open><summary><h3 id="faq-q1">What is this about?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Effing the ineffable. A space to live new culture! It’s somewhere between a research symposium, the best house party you’ve ever been to, and a curated festival in private nature. Something like this hasn’t happened before, so honestly, we’re not quite sure.<br><br>This is more for doing phenomenological research than talking about research, but there will assuredly be talks.<br><br>This is part of a greater phenomenological research month, continuing for the three weeks following the event.<br><br>This is an advanced event. Side effects may include involuntary personal development, struggle, embodiment, coherence, unexpected tenderness, transcendence, and better questions.</p></div></details>
+    <details class="faq-item" open><summary><h3 id="faq-q1">What is this about?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Effing the ineffable. A space to live new culture! It’s somewhere between a research symposium, the best house party you’ve ever been to, and a curated festival in private nature. Something like this hasn’t happened before, so honestly, we’re not quite sure.<br><br>This is a data-driven research event. This is more for doing phenomenological research than talking about research, but there will assuredly be talks.<br><br>This is part of a greater phenomenological research month, continuing for the three weeks following the event.<br><br>This is an advanced event. Side effects may include involuntary personal development, struggle, embodiment, coherence, unexpected tenderness, transcendence, and better questions.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q2">So it’s a party. What does that mean?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Qualia is not theoretical. Qualia is all that we know.<br><br>It means it’s fun. Dancing. Immersive, playful, curious, reverent, irreverent, in on the joke. We believe fun leads to focus, and focus leads to insight.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q9">Is this part of something bigger?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>The party kicks off a month of phenomenological research. Afterwards, there’s an optional three-week residency: more time to follow a question, bring something to life, and live some life! Come for the party, or stay for the month.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q3">Can anyone come?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No. It’s curated for character, via application.</p></div></details>
@@ -288,6 +288,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
     <a class="signal-link" href="https://signal.group/#CjQKIEUrRqSJuQTnvetwsqKrlnMcP75vbt2LGmxpuD9OfnWuEhBmb3S-MWQ2-Tqc63s_XySz" target="_blank" rel="noopener noreferrer"><span>Signal group for details</span><svg class="arrow" aria-hidden="true" viewBox="0 0 40 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 26C11 29 25 23 23 14C21 5 11 8 13 16C15 25 30 20 35 5M27 8L35 5L37 13"/></svg></a>
   </div>
 </main>
+<script src="assets/vendor/astronomy-2.1.19.min.js"></script>
 <script>
 // Readiness milestones, not a pretend download percentage. Failed optional
 // images settle to their procedural fallback; a completed frame gates reveal.
@@ -297,6 +298,10 @@ const QUALIA_LOAD = (()=>{
   let ready=false,finishing=false,moonReveal=0,inkReveal=0,captionReveal=0,controlsReveal=0,anchor=null,introFrame=0;
   let phaseFrame=0,phaseShown=0,phaseFrom=0,phaseTarget=0,phaseStarted=0;
   const globe=screen.querySelector("svg"),root=document.documentElement;
+  let lunarFraction=1,lunarWaxing=true;
+  try { const date=new Date();lunarFraction=Astronomy.Illumination('Moon',date).phase_fraction;lunarWaxing=Astronomy.MoonPhase(date)<180; } catch (_) {}
+  const phaseOrigin=lunarFraction>=.5?0:1;
+  moon.setAttribute('transform',lunarWaxing?'':'translate(32 0) scale(-1 1)');
   for(const part of ["ink","caption","meta","controls"])document.body.style.setProperty(`--intro-${part}`,0);
   function complete(){
     if(ready)return;ready=true;moonReveal=inkReveal=captionReveal=controlsReveal=1;
@@ -313,8 +318,9 @@ const QUALIA_LOAD = (()=>{
     if(ready)return;
     const t=Math.min(1,Math.max(0,(now-phaseStarted)/180));
     phaseShown=phaseFrom+(phaseTarget-phaseFrom)*ease(t);
-    const r=Math.max(.001,14*Math.abs(Math.cos(Math.PI*phaseShown)));
-    moon.setAttribute('d',`M16 2A14 14 0 0 1 16 30A${r} 14 0 0 ${phaseShown<.5?0:1} 16 2Z`);
+    const illumination=phaseOrigin+(lunarFraction-phaseOrigin)*phaseShown;
+    const r=Math.max(.001,14*Math.abs(Math.cos(Math.PI*illumination)));
+    moon.setAttribute('d',`M16 2A14 14 0 0 1 16 30A${r} 14 0 0 ${illumination<.5?0:1} 16 2Z`);
     if(t<1)phaseFrame=requestAnimationFrame(paintPhase);
   }
   function reveal(){
@@ -334,19 +340,20 @@ const QUALIA_LOAD = (()=>{
       }
       moonReveal=ease((elapsed-(still?0:720))/(still?200:180));
       globe.style.opacity=1-moonReveal;
-      // A quiet, overlapping cascade: mark, caption, details, then controls.
-      inkReveal=ease((elapsed-(still?0:880))/(still?200:350));
-      captionReveal=ease((elapsed-(still?0:970))/(still?200:350));
-      const metaReveal=ease((elapsed-(still?0:1060))/(still?200:350));
-      controlsReveal=ease((elapsed-(still?0:1150))/(still?200:350));
+      // One stage per second after landing; downloads and lunar travel stay quick.
+      inkReveal=ease((elapsed-(still?0:880))/(still?200:600));
+      captionReveal=ease((elapsed-(still?0:1880))/(still?200:600));
+      const metaReveal=ease((elapsed-(still?0:2880))/(still?200:600));
+      controlsReveal=ease((elapsed-(still?0:3880))/(still?200:600));
       document.body.style.setProperty("--intro-ink",inkReveal);
       document.body.style.setProperty("--intro-caption",captionReveal);
       document.body.style.setProperty("--intro-meta",metaReveal);
       document.body.style.setProperty("--intro-controls",controlsReveal);
-      if(elapsed>=(still?200:1500))complete();else introFrame=requestAnimationFrame(step);
+      if(elapsed>=(still?200:4480))complete();else introFrame=requestAnimationFrame(step);
     }
     introFrame=requestAnimationFrame(step);
   }
+  paintPhase(performance.now());
   document.body.setAttribute('aria-busy','true');
   function done(name){
     if(!pending.delete(name))return;
@@ -457,7 +464,6 @@ document.getElementById('brand-ink-toggle').addEventListener('click', e => {
 });
 </script>
 <script src="assets/wordmarks.js"></script>
-<script src="assets/vendor/astronomy-2.1.19.min.js"></script>
 <script>
 (() => {
 'use strict';
@@ -951,6 +957,7 @@ const FS_CLOUD = `#version 300 es
 precision highp float;
 in vec2 vUv; out vec4 o;
 uniform float uTime, uAspect;
+uniform vec4 uCloudBurst;
 ${COMMON}
 // Time is a third noise dimension: the cloud volume evolves independently of wind.
 float cloudNoise(vec3 p) {
@@ -984,11 +991,16 @@ float cloudField(vec2 p) {
 void main() {
   vec2 uv=vec2(vUv.x,1.-vUv.y);
   vec2 p=vec2(uv.x*uAspect,uv.y*1.45)*3.8+vec2(9.,1.);
+  vec2 burstD=(uv-uCloudBurst.xy)*vec2(uAspect,1.45);
+  float age=clamp(uCloudBurst.z/2.4,0.,1.);
+  float burst=pow(sin(age*3.14159265),2.)*exp(-dot(burstD,burstD)/(.015+.075*age))*uCloudBurst.w;
+  if(uCloudBurst.w>.5)p-=burstD*burst*1.6;
   float bank=cloudField(p);
   float sunward=cloudField(p+vec2(.065,-.09));
   // High, wind-combed ice clouds move independently of the rounded lower bank.
   float veil=cloudVolume(vec2(p.x*.65-uTime*.010,p.y*2.8)+vec2(23.,0.),uTime*.014+21.);
   veil=smoothstep(.46,.70,veil)*.28;
+  veil+=bank*burst*.16;bank*=1.-burst*.24;sunward*=1.-burst*.18;
   float horizon=1.-smoothstep(.78,1.02,uv.y);
   o=vec4(bank*horizon,sunward*horizon,veil*horizon,1.);
 }`;
@@ -1130,16 +1142,22 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   col += (starHeads + trails*openSky*moving)*scint*uLight.z*starGain;
   vec2 sunD = vec2(pd.x - uSun.x*uRes.x, pd.y - uSun.y*uShore)/uShore;
   float sunR = length(sunD);
-  float sunFlatten=mix(1.,.80,dusk*smoothstep(.75,1.,uSun.y));
-  float horizonAir=dusk*smoothstep(.55,1.,uSun.y);
+  float horizonAir=smoothstep(.50,1.04,uSun.y);
+  float sunFlatten=mix(1.,.88,horizonAir);
+  if(reflected){
+    float row=pd.y/uDpr;
+    sunD.x+=(sin(row*1.37+uTime*.72)*.004+sin(row*.43-uTime*.37)*.006)*(1.+horizonAir*.4);
+  }
   // Tiny refraction in low, warm air; the limb never becomes a hard vector edge.
   vec2 refractedSun=sunD;
   refractedSun.y+=horizonAir*.00065*(vnoise(vec2(sunD.x*380.,uTime*.38))-.5);
   float sunDiscR=length(refractedSun/vec2(1.,sunFlatten));
-  float sunSize=mix(.032,.040,dusk);
+  float sunSize=mix(.033,.040,horizonAir);
   float discMu=sqrt(max(0.,1.-pow(sunDiscR/sunSize,2.)));
   float limbSoft=max(fwidth(sunDiscR)*.75,.0007)+horizonAir*.0008;
-  float disk = (1. - smoothstep(sunSize-limbSoft,sunSize+limbSoft,sunDiscR))*(.4+.6*discMu);
+  float disk = 1. - smoothstep(sunSize-limbSoft,sunSize+limbSoft,sunDiscR);
+  float solarLimb=.76+.24*discMu;
+  if(reflected)disk*=.30+.70*smoothstep(.15,.85,vnoise(vec2(pd.y/uDpr*.52+uTime*.24,pd.x/uDpr*.012)));
   float rimDistance=max(0.,sunDiscR-sunSize);
   float solarVeil=dusk*(.20*exp(-pow(rimDistance/.0045,2.))+.065*exp(-pow(rimDistance/.018,2.)));
   solarVeil*=smoothstep(sunSize*.80,sunSize,sunDiscR);
@@ -1206,9 +1224,12 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   float cloudDay=max(uLight.x,dusk*.62);
   col=mix(col,mix(vec3(.019,.027,.043),cloudLight,cloudDay),(1.-transmission)*openSky*mix(.48,.92,cloudDay));
   // Atmospheric aureole has a broad falloff; the disc softens behind passing cloud.
-  float aureole=.16*exp(-sunR*sunR/.035)+.085*exp(-sunR*sunR/.18);
-  float innerGlow=.34*exp(-sunR*sunR/.0035);
-  col+=sunColour*(disk*mix(1.15,4.2,dusk)*transmission+solarVeil*sqrt(transmission)+innerGlow*sqrt(transmission)*mix(1.,.18,dusk)+aureole*(.45+.55*transmission)*(1.-dusk))*uLight.x*openSky*aboveHorizon;
+  float aureole=.15*exp(-sunR*sunR/.022)+.045*exp(-sunR*sunR/.13);
+  float innerGlow=.48*exp(-pow(rimDistance/.016,1.35));
+  vec3 glowColour=mix(vec3(1.,.94,.72),vec3(1.,.63,.28),horizonAir);
+  float solarAir=sqrt(transmission)*(.78+.22*silver);
+  col+=(sunColour*disk*solarLimb*mix(1.35,3.4,dusk)*transmission
+       +glowColour*(innerGlow+aureole+solarVeil*.45)*solarAir)*uLight.x*openSky*aboveHorizon;
   float haze = exp(-pow((t-.89)/.14,2.));
   col = mix(col,mix(vec3(.66,.76,.75),warm,dusk),haze*.09*uLight.x*openSky);
   float peak=max(col.r,max(col.g,col.b));
@@ -1216,10 +1237,12 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   col*=mix(1.,shoulder,dusk);
   // Resolve the luminous solar face after exposure compression so the bright
   // atmosphere cannot wash it into an indistinct orange smudge.
-  vec3 solarFace=mix(vec3(1.,.69,.34),vec3(1.,.96,.82),smoothstep(0.,.17,uSolar.w));
+  vec3 solarFace=mix(vec3(1.,.80,.40),vec3(1.,.985,.87),smoothstep(0.,.23,uSolar.w));
+  solarFace*=mix(.91,1.,discMu);
   float solarPresence=smoothstep(.02,.35,uLight.x)*openSky*aboveHorizon;
-  col=mix(col,solarFace,disk*pow(transmission,.45)*solarPresence*.96);
-  col+=sunColour*solarVeil*.22*sqrt(transmission)*solarPresence;
+  col=mix(col,solarFace,disk*pow(transmission,.62)*solarPresence*.97);
+  // Gentle light bleed rather than an outlined circle, filtered by cloud thickness.
+  col+=glowColour*(.075*exp(-pow(rimDistance/.009,1.3))+.028*exp(-sunR*sunR/.018))*solarAir*solarPresence;
   return col;
 }
 /* cubic B-spline upsample from 4 bilinear taps (Sigg & Hadwiger 2005), hides the texel grid of coarse glow */
@@ -1357,13 +1380,13 @@ void main(){
     // A rough water surface stretches the sun into a broken path toward the viewer.
     float belowSun=(pd.y-(2.-uSun.y)*uShore)/Hw;
     float nearSun=clamp(belowSun,0.,1.);
-    float solarWidth=(.007+.032*nearSun)*(1.+.8*v);
+    float solarWidth=(.008+.040*nearSun)*(1.+.8*v);
     float solarCross=(pd.x/uRes.x-uSun.x+off.x/uRes.x*1.6)/solarWidth;
     float solarPath=exp(-solarCross*solarCross)*exp(-nearSun*2.4)*smoothstep(-.018,.02,belowSun);
     vec2 glintSpace=pd/uDpr*vec2(.09,.55)+vec2(off.x/uDpr*.02,uTime*.35);
     float clusters=smoothstep(.45,.85,vnoise(glintSpace))*smoothstep(.3,.7,vnoise(glintSpace*.37+vec2(7.1,uTime*.1)));
     float broken=max(clusters*.8,clamp(sunGlint*40.,0.,1.))*(.25+.75*smoothstep(.2,.6,vnoise(glintSpace*.21)));
-    col+=reflectedSun*solarPath*broken*.34*uLight.y*uLight.x*fade*(1.-mA)*(1.-smoothstep(.98,1.035,uSun.y));
+    col+=reflectedSun*solarPath*broken*mix(.06,.42,uLight.y)*uLight.x*fade*(1.-mA)*(1.-smoothstep(.98,1.035,uSun.y));
     // Cool, sparse microfacets under the moon: the same moving light as the sky.
     float lunarBelow=(pd.y-(2.*uShore-uMoonAnchor.y))/Hw;
     float lunarNear=clamp(lunarBelow,0.,1.);
@@ -1725,6 +1748,7 @@ function drawWord(){
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
   wordBox = [x0*dpr, y0*dpr, (x1 - x0)*dpr, (y1 - y0)*dpr];
   wordReady = true;
+  layoutFooter();if(sized)refreshSwimBounds();
 }
 
 /* ---------- camera: water plane <-> screen (CSS px). World units are CSS px at the bottom edge ---------- */
@@ -1782,6 +1806,28 @@ const HAND_K = [[0,.54,.09,-.13],[.13,.50,.27,-.16],[.26,.34,.42,-.25],[.37,.16,
 const FOOT_K = [[0,-1.41,.085,-.27],[.36,-1.41,.085,-.27],[.49,-.99,.19,-.18],[.57,-1.08,.36,-.28],[.66,-1.33,.24,-.30],[.74,-1.41,.085,-.27]];
 let openingComplete = false;
 const footer = document.querySelector('.foot');
+let artworkTop=null;
+function layoutFooter(){
+  const image=mark.querySelector('img'),box=mark.getBoundingClientRect();
+  let inkTop=box.top;
+  if(image?.naturalWidth){
+    if(artworkTop===null){
+      try {
+        const sample=document.createElement('canvas');sample.width=256;sample.height=Math.max(1,Math.round(256*image.naturalHeight/image.naturalWidth));
+        const c=sample.getContext('2d');c.drawImage(image,0,0,sample.width,sample.height);
+        const data=c.getImageData(0,0,sample.width,sample.height).data;
+        artworkTop=0;
+        scan:for(let y=0;y<sample.height;y++)for(let x=0;x<sample.width;x++){
+          const i=(y*sample.width+x)*4;
+          if(data[i+3]>40&&Math.max(data[i],data[i+1],data[i+2])>90){artworkTop=y/sample.height;break scan;}
+        }
+      }catch(_){artworkTop=0;}
+    }
+    const r=image.getBoundingClientRect();inkTop=Math.max(box.top,r.top+r.height*artworkTop);
+  }
+  const reflectionBottom=2*shoreCss-inkTop;
+  footer.style.setProperty('--footer-gap',Math.max(0,(H-reflectionBottom-footer.getBoundingClientRect().height)/2)+'px');
+}
 let swimMaxY=Infinity, swimMinZ=0, swimFooterTop=Infinity;
 const SW = { X: 0, Z: 0, th: 0, turnV: 0, phase: .62, cadence: 1/2.7, burstLeft: 0, effort: 0, tread: 0, tph: 0, go: true, tx: 0, tz: 0, v: 0, arrivedAt: 0 };
 function sprintSwimmer(){
@@ -2312,6 +2358,17 @@ function renderWoman() {
 
 /* ---------- input ---------- */
 let autoOn = true;
+const cloudBurst={x:0,y:0,time:-100},cloudHit=new Uint8Array(4);
+function burstCloud(e){
+  if(!QUALIA_LOAD.ready||document.getElementById('faq-dialog').open||e.target!==cvs||e.clientY<0||e.clientY>=shoreCss*.86||activeTouches.size>1||(window.visualViewport?.scale||1)>1.01||gl.isContextLost())return false;
+  const prev=gl.getParameter(gl.FRAMEBUFFER_BINDING);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,T.cloud.f);
+  gl.readPixels(Math.min(511,Math.max(0,Math.floor(e.clientX/W*512))),Math.min(255,Math.max(0,Math.floor((1-e.clientY/shoreCss)*256))),1,1,gl.RGBA,gl.UNSIGNED_BYTE,cloudHit);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,prev);
+  if(cloudHit[0]<24)return false;
+  if(ambT-cloudBurst.time>.15){cloudBurst.x=e.clientX/W;cloudBurst.y=e.clientY/shoreCss;cloudBurst.time=ambT;}
+  return true;
+}
 const activeTouches=new Set();
 function steer(e, force){
   if (AUTO || document.getElementById('faq-dialog').open || e.target.closest?.('.light-controls, .signal-link, .wordmark-controls, #faq-open, #brand-ink-toggle')) return false;
@@ -2330,6 +2387,7 @@ addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || e.button
 addEventListener('pointerdown', e => {
   if(e.pointerType==='touch') activeTouches.add(e.pointerId);
   if(!e.isPrimary || e.button!==0) return;
+  if(burstCloud(e))return;
   if(steer(e,true)) sprintSwimmer();
 }, { passive: true });
 for(const type of ['pointerup','pointercancel']) addEventListener(type,e=>activeTouches.delete(e.pointerId),{passive:true});
@@ -2488,6 +2546,7 @@ function simStep(dt){
 function render(){
   gl.useProgram(P.cloud.p); drawTo(T.cloud);
   gl.uniform1f(P.cloud.u.uTime,ambT); gl.uniform1f(P.cloud.u.uAspect,W/shoreCss);
+  gl.uniform4f(P.cloud.u.uCloudBurst,cloudBurst.x,cloudBurst.y,ambT-cloudBurst.time,reduced?.2:1);
   full();
   renderWoman();
   const starState = starMotion(starClock, reduced || !starHistoryOK);
@@ -2604,7 +2663,7 @@ if (document.fonts){
 }
 mark.addEventListener('load', () => { if (sized && !gl.isContextLost()) drawWord(); }, true);
 new ResizeObserver(() => { if (sized && !gl.isContextLost()) drawWord(); }).observe(document.querySelector('.brand-lockup'));
-new ResizeObserver(() => { if(sized) refreshSwimBounds(); }).observe(footer);
+new ResizeObserver(() => { if(sized){layoutFooter();refreshSwimBounds();} }).observe(footer);
 document.addEventListener('qualia:wordmark-change', () => { if (sized && !gl.isContextLost()) drawWord(); });
 function boot(){
   try { initGL(); resize(); start(); }
