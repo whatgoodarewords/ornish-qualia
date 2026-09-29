@@ -95,6 +95,9 @@ window.qualiaLoadEscape=setTimeout(()=>{if(window.qualiaFinishLoading)window.qua
 
   #faq-open { position:fixed; z-index:4; right:var(--edge-right); top:calc(var(--safe-top) + 16px); width:44px; height:44px; display:grid; place-items:center; padding:8px; border:0; background:transparent; color:#e5e7e9; opacity:.76; cursor:pointer; touch-action:manipulation; transition:opacity .2s; }
   #faq-open:hover { opacity:1; }
+  #faq-reflection-open { position:fixed; z-index:4; width:44px; height:44px; padding:0; border:0; border-radius:50%; background:transparent; cursor:pointer; touch-action:manipulation; }
+  #faq-reflection-open:focus-visible { outline:1px solid #c5e9ff; outline-offset:2px; }
+  #faq-reflection-open[hidden] { display:none; }
   #faq-open svg { width:22px; height:26px; flex:none; transform:scale(.95,.9); transform-origin:center; }
   #faq-dialog { position:fixed; inset:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left); box-sizing:border-box; width:min(860px,calc(100vw - var(--safe-left) - var(--safe-right) - 64px)); max-height:calc(100vh - var(--safe-top) - var(--safe-bottom) - 48px); max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 48px); margin:auto; padding:0 12px; border:0; color:#e6eaf0; background:transparent; overflow:auto; scrollbar-width:thin; scrollbar-color:#e1e7ed30 transparent; overscroll-behavior:contain; touch-action:manipulation; user-select:text; -webkit-user-select:text; }
   #faq-dialog::backdrop { background:#020609e8; backdrop-filter:blur(5px); }
@@ -313,6 +316,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
   <p id="wordmark-status" role="status" aria-live="polite"></p>
 </nav>
 <button id="faq-open" type="button" aria-label="Questions about Qualia" aria-haspopup="dialog" aria-controls="faq-dialog" aria-expanded="false"><!-- Original LensQuestionarium: Bodoni/Didone ball-terminal glyph from sw-dev/packages/app/src-oversize/components/ui/icons.tsx. --><svg viewBox="-710 -200 3970 4770" fill="currentColor" stroke="none" aria-hidden="true"><g transform="translate(0,4370) scale(1,-1)"><path d="M1033 4354c-178-28-389-106-554-206-109-66-220-166-306-278-57-74-80-119-121-246-44-132-56-223-43-319 25-186 32-203 118-295 70-76 138-120 237-156 74-26 79-26 168-15 150 19 252 84 301 191 66 141 62 264-9 357-30 39-115 103-163 123-53 21-147 18-215-8-55-21-60-22-77-6-54 48 4 247 103 358 45 50 165 146 183 146 3 0 29 11 58 25 68 33 138 53 272 76 179 31 285 21 500-47 201-63 387-269 442-488 39-156 28-392-28-601-20-72-85-208-127-265-57-76-223-239-368-359-192-161-274-250-311-337-17-38-23-78-27-179-11-255-16-841-8-875l8-35 105-1 106 0 2 375c1 348 3 382 22 451 31 108 59 157 130 226 81 76 133 112 234 158 140 65 300 157 422 243 113 80 247 236 355 413 23 38 58 135 84 235 54 205 13 535-89 704-57 97-71 117-111 164-67 82-273 246-389 310-256 143-610 206-904 161zM1119 456c-138-37-225-184-175-299 16-37 74-94 131-127 34-21 53-24 135-25 86 0 99 3 142 27 158 94 164 291 12 388-74 47-159 59-245 36z"/></g></svg></button>
+<button id="faq-reflection-open" type="button" aria-label="Questions about Qualia (reflected)" aria-haspopup="dialog" aria-controls="faq-dialog" hidden></button>
 <button id="brand-ink-toggle" type="button" aria-label="Use black wordmark" aria-pressed="false"></button>
 <dialog id="faq-dialog" aria-labelledby="faq-heading">
   <header class="faq-header"><h2 id="faq-heading" tabindex="-1"><span class="paq-title-ink">PAQ</span><span class="faq-heading-subtitle">Pre-emptively Answered Questions</span></h2><p class="faq-authorship">The following words were written by a human</p></header><button id="faq-close" type="button" aria-label="Close questions" autofocus>×</button>
@@ -374,6 +378,23 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 // Both renderers consume the same lighting clock and artwork sources.
 const QUALIA_SHORE=.44;
 const QUALIA_ART={moon:'assets/lroc-color-2k.jpg?v=f7130a182268',woodland:'assets/woodland-photo.png?v=a9b5d8e4e79e'};
+// The water mirrors this control around the same shoreline in both renderers.
+const QUALIA_QUESTION_REFLECTION=(()=>{
+  const button=document.getElementById('faq-reflection-open'),source=document.getElementById('faq-open'),dialog=document.getElementById('faq-dialog');
+  let visible=false;
+  const sync=()=>{button.hidden=!visible||dialog.open;};
+  function layout(){
+    const r=source.getBoundingClientRect(),shore=Math.round(innerHeight*QUALIA_SHORE);
+    button.style.left=(r.left+r.width/2-22)+'px';
+    button.style.top=(2*shore-r.top-r.height/2-22)+'px';
+  }
+  button.addEventListener('click',()=>{if(!button.hidden)source.click();});
+  new MutationObserver(sync).observe(dialog,{attributes:true,attributeFilter:['open']});
+  addEventListener('resize',layout,{passive:true});
+  window.visualViewport?.addEventListener('resize',layout,{passive:true});
+  layout();sync();
+  return {setVisible(value){visible=value;sync();}};
+})();
 // Update only the open dialog, and only when a visible strength step changes.
 const paqReadabilityDialog=document.getElementById('faq-dialog');
 let paqReadabilityLevel=-1;
@@ -522,6 +543,7 @@ const QUALIA_LOAD = (()=>{
     document.body.style.setProperty("--question-glint",0);
     document.body.style.setProperty("--intro-controls-events","auto");
     root.classList.remove("is-loading","is-revealing");
+    QUALIA_QUESTION_REFLECTION.setVisible(true);
     document.body.removeAttribute("aria-busy");screen.setAttribute("aria-hidden","true");
     setTimeout(()=>screen.remove(),700);
   }
@@ -555,24 +577,25 @@ const QUALIA_LOAD = (()=>{
       }
       moonReveal=ease((elapsed-(still?0:720))/(still?200:180));
       globe.style.opacity=1-moonReveal;
-      // Paint for 2.5 seconds, then continue the one-second cascade.
+      // Paint for 2 seconds, then continue the one-second cascade.
       inkReveal=ease((elapsed-(still?0:880))/(still?200:180));
-      window.qualiaTrace?.setProgress(still?1:Math.max(0,Math.min(1,(elapsed-880)/2500)));
-      swimReady=elapsed>=(still?200:3380);
-      captionReveal=ease((elapsed-(still?0:3380))/(still?200:600));
+      window.qualiaTrace?.setProgress(still?1:Math.max(0,Math.min(1,(elapsed-880)/2000)));
+      swimReady=elapsed>=(still?200:2880);
+      captionReveal=ease((elapsed-(still?0:2880))/(still?200:600));
       // Reflections share their source's fade; the water supplies attenuation.
       reflectionInk=inkReveal;
       reflectionCaption=captionReveal;
-      const metaReveal=ease((elapsed-(still?0:4380))/(still?200:600));
-      controlsReveal=ease((elapsed-(still?0:5380))/(still?200:600));
-      const glint=still?0:Math.pow(Math.sin(Math.PI*Math.min(1,Math.max(0,(elapsed-5380)/600))),2);
+      const metaReveal=ease((elapsed-(still?0:3880))/(still?200:600));
+      controlsReveal=ease((elapsed-(still?0:4880))/(still?200:600));
+      QUALIA_QUESTION_REFLECTION.setVisible(controlsReveal>.1);
+      const glint=still?0:Math.pow(Math.sin(Math.PI*Math.min(1,Math.max(0,(elapsed-4880)/600))),2);
       document.body.style.setProperty("--question-glint",glint);
       document.body.style.setProperty("--intro-ink",inkReveal);
       document.body.style.setProperty("--intro-caption",captionReveal);
       document.body.style.setProperty("--intro-meta",metaReveal);
       document.body.style.setProperty("--intro-controls",controlsReveal);
       document.body.style.setProperty("--intro-controls-events",controlsReveal>.1?"auto":"none");
-      if(elapsed>=(still?200:5980))complete();else introFrame=requestAnimationFrame(step);
+      if(elapsed>=(still?200:5480))complete();else introFrame=requestAnimationFrame(step);
     }
     introFrame=requestAnimationFrame(step);
   }
@@ -632,7 +655,7 @@ const PAQ = (() => {
   const state={t:0,progress:0,target:0,scrollY:0};
   function readingScroll(){state.scrollY=Math.max(0,dialog.scrollTop);}
   dialog.addEventListener('scroll',readingScroll,{passive:true});
-  let raf=0,last=0;
+  let raf=0,last=0,focusReturn=opener;
   const windowed=(a,b,t)=>Math.min(1,Math.max(0,(t-a)/(b-a)));
   const ease=t=>t*t*(3-2*t);
   const soft=t=>t*t*t*(t*(t*6-15)+10);
@@ -665,12 +688,12 @@ const PAQ = (() => {
     }
     if(!raf) {last=performance.now();raf=requestAnimationFrame(tick);}
   }
-  opener.addEventListener('click',()=>animate(1));
+  opener.addEventListener('click',()=>{focusReturn=document.activeElement===document.getElementById('faq-reflection-open')?document.activeElement:opener;animate(1);});
   document.getElementById('faq-close').addEventListener('click',()=>animate(0));
   dialog.addEventListener('cancel',e=>{e.preventDefault();animate(0);});
   dialog.addEventListener('close',()=>{
     // Also recover from a browser-forced close (e.g. repeated Escape).
-    animate(0);opener.focus({preventScroll:true});
+    animate(0);focusReturn.focus({preventScroll:true});
   });
   document.addEventListener('visibilitychange',()=>{
     if(!document.hidden)return;
@@ -2625,7 +2648,7 @@ function burstCloud(e){
 }
 const activeTouches=new Set();
 function steer(e, force){
-  if (!QUALIA_LOAD.swimReady || AUTO || document.getElementById('faq-dialog').open || e.target.closest?.('.light-controls, .signal-link, .wordmark-controls, #faq-open, #brand-ink-toggle')) return false;
+  if (!QUALIA_LOAD.swimReady || AUTO || document.getElementById('faq-dialog').open || e.target.closest?.('.light-controls, .signal-link, .wordmark-controls, #faq-open, #faq-reflection-open, #brand-ink-toggle')) return false;
   if ((window.visualViewport?.scale || 1)>1.01 || activeTouches.size>1 || (e.pointerType==='touch' && !e.isPrimary)) return false;
   if (e.clientY>=swimFooterTop) return false;
   if (!force && e.pointerType === 'mouse' && e.buttons === 0 && e.clientY < shoreCss) return false;
