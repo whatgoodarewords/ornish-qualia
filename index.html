@@ -1,0 +1,2214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Qualia — a phenomenological research party</title>
+<link rel="icon" type="image/png" href="assets/qualia-q.png">
+<meta name="description" content="a phenomenological research party. Summer 2027. The Garden, Portugal.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400&amp;text=PAQ&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Libre+Baskerville:wght@400&display=swap">
+<style>
+  :root { color-scheme: dark; --safe-top:env(safe-area-inset-top,0px); --safe-right:env(safe-area-inset-right,0px); --safe-bottom:env(safe-area-inset-bottom,0px); --safe-left:env(safe-area-inset-left,0px); --edge-left:calc(var(--safe-left) + 16px); --edge-right:calc(var(--safe-right) + 16px); }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #010308; }
+  body {
+    touch-action: manipulation; overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+    color: #e2eaf4;
+  }
+  html.nogl body { background: linear-gradient(#02040c 0, #07101d 44%, #010307 44%, #02060b 100%); }
+  html.nogl .light-controls { display: none; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .hero { position: fixed; inset: 0; pointer-events: none; }
+  .brand-lockup { --wordmark-width:clamp(18rem,52vw,52rem); position:absolute; left:var(--edge-left); right:var(--edge-right); top:max(21%,calc(var(--safe-top) + 48px)); transform:translateY(-50%); text-align:center; }
+  .mark {
+    margin:0;
+    text-align: center; white-space: nowrap;
+    font-family: "Baskerville", "Georgia", serif; font-weight: 500;
+    color: #fff;
+    font-size: clamp(5.5rem, 14vw, 14rem); line-height: 1; letter-spacing: -0.035em;
+  }
+  .mark span {
+    text-shadow: 0 2px 20px rgba(2, 10, 25, .18);
+    animation: moonlight 18s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -0.8s);
+  }
+  .mark span:nth-child(1) { --i: 0; }
+  .mark span:nth-child(2) { --i: 1; }
+  .mark span:nth-child(3) { --i: 2; }
+  .mark span:nth-child(4) { --i: 3; }
+  .mark span:nth-child(5) { --i: 4; }
+  .mark span:nth-child(6) { --i: 5; }
+  @keyframes moonlight {
+    0%, 65%, 100% { text-shadow: 0 2px 20px rgba(2, 10, 25, .18), 0 0 .12em rgba(213, 235, 255, .04); }
+    32% { text-shadow: 0 2px 20px rgba(2, 10, 25, .18), 0 0 .2em rgba(213, 235, 255, .24); }
+  }
+
+  .light-controls { display:none; position:fixed; top:calc(var(--safe-top) + 16px); right:var(--edge-right); z-index:3; touch-action:manipulation; }
+  #light-toggle { display:grid; place-items:center; width:44px; height:44px; padding:10px; border:0; border-radius:50%; color:#e3ebf3; background:transparent; cursor:pointer; transition:background .2s,color .2s; }
+  #light-toggle:hover { background:#d9ebff12; color:white; }
+  #light-toggle svg { grid-area:1/1; width:20px; height:20px; transition:opacity .25s,transform .4s; }
+  #light-toggle[data-mode="day"] .sun-icon, #light-toggle[data-mode="night"] .moon-icon { opacity:0; transform:rotate(-25deg) scale(.65); }
+  button:focus-visible, a:focus-visible { outline:2px solid #c5e9ff; outline-offset:4px; }
+  .foot { position:absolute; left:var(--edge-left); right:var(--edge-right); bottom:calc(var(--safe-bottom) + 16px); margin-inline:auto; width:auto; max-width:640px; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; }
+  .sub { position:relative; top:-14px; margin:14px auto 0; text-shadow:0 1px 8px #14213780; width:min(640px,calc(var(--wordmark-width) * .78)); max-width:100%; font:400 clamp(18px,1.6vw,22px)/1.35 "Libre Baskerville",Baskerville,Georgia,serif; font-size:clamp(11px,calc(var(--wordmark-width) * .039),22px); letter-spacing:-.025em; color:#e4eaf1; white-space:nowrap; text-wrap:nowrap; }
+  .sub span, .sub-secondary span { display:inline-block; }
+  .sub-secondary { margin:0 auto 2px; max-width:100%; font:400 clamp(11px,1.05vw,14px)/1.4 "Libre Baskerville",Baskerville,Georgia,serif; letter-spacing:0; color:#bac7d6; text-wrap:balance; text-shadow:0 1px 8px #14213780; }
+  .meta { margin:0; display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:8px; font:400 14px/1.5 "DM Sans",sans-serif; color:#edf0f3; }
+  .meta .separator { opacity:.95; font:18px/1 Georgia,serif; margin:0 3px; }
+  .signal-link { pointer-events:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:40px; box-sizing:border-box; max-width:100%; padding:6px 18px; margin-top:8px; background:#f6f1e6; color:#101b29; font:500 14px/1.4 "DM Sans",sans-serif; text-decoration:none; touch-action:manipulation; clip-path:polygon(12px 0,calc(100% - 12px) 0,calc(100% - 12px) 5px,calc(100% - 6px) 5px,calc(100% - 6px) 10px,100% 10px,100% calc(100% - 10px),calc(100% - 6px) calc(100% - 10px),calc(100% - 6px) calc(100% - 5px),calc(100% - 12px) calc(100% - 5px),calc(100% - 12px) 100%,12px 100%,12px calc(100% - 5px),6px calc(100% - 5px),6px calc(100% - 10px),0 calc(100% - 10px),0 10px,6px 10px,6px 5px,12px 5px); transition:background .2s; }
+  .signal-link:hover { background:#fffaf0; }
+  .signal-link:focus-visible { outline:none; box-shadow:inset 0 0 0 4px #74a7ba; }
+  .signal-link .arrow { display:block; width:28px; height:22px; flex:none; }
+  @media(max-width:420px) { .mark { font-size:clamp(4.8rem,23vw,6rem); } }
+  @media(max-height:480px) and (min-width:600px) {
+    .foot { right:var(--edge-right); bottom:calc(var(--safe-bottom) + 8px); max-width:none; display:grid; grid-template-columns:1fr auto; column-gap:24px; row-gap:2px; text-align:left; }
+    .sub { font-size:18px; }
+    .meta { grid-column:1; justify-content:flex-start; }
+    .signal-link { grid-column:2; grid-row:1 / 3; }
+  }
+  @media(max-width:760px), (max-height:480px) and (pointer:coarse) {
+    .meta, .signal-link { font-size:15px; }
+    .sub { font-size:clamp(11px,calc(var(--wordmark-width) * .039),19px); }
+  }
+  @media(prefers-reduced-motion:reduce) { .mark span { animation:none; } }
+
+  #faq-open { position:fixed; z-index:4; right:var(--edge-right); top:calc(var(--safe-top) + 16px); width:44px; height:44px; display:grid; place-items:center; padding:8px; border:0; background:transparent; color:#e5e7e9; opacity:.76; cursor:pointer; touch-action:manipulation; transition:opacity .2s; }
+  #faq-open:hover { opacity:1; }
+  #faq-open svg { width:22px; height:26px; flex:none; transform:scale(.95,.9); transform-origin:center; }
+  #faq-dialog { position:fixed; inset:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left); box-sizing:border-box; width:min(860px,calc(100vw - var(--safe-left) - var(--safe-right) - 64px)); max-height:calc(100vh - var(--safe-top) - var(--safe-bottom) - 48px); max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 48px); margin:auto; padding:0 12px; border:0; color:#e6eaf0; background:transparent; overflow:auto; scrollbar-width:thin; scrollbar-color:#e1e7ed30 transparent; overscroll-behavior:contain; touch-action:manipulation; user-select:text; -webkit-user-select:text; }
+  #faq-dialog::backdrop { background:#020609e8; backdrop-filter:blur(5px); }
+  .faq-header { display:flex; align-items:center; justify-content:space-between; gap:24px; position:sticky; top:0; padding:22px 0 28px; z-index:1; background:linear-gradient(#03080bf5 70%,#03080b00); }
+  #faq-heading { margin:0; font:400 clamp(34px,4.2vw,46px)/1.15 "Cormorant Garamond",Baskerville,Georgia,serif; letter-spacing:-.02em; }
+  .faq-heading-subtitle { display:block; margin-top:8px; font:400 clamp(14px,1.8vw,17px)/1.4 "DM Sans",sans-serif; letter-spacing:0; color:#b8bec8; }
+  #faq-close { flex:none; display:grid; place-items:center; width:44px; height:44px; margin-right:0; border:0; background:transparent; color:#c9d3db; font:300 30px/1 "DM Sans",sans-serif; cursor:pointer; }
+  #faq-close:hover { color:white; }
+  .faq-answers { padding:6px 0 32px; }
+  .faq-item { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.5fr); gap:48px; padding:27px 0 30px; border-top:1px solid #d9e1e51f; }
+  .faq-item h3 { margin:0; color:#eef0f2; font:400 18px/1.55 "Libre Baskerville",Baskerville,Georgia,serif; letter-spacing:-.025em; text-wrap:balance; }
+  .faq-item p { margin:0; color:#bfcad3; font:400 16px/1.75 "DM Sans",sans-serif; }
+  .faq-catchphrases { list-style:none; margin:0; padding:0; color:#bfcad3; font:400 16px/1.75 "DM Sans",sans-serif; }
+  .faq-catchphrases li + li { margin-top:15px; }
+  .faq-catchphrases strong { color:#eef0f2; font-weight:500; }
+  @media(max-width:600px) {
+    #faq-dialog { width:calc(100vw - var(--safe-left) - var(--safe-right) - 36px); padding:0 6px; max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 24px); }
+    .faq-header { padding:12px 0 24px; }
+    .faq-item { grid-template-columns:minmax(0,1fr); gap:12px; padding:23px 0 27px; }
+    .faq-item h3 { font-size:19px; text-wrap:initial; }
+    .faq-item p { font-size:16px; line-height:1.7; }
+  }
+</style>
+<style>
+  .mark.image-mark { font-size:0; line-height:0; }
+  .mark.image-mark img { display:block; width:var(--wordmark-width); max-width:100%; height:auto; margin:auto; filter:drop-shadow(0 1px 2px #14213770); }
+  .mark.image-mark[data-wordmark="16-interpenetrating-contour"] { height:calc(var(--wordmark-width) * .3); overflow:hidden; }
+  .mark[data-wordmark="16-interpenetrating-contour"] img { transform:translateY(-20%); mask-image:radial-gradient(ellipse 2.9% 5.8% at 71.5% 31.5%,rgba(0,0,0,var(--dot-alpha,0)) 99%,#000 100%); }
+  .mark.alternate-font { letter-spacing:-.015em; }
+  .wordmark-controls { position:fixed; left:max(16px,env(safe-area-inset-left)); bottom:max(16px,env(safe-area-inset-bottom)); z-index:4; display:flex; align-items:center; width:310px; max-width:calc(100vw - 32px); color:#b5c1d2; background:#050c1799; border:1px solid #dfebff1f; border-radius:24px; backdrop-filter:blur(14px); touch-action:manipulation; }
+  .wordmark-controls[hidden] { display:none; }
+  .wordmark-controls select { width:152px; min-width:0; min-height:44px; padding:0 4px; border:0; background:transparent; color:inherit; font:400 12px/1.3 "DM Sans",sans-serif; cursor:pointer; }
+  .wordmark-controls option,.wordmark-controls optgroup { background:#0b1320; color:#fff; font-size:14px; }
+  .wordmark-controls button { flex:0 0 38px; min-height:44px; padding:0; border:0; background:transparent; color:inherit; cursor:pointer; font-size:18px; border-radius:22px; }
+  .wordmark-controls #wordmark-outline { flex:0 0 78px; border-left:1px solid #dfebff1f; border-radius:0 24px 24px 0; font:400 12px/1 "DM Sans",sans-serif; }
+  #wordmark-outline[aria-pressed="true"] { background:#d9ebff26; color:#fff; }
+  .mark.alternate-font[data-outline="true"] { color:transparent; -webkit-text-stroke: max(1px,.009em) #fff; }
+  .mark.alternate-font[data-outline="true"] span { animation:none; text-shadow:none; }
+  .wordmark-controls button:hover { background:#d9ebff14; color:#fff; }
+  .wordmark-controls select:focus-visible { outline:2px solid #c5e9ff; outline-offset:2px; }
+  #wordmark-status { position:absolute; left:8px; bottom:100%; margin:0 0 8px; width:250px; max-width:calc(100vw - 48px); font:400 12px/1.4 "DM Sans",sans-serif; color:#ced9e7; }
+  #wordmark-status:empty { display:none; }
+  @media(max-width:760px) { .brand-lockup { --wordmark-width:calc(100vw - var(--edge-left) - var(--edge-right)); } .wordmark-controls { bottom:max(148px,calc(env(safe-area-inset-bottom) + 136px)); } .mark.image-mark img { width:100%; } }
+  @media(max-height:480px) { .sub { width:min(100%,max(12rem,calc(var(--wordmark-width) * .78))); } .brand-lockup { --wordmark-width:min(42vw,56vh); } .brand-lockup .mark.image-mark img { width:var(--wordmark-width); } }
+</style>
+<style>
+/* The PAQ is another view of the same lake, not a separate opaque panel. */
+body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10px; }
+.hero { opacity:var(--paq-hero); }
+#faq-open { opacity:calc(.76 * var(--paq-control)); transition:none; }
+#paq-dim { position:fixed; inset:0; z-index:5; pointer-events:none; opacity:var(--paq-dim); background:linear-gradient(to bottom,#02080e10 0%,#02080e32 18%,#02080ed9 40%,#02080ef5 68%); }
+#faq-dialog { inset:0; width:100%; height:100dvh; max-width:none; max-height:none; margin:0; padding:0 max(7vw,calc((100vw - 900px)/2)) calc(var(--safe-bottom) + 64px); background:transparent; color:#eceae4; opacity:var(--paq-text); transform:translateY(var(--paq-text-y)); transition:none; }
+#faq-dialog::backdrop { backdrop-filter:none; background:transparent; }
+.faq-header { position:relative; display:block; padding:clamp(100px,18vh,170px) 0 64px; background:none; }
+#faq-heading { font:400 clamp(48px,6vw,74px)/1 Georgia,'Times New Roman',serif; letter-spacing:-.035em; outline:none; }
+.faq-heading-subtitle,.faq-authorship { font:400 clamp(13px,1.6vw,17px)/1.5 "DM Sans",sans-serif; letter-spacing:.015em; color:#c4cdd3; }
+.faq-heading-subtitle { margin-top:15px; }
+#faq-close { position:fixed; top:calc(var(--safe-top) + 18px); right:calc(var(--safe-right) + 22px); width:44px; height:44px; font-size:36px; font-weight:300; }
+.faq-answers { padding:0; }
+.faq-guild-heading { margin:28px 0 16px; font:400 22px/1.4 Georgia,serif; color:#eef0f2; }
+.faq-authorship { margin:8px 0 0; }
+.faq-item { display:block; padding:0; border:0; }
+.faq-item summary { list-style:none; display:flex; align-items:center; justify-content:space-between; gap:24px; padding:26px 0; cursor:pointer; min-height:44px; box-sizing:border-box; }
+.faq-item summary::-webkit-details-marker { display:none; }
+.faq-item summary:focus-visible { outline:1px solid #c5e9ff; outline-offset:5px; }
+.faq-item h3 { font:400 clamp(22px,2.8vw,34px)/1.3 Georgia,'Times New Roman',serif; letter-spacing:-.025em; text-wrap:balance; }
+.faq-sign { width:20px; height:20px; position:relative; flex:none; }
+.faq-sign::before,.faq-sign::after { content:''; position:absolute; background:#d6dfe2; width:20px; height:1px; top:10px; left:0; }
+.faq-sign::after { transform:rotate(90deg); }
+.faq-item[open] .faq-sign::after { transform:rotate(0); }
+.faq-answer { padding:0 42px 38px 0; max-width:760px; }
+.faq-item p,.faq-catchphrases { font:400 clamp(18px,2vw,23px)/1.62 Georgia,'Times New Roman',serif; color:#d9dddc; }
+@media(max-width:600px) { #faq-dialog { padding-left:24px; padding-right:24px; } .faq-header { padding-top:116px; padding-bottom:44px; } .faq-item summary { padding:22px 0; gap:16px; } .faq-answer { padding-right:8px; padding-bottom:30px; } .faq-heading-subtitle { max-width:250px; } }
+@media(prefers-reduced-motion:reduce) { #faq-dialog { transform:none; } }
+</style>
+</head>
+<body>
+<canvas id="c" aria-hidden="true"></canvas>
+<nav class="light-controls" aria-label="Lake lighting">
+  <button id="light-toggle" type="button" aria-label="Switch to day" title="Switch to day" data-mode="night">
+    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.7"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/></svg>
+    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.3 14.3A8.5 8.5 0 0 1 9.7 3.7a8.5 8.5 0 1 0 10.6 10.6Z"/></svg>
+  </button>
+</nav>
+<!-- Exploration UI and assets retained. Remove hidden to restore the chooser. -->
+<nav class="wordmark-controls" aria-label="Try a wordmark" hidden>
+  <button type="button" data-wordmark-step="-1" aria-label="Previous wordmark">‹</button>
+  <select id="wordmark-select" aria-label="Wordmark style" aria-describedby="wordmark-status">
+
+    <optgroup label="Generated concepts">
+      <option value="01-sculptural">01 · Sculptural</option><option value="02-calligraphic">02 · Calligraphic</option>
+      <option value="03-humanist">03 · Humanist</option><option value="04-perceptual">04 · Perceptual</option>
+      <option value="05-fluid">05 · Fluid</option>
+
+      <option value="10-poetic">10 · Poetic</option>
+    </optgroup>
+    <optgroup label="New explorations">
+
+      <option value="14-closure-stencil-roman">14 · Closure Stencil Roman</option>
+
+      <option value="16-interpenetrating-contour">16 · Interpenetrating Contour</option>
+
+      <option value="20-scissor-cut-letters">20 · Scissor-Cut Letters</option>
+    </optgroup>
+    <optgroup label="Classic"><option value="baskerville">Baskerville PT*</option></optgroup>
+  </select>
+  <button type="button" data-wordmark-step="1" aria-label="Next wordmark">›</button>
+  <button id="wordmark-outline" type="button" aria-pressed="false">Outline</button>
+  <p id="wordmark-status" role="status" aria-live="polite"></p>
+</nav>
+<button id="faq-open" type="button" aria-label="Questions about Qualia" aria-haspopup="dialog" aria-controls="faq-dialog" aria-expanded="false"><!-- Original LensQuestionarium: Bodoni/Didone ball-terminal glyph from sw-dev/packages/app/src-oversize/components/ui/icons.tsx. --><svg viewBox="-710 -200 3970 4770" fill="currentColor" stroke="none" aria-hidden="true"><g transform="translate(0,4370) scale(1,-1)"><path d="M1033 4354c-178-28-389-106-554-206-109-66-220-166-306-278-57-74-80-119-121-246-44-132-56-223-43-319 25-186 32-203 118-295 70-76 138-120 237-156 74-26 79-26 168-15 150 19 252 84 301 191 66 141 62 264-9 357-30 39-115 103-163 123-53 21-147 18-215-8-55-21-60-22-77-6-54 48 4 247 103 358 45 50 165 146 183 146 3 0 29 11 58 25 68 33 138 53 272 76 179 31 285 21 500-47 201-63 387-269 442-488 39-156 28-392-28-601-20-72-85-208-127-265-57-76-223-239-368-359-192-161-274-250-311-337-17-38-23-78-27-179-11-255-16-841-8-875l8-35 105-1 106 0 2 375c1 348 3 382 22 451 31 108 59 157 130 226 81 76 133 112 234 158 140 65 300 157 422 243 113 80 247 236 355 413 23 38 58 135 84 235 54 205 13 535-89 704-57 97-71 117-111 164-67 82-273 246-389 310-256 143-610 206-904 161zM1119 456c-138-37-225-184-175-299 16-37 74-94 131-127 34-21 53-24 135-25 86 0 99 3 142 27 158 94 164 291 12 388-74 47-159 59-245 36z"/></g></svg></button>
+<div id="paq-dim" aria-hidden="true"></div>
+<dialog id="faq-dialog" aria-labelledby="faq-heading">
+  <header class="faq-header"><h2 id="faq-heading" tabindex="-1">PAQ<span class="faq-heading-subtitle">Pre-emptively Answered Questions</span></h2><p class="faq-authorship">The following words were written by a human</p><button id="faq-close" type="button" aria-label="Close questions" autofocus>×</button></header>
+  <div class="faq-answers">
+    <details class="faq-item" open><summary><h3 id="faq-q1">What is this about?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Effing the ineffible. A space to live new culture! It’s somewhere between a research symposium, the best house party you’ve ever been to, and a curated festival in private nature. Something like this hasn’t happened before, so honestly, we’re not quite sure.<br><br>This is more for doing phenomenological research than talking about research, but there will assuredly be talks.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q2">So it’s a party. What does that mean?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>It means it’s fun. Dancing. Immersive, playful, curious, reverent, irreverent, in on the joke. We believe fun leads to focus, and focus leads to insight.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q3">Can anyone come?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No. It’s curated for character, via application.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-dependents">I want to bring a dependent.</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Children, pets… all sentient beings are welcome to apply. We do not discriminate. Everyone in attendance must apply and will be held to the same standard of curation.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q4">Is this a night thing?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>All chronotypes are welcome. There will be day and night programming. We’ll start more day-focused and end more evening-focused. The goal is for everyone to leave feeling better in their bodies than when they arrived.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-stimulation">Will this be overstimulating?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Parts will. The land is vast, and soft, with many cozy nooks and quiet zones. We’ll have an outdoor sound curfew most nights. There will be an arc.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q5">Can I bring something to life here?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Yes. It’s a hybrid: curated from the top down, co-created from the bottom up.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-guilds">Can we create a guild?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Yes! Guilds are like camps, but you don’t need to worry about food, water, or shade. Paradise has you covered.</p><h4 class="faq-guild-heading" id="faq-founding-guilds">Founding guilds</h4><ul class="faq-catchphrases faq-guild-list">
+      <li><strong>Aphantasians</strong> — life without a mind’s eye.</li>
+      <li><strong>Lucid Dreamers</strong> — becoming conscious inside the dream.</li>
+      <li><strong>The Hypnagogues</strong> — meeting at the edge of sleep.</li>
+      <li><strong>Synesthetes</strong> — where the senses cross.</li>
+      <li><strong>The Somanauts</strong> — exploring experience from inside the body.</li>
+      <li><strong>The Noticers</strong> — paying unreasonable attention to ordinary things.</li>
+      <li><strong>Reality Testers</strong> — investigating what makes something feel real.</li>
+      <li><strong>The Society for Curious Tongues</strong> — mapping the experience of taste.</li>
+      <li><strong>Night Elves</strong> — exploring the world after dark.</li>
+      <li><strong>The Timeless</strong> — investigating what time feels like.</li>
+    </ul></div></details>
+    <details class="faq-item"><summary><h3 id="faq-potluck">Will there be a potluck?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Yes, there will be a phenomenological potluck the likes of which the world has never seen.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q6">I’m sober. Will that be a problem?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No, quality is a hell of a drug. You’ll fit right in.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q7">Any weird rules?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No alcohol, no ketamine, no smoking, no small talk.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q8">How long is the event?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Five or six nights.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-sleep">Where do I sleep?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Camping, glamping, vans, and private cabins.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-arrival">When can I arrive?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Wednesday or Friday. Arriving after 7pm on Wednesday costs €100 more. We want you here for the whole experience. If you’re a weekend warrior, you can afford it.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q9">Is this part of something bigger?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>The party kicks off a month of phenomenological research. Afterwards, there’s an optional three-week residency: more time to follow a question, bring something to life, and live some life! Come for the party, or stay for the month.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q10">Is this event for profit?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>It will most assuredly lose money.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-catchphrases-heading">alternative catchphrases</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><ul class="faq-catchphrases">
+      <li><strong>a party for the fact that anything feels like anything at all</strong></li>
+      <li>a field trip into being</li>
+      <li>recreational investigations into what the fuck is going on</li>
+      <li>unsupervised study of experience</li>
+      <li>several nights inside the hard problem</li>
+      <li>first-person data collection in the forest</li>
+    </ul></div></details>
+  </div>
+</dialog>
+<main class="hero">
+  <div class="brand-lockup">
+  <h1 class="mark image-mark" aria-label="Qualia" data-wordmark="16-interpenetrating-contour"><img src="assets/wordmarks/16-interpenetrating-contour.png" alt="" aria-hidden="true"></h1>
+    <p class="sub"><span>a</span> <span>phenomenological</span> <span>research</span> <span>party</span></p>
+  </div>
+  <div class="foot">
+    <p class="meta"><span>Summer 2027</span><span class="separator" aria-hidden="true">❦</span><span>The Garden, Portugal</span></p>
+    <a class="signal-link" href="https://signal.group/#CjQKIEUrRqSJuQTnvetwsqKrlnMcP75vbt2LGmxpuD9OfnWuEhBmb3S-MWQ2-Tqc63s_XySz" target="_blank" rel="noopener noreferrer"><span>Signal group for details</span><svg class="arrow" aria-hidden="true" viewBox="0 0 40 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 26C11 29 25 23 23 14C21 5 11 8 13 16C15 25 30 20 35 5M27 8L35 5L37 13"/></svg></a>
+  </div>
+</main>
+<script>
+// One reversible clock for the lake, moon, dimming, typography and controls.
+const PAQ = (() => {
+  const opener=document.getElementById('faq-open'), dialog=document.getElementById('faq-dialog');
+  const motion=matchMedia('(prefers-reduced-motion: reduce)');
+  const state={t:0,progress:0,target:0};
+  let raf=0,last=0;
+  const windowed=(a,b,t)=>Math.min(1,Math.max(0,(t-a)/(b-a)));
+  const ease=t=>t*t*(3-2*t);
+  const soft=t=>t*t*t*(t*(t*6-15)+10);
+  function paint() {
+    state.progress=ease(state.t);
+    const text=ease(windowed(.38,1,state.t)),style=document.body.style;
+    style.setProperty('--paq-hero',1-ease(windowed(0,.3,state.t)));
+    style.setProperty('--paq-control',1-ease(windowed(0,.25,state.t)));
+    style.setProperty('--paq-dim',soft(windowed(.1,.85,state.t)));
+    style.setProperty('--paq-text',text);
+    style.setProperty('--paq-text-y',motion.matches?'0px':`${10*(1-text)}px`);
+  }
+  function finish() {
+    if(state.target===0 && state.t===0 && dialog.open) dialog.close();
+  }
+  function tick(now) {
+    raf=0;
+    const dt=Math.min(1/30,Math.max(0,(now-last)/1000));last=now;
+    state.t=Math.min(1,Math.max(0,state.t+(state.target?1:-1)*dt/(motion.matches?.2:1.1)));
+    paint();finish();
+    if(state.t!==state.target) raf=requestAnimationFrame(tick);
+  }
+  function animate(target) {
+    state.target=target;
+    dialog.inert=!target;
+    opener.setAttribute('aria-expanded',String(!!target));
+    if(target && !dialog.open) {
+      dialog.showModal();dialog.scrollTop=0;
+      document.getElementById('faq-heading').focus({preventScroll:true});
+    }
+    if(!raf) {last=performance.now();raf=requestAnimationFrame(tick);}
+  }
+  opener.addEventListener('click',()=>animate(1));
+  document.getElementById('faq-close').addEventListener('click',()=>animate(0));
+  dialog.addEventListener('cancel',e=>{e.preventDefault();animate(0);});
+  dialog.addEventListener('close',()=>{
+    // Also recover from a browser-forced close (e.g. repeated Escape).
+    animate(0);opener.focus({preventScroll:true});
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden)return;
+    cancelAnimationFrame(raf);raf=0;state.t=state.target;paint();finish();
+  });
+  paint();return state;
+})();
+</script>
+<script src="assets/wordmarks.js"></script>
+<script src="assets/vendor/astronomy-2.1.19.min.js"></script>
+<script>
+(() => {
+'use strict';
+
+const AUTO = false;   // test copies set this to true: the swimmer steers itself and ignores the pointer
+
+/* ---------- scene constants ---------- */
+const SHORE = 0.44;   // shoreline as a fraction of viewport height
+const V0 = 0.18;      // perspective offset: the far shore sits at a finite distance
+const TILT = 0.8;     // foreshortening of the water plane at the bottom edge
+const NSP = 12;       // water disturbance splats per frame
+const NCAP = 32;      // swimmer capsules
+
+const cvs = document.getElementById('c');
+const mark = document.querySelector('.mark');
+const tagline = document.querySelector('.sub');
+let paqT=0, paqProgress=0, paqSkyTime=0;
+const RM = matchMedia('(prefers-reduced-motion: reduce)');
+let reduced = RM.matches;
+if (RM.addEventListener) RM.addEventListener('change', e => { reduced = e.matches; });
+
+const gl = cvs.getContext('webgl2', { antialias: false, alpha: false, depth: false, stencil: false, premultipliedAlpha: false, powerPreference: 'high-performance' });
+if (!gl) { document.documentElement.classList.add('nogl'); return; }
+
+/* ---------- shaders ---------- */
+const COMMON = `
+float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+vec4 hash42(vec2 p){ vec4 p4 = fract(vec4(p.xyxy) * vec4(.1031, .1030, .0973, .1099)); p4 += dot(p4, p4.wzxy + 33.33); return fract((p4.xxyz + p4.yzzw) * p4.zywx); }
+uint pcg(uint v){ uint st = v*747796405u + 2891336453u; uint w = ((st >> ((st >> 28u) + 4u)) ^ st)*277803737u; return (w >> 22u) ^ w; }
+float hashI(vec2 p){ uvec2 q = uvec2(ivec2(floor(p)) + 65536); return float(pcg(q.x + pcg(q.y)))/4294967295.; }
+vec4 hashI4(vec2 p){ uvec2 q = uvec2(ivec2(floor(p)) + 65536); uint a = pcg(q.x + pcg(q.y)); uint b = pcg(a), c = pcg(b), d = pcg(c);
+  return vec4(float(a), float(b), float(c), float(d))/4294967295.; }
+float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3. - 2.*f);
+  float a = hash12(i), b = hash12(i + vec2(1., 0.)), c = hash12(i + vec2(0., 1.)), d = hash12(i + vec2(1., 1.));
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y); }
+float fbm(vec2 p){ float s = 0., a = .5; for (int i = 0; i < 5; i++){ s += a*vnoise(p); p = p*2.03 + 17.1; a *= .5; } return s; }
+`;
+
+const VS_FULL = `#version 300 es
+out vec2 vUv;
+void main(){ vec2 p = vec2(gl_VertexID == 1 ? 3. : -1., gl_VertexID == 2 ? 3. : -1.); vUv = p*.5 + .5; gl_Position = vec4(p, 0., 1.); }`;
+
+/* static sky, rendered once per resize into two targets: background (alpha = tree cover) and stars */
+const FS_SKY = `#version 300 es
+precision highp float;
+in vec2 vUv;
+layout(location = 0) out vec4 oSky;
+layout(location = 1) out vec4 oStar;
+uniform vec2 uRes; uniform float uShore, uU, uDpr, uAtlasRadius;
+${COMMON}
+float crownDome(float x, float centre, float radius, float height){
+  float q = (x - centre)/radius;
+  return height*sqrt(max(0., 1. - q*q));
+}
+float canopy(float x, float y, float cw, float hmin, float hmax, float seed){
+  float skyline = 0.;
+  float ci = floor(x / cw);
+  for (int k = -3; k <= 3; k++){
+    float i = ci + float(k);
+    vec4 h = hashI4(vec2(i + 5000., seed*31. + 7.));
+    float cx = (i + .5 + (h.y - .5)*.65)*cw;
+    float H = mix(hmin, hmax, h.z)*(.8 + .3*vnoise(vec2(i*.16, seed)));
+    float radius = cw*(.62 + .38*h.w);
+    // Broad, asymmetric crowns overlap into a low deciduous canopy.
+    float crown = crownDome(x, cx, radius, H);
+    crown = max(crown, crownDome(x, cx - radius*.48, radius*.7, H*(.70 + .12*h.x)));
+    crown = max(crown, crownDome(x, cx + radius*.52, radius*.64, H*(.66 + .18*h.y)));
+    skyline = max(skyline, crown);
+  }
+  // Fine irregular leaf clusters break up the large crown without a sawtooth edge.
+  skyline += 1.8*(vnoise(vec2(x*.31, seed + 2.)) - .5);
+  skyline += .85*(vnoise(vec2(x*.83, seed + 17.)) - .5);
+  skyline += .35*(vnoise(vec2(x*1.91, seed + 31.)) - .5);
+  return clamp((skyline - y)*uU + .5, 0., 1.);
+}
+/* star colour from B-V colour index (blackbody-like ramp, hot blue-white to cool orange) */
+vec3 bvColor(float bv){
+  float x = clamp((bv + .4)/.4, 0., 4.999); float f = fract(x); int i = int(floor(x));
+  vec3 a, b;
+  if (i == 0){ a = vec3(.62, .72, 1.); b = vec3(.80, .86, 1.); }
+  else if (i == 1){ a = vec3(.80, .86, 1.); b = vec3(1., .97, .93); }
+  else if (i == 2){ a = vec3(1., .97, .93); b = vec3(1., .88, .73); }
+  else if (i == 3){ a = vec3(1., .88, .73); b = vec3(1., .79, .57); }
+  else { a = vec3(1., .79, .57); b = vec3(1., .70, .44); }
+  return mix(a, b, f);
+}
+void main(){
+  vec2 pd = vec2(vUv.x*uRes.x, (1. - vUv.y)*uRes.y);
+  if (uAtlasRadius > 0.) pd = vec2(uRes.x*.72, uShore*.24) + (vec2(vUv.x, 1. - vUv.y)*2. - 1.)*uAtlasRadius;
+  if (pd.y >= uShore && uAtlasRadius <= 0.){ oSky = vec4(0., 0., 0., 1.); oStar = vec4(0., 0., 0., 1.); return; }
+  vec2 pc = pd / uDpr; vec2 R = uRes / uDpr; float shc = uShore / uDpr;
+  float t = clamp(pd.y / uShore, 0., 1.);
+  vec3 col = mix(vec3(.014, .026, .057), vec3(.055, .083, .125), pow(t, 1.7));
+  col += vec3(.020, .026, .035) * exp(-(1. - t)*8.);
+  col += vec3(.003, .010, .006) * exp(-pow((t - .8)/.1, 2.));           // airglow, green OI line
+  /* Milky Way: glow, bulge toward the horizon, domain-warped dust and a central rift */
+  vec2 A = vec2(R.x*.95, -shc*.08), B = vec2(R.x*.68, shc*1.06);
+  vec2 dir = normalize(B - A), nrm = vec2(-dir.y, dir.x);
+  float along = dot(pc - A, dir)/length(B - A);
+  float wid = .11*min(R.x, shc*1.4)*(1. + .6*along);
+  float across = dot(pc - A, nrm) + (fbm(vec2(dot(pc - A, dir)/260., 1.7)) - .5)*wid*.9;
+  float band = exp(-pow(across/wid, 2.));
+  float core = smoothstep(.5, 1., along) * exp(-pow(across/(wid*.75), 2.));
+  float cloud = fbm(pc/85. + vec2(3., 7.));
+  float glow = band*(.3 + .85*cloud) + core*(.45 + .8*cloud);
+  vec2 wq = pc/55. + vec2(fbm(pc/150.), fbm(pc/150. + 9.))*2.4;
+  float dust = smoothstep(.44, .72, fbm(wq)) * exp(-pow(across/(wid*.6), 2.));
+  float rift = exp(-pow((across - wid*.1)/(wid*.17), 2.)) * smoothstep(.25, .65, along) * smoothstep(.32, .62, fbm(pc/75. + 2.));
+  float dk = clamp(dust*.8 + rift*.9, 0., .93);
+  vec3 mwc = mix(vec3(.070, .078, .100), vec3(.130, .112, .088), core);
+  col += mwc*glow*(1. - dk)*(1. - .25*t)*1.7 + vec3(.017, .020, .030)*exp(-pow(across/(wid*2.2), 2.));
+  /* stars: magnitudes drawn from N(<m) ~ 10^(0.5 m), flux 10^(-0.4 m), colour from B-V */
+  vec3 st = vec3(0.);
+  vec2 cid = floor(pc/8.);
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++){
+    vec2 id = cid + vec2(float(i), float(j));
+    vec4 h = hashI4(id);
+    if (h.x > .64) continue;
+    vec2 d = pc - (id + h.yz)*8.;
+    float u = max(hashI(id + vec2(4099., 331.)), 1e-5);
+    float m = max(8. + 2.*log(u)/log(10.), -1.2);
+    float flux = pow(10., -.4*(m - 6.));
+    float r2 = dot(d, d);
+    st += bvColor(-.3 + 1.9*pow(h.w, 1.25)) * flux * (.34*exp(-r2/.34) + .006*exp(-r2/8.) + .0008*exp(-r2/30.));
+  }
+  float dens = clamp(band*.9 + core*.7, 0., 1.)*(1. - dk);
+  vec2 cid2 = floor(pc/3.);
+  vec4 h2 = hashI4(cid2 + vec2(7717., 1231.));
+  if (h2.x < dens*.85){
+    vec2 d = pc - (cid2 + h2.yz)*3.;
+    st += bvColor(.1 + 1.3*h2.w) * (.025 + .1*h2.w*h2.w) * exp(-dot(d, d)/.3);
+  }
+  st *= 1. - .6*dk;
+  st *= mix(vec3(1.), vec3(.5, .36, .24), pow(t, 5.));            // extinction and reddening near the horizon
+  st = 1. - exp(-st);
+  if (uAtlasRadius > 0.) { oSky = vec4(st, 1.); oStar = vec4(0.); return; }
+  /* soft, layered broadleaf canopies on the far shore */
+  float x = pd.x / uU, y = (uShore - pd.y) / uU;
+  // Compress the original rolling canopy locally, rather than cutting a notch.
+  // An asymmetric, softly tapering hollow retains every tree/hill irregularity.
+  float fromSun=pd.x/uRes.x-.807;
+  float hollowWidth=fromSun<0.? .070 : .095;
+  float solarHollow=exp(-pow(fromSun/hollowWidth,2.)*2.);
+  solarHollow*=1.-smoothstep(.12,.18,abs(fromSun));
+  y*=1.+1.65*solarHollow;
+  float ridgeF = 8. + 14.*vnoise(vec2(x*.006, 1.)) + 5.*vnoise(vec2(x*.03, 2.));
+  float covF = clamp((ridgeF - y)*uU + .5, 0., 1.);
+  covF = max(covF, canopy(x, y - ridgeF*.65, 13., 9., 22., 3.));
+  float ridgeN = 7. + 15.*vnoise(vec2(x*.006, 5.)) + 4.*vnoise(vec2(x*.025, 8.));
+  float covN = clamp((ridgeN - y)*uU + .5, 0., 1.);
+  covN = max(covN, canopy(x, y - ridgeN, 19., 16., 35., 11.));
+  col = mix(col, vec3(.010, .013, .022), covF*.92);
+  col = mix(col, vec3(.0025, .0035, .006), covN);
+  float cov = max(covF, covN);
+  oSky = vec4(col, cov);
+  // Cache layered cloud structure once; the compositor drifts and lights this field.
+  vec2 cloudP = pc/vec2(220., 110.);
+  vec2 warp = vec2(fbm(cloudP*.64+3.), fbm(cloudP*.73+11.));
+  float billow = fbm(cloudP + warp*1.5);
+  float cumulus = smoothstep(.44,.68,billow) * (1.-smoothstep(.68,1.,t));
+  float cirrus = smoothstep(.47,.74,fbm(pc/vec2(310.,45.)+warp*.6+vec2(8.,3.)));
+  float density = max(cumulus, cirrus*.4) * (1.-smoothstep(.85,1.,t));
+  // Alpha stores forest depth and leaf-cluster shading for dynamic daylight.
+  float leafClusters=.65*vnoise(vec2(x*.22,y*.25))+.35*vnoise(vec2(x*.69,y*.57));
+  float forestInfo=mix(covF*.18,.55+.45*leafClusters,covN);
+  oStar = vec4(st*(1. - cov), forestInfo);
+}`;
+
+/* disturbance splats: uSp = (u, v, vx, vy) screen px/s; uSq = (radius in world units, velocity mix, stimulus, wave push) */
+const SPL = `
+uniform vec4 uSp[${NSP}]; uniform vec4 uSq[${NSP}];
+uniform vec2 uSimPx; uniform float uV0, uTilt;
+float persp(float v){ return (v + uV0)/(1. + uV0); }
+float splG(vec2 uv, vec2 c, float rw){
+  float s = persp(uv.y); float a = max(s*uTilt, .05);
+  vec2 d = (uv - c)*uSimPx; d.y /= a; float r = max(rw*s, 1.5);
+  return exp(-dot(d, d)/(r*r));
+}`;
+
+/* wake field: xy = water velocity (screen px/s), z = agitation. Semi-Lagrangian advection, diffusion, decay */
+const FS_VEL = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uVel; uniform float uDt, uDecay;
+${SPL}
+void main(){
+  vec2 tx = 1./vec2(textureSize(uVel, 0));
+  vec2 v = texture(uVel, vUv).xy;
+  vec2 back = vUv - v*uDt/uSimPx;
+  vec4 va = texture(uVel, back);
+  vec4 nb = (texture(uVel, back + vec2(tx.x, 0.)) + texture(uVel, back - vec2(tx.x, 0.))
+           + texture(uVel, back + vec2(0., tx.y)) + texture(uVel, back - vec2(0., tx.y))) * .25;
+  va.xy = mix(va.xy, nb.xy, .18) * exp(-uDt/uDecay);
+  va.z = mix(va.z, nb.z, .2) * exp(-uDt/.7);
+  for (int i = 0; i < ${NSP}; i++){
+    vec4 q = uSq[i];
+    if (q.y <= 0. && q.z <= 0.) continue;
+    float g = splG(vUv, uSp[i].xy, q.x);
+    va.xy = mix(va.xy, uSp[i].zw, clamp(g*q.y, 0., 1.));
+    va.z = max(va.z, g*q.z);
+  }
+  // Unresolved plankton gives each disturbed patch a faint afterglow even when
+  // the discrete particles have drifted apart. Still water stays dark.
+  float lightTarget=smoothstep(.055,.8,va.z)*.7;
+  float light=texture(uVel,back).w;
+  light+=(lightTarget-light)*(1.-exp(-uDt/(lightTarget>light?.12:1.7)));
+  o = vec4(va.xyz, light);
+}`;
+
+/* surface height: damped wave equation with perspective-anisotropic speed */
+const FS_WAVE = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uWave; uniform float uK, uPush;
+${SPL}
+void main(){
+  ivec2 ij = ivec2(gl_FragCoord.xy); ivec2 sz = textureSize(uWave, 0) - 1;
+  vec2 c = texelFetch(uWave, ij, 0).rg;
+  float hl = texelFetch(uWave, ivec2(max(ij.x - 1, 0), ij.y), 0).r;
+  float hr = texelFetch(uWave, ivec2(min(ij.x + 1, sz.x), ij.y), 0).r;
+  float hd = texelFetch(uWave, ivec2(ij.x, max(ij.y - 1, 0)), 0).r;
+  float hu = texelFetch(uWave, ivec2(ij.x, min(ij.y + 1, sz.y)), 0).r;
+  float s = persp(vUv.y);
+  float kx = uK*s*s, ky = uK*pow(s*s*uTilt, 2.);
+  float lap = kx*(hl + hr - 2.*c.r) + ky*(hu + hd - 2.*c.r);
+  float hn = (c.r + (c.r - c.g)*.993 + lap) * .9992;
+  hn += .035*((hl + hr + hu + hd)*.25 - c.r);
+  if (uPush > 0.){
+    for (int i = 0; i < ${NSP}; i++){
+      if (uSq[i].w <= 0.) continue;
+      hn -= uSq[i].w*splG(vUv, uSp[i].xy, uSq[i].x*.9);
+    }
+  }
+  // Absorb outgoing wave energy at the simulation edges, avoiding artificial echoes.
+  float edge=min(min(vUv.x,1.-vUv.x),min(vUv.y,1.-vUv.y));
+  hn*=mix(.965,1.,smoothstep(0.,.035,edge));
+  o = vec4(hn, c.r, 0., 1.);
+}`;
+
+/* dinoflagellates. A = (x, y, glow e, capacity c); B = (drive d, flash f, adaptation a, -) */
+const FS_PART = `#version 300 es
+precision highp float;
+layout(location = 0) out vec4 oA;
+layout(location = 1) out vec4 oB;
+uniform sampler2D uPA, uPB, uVel;
+uniform vec2 uSimPx; uniform float uDt, uTime, uThr, uDrift, uV0, uTilt;
+${COMMON}
+vec2 curl(vec2 p){ float e = .1;
+  return vec2(vnoise(p + vec2(0., e)) - vnoise(p - vec2(0., e)), -(vnoise(p + vec2(e, 0.)) - vnoise(p - vec2(e, 0.))))/(2.*e); }
+void main(){
+  ivec2 ij = ivec2(gl_FragCoord.xy);
+  vec4 A = texelFetch(uPA, ij, 0), B = texelFetch(uPB, ij, 0);
+  vec4 h = hash42(vec2(ij) + .5);
+  vec2 pos = A.xy; float e = A.z, c = A.w, d = B.x, f = B.y, ad = B.z;
+  float s = (pos.y + uV0)/(1. + uV0);
+  float a = max(s*uTilt, .05);
+  vec2 tx = 1./vec2(textureSize(uVel, 0));
+  vec4 v0 = texture(uVel, pos);
+  vec2 vl = texture(uVel, pos - vec2(tx.x, 0.)).xy, vr = texture(uVel, pos + vec2(tx.x, 0.)).xy;
+  vec2 vd = texture(uVel, pos - vec2(0., tx.y)).xy, vu = texture(uVel, pos + vec2(0., tx.y)).xy;
+  vec2 gx = (vr - vl)/(2.*tx.x*uSimPx.x), gy = (vu - vd)/(2.*tx.y*uSimPx.y);
+  float ux = gx.x, vy = gy.y, uy = gy.x*a, vx = gx.y/a;
+  float S = sqrt(2.*ux*ux + 2.*vy*vy + (uy + vx)*(uy + vx));    // strain-rate magnitude
+  float thr = uThr * exp((h.x - .5)*1.8);                       // per-cell threshold spread
+  float zt = .14 * exp((h.x - .5)*1.6);
+  float stim = max(smoothstep(thr, thr*3., S), smoothstep(zt, zt*2.6, v0.z));
+  // Only swimmer-driven strain and wake agitation activate the plankton.
+  d = max(d*exp(-uDt/.12), stim);
+  ad += (d - ad)*(1. - exp(-uDt/.35));
+  float fT = max(0., d - ad*.85) * c;                            // flash: transient on stimulus onset
+  f += (fT - f)*(fT > f ? 1. - exp(-uDt/.03) : 1. - exp(-uDt/.11));
+  float eT = d*c*(.5 + .4*h.w);                                  // glow: ~0.1 s rise, 1.2 to 3 s decay
+  e += (eT - e)*(eT > e ? 1. - exp(-uDt/.1) : 1. - exp(-uDt/mix(1.2, 3., h.z)));
+  c = clamp(c - (e*.2 + f*.9)*uDt + (1. - c)*(1. - exp(-uDt/7.)), 0., 1.);   // luciferin depletion, slow recovery
+  vec2 wp = vec2((pos.x - .5)*uSimPx.x/s, uSimPx.y/(uTilt*s)) / 90.;
+  vec2 drift = (vec2(3., 0.) + curl(wp*.5 + vec2(uTime*.02, 0.))*5.) * uDrift * s;
+  drift.y *= a;
+  vec2 turb = curl(wp*2.2 + vec2(uTime*.35, 0.)) * length(v0.xy) * .25; turb.y *= a;
+  pos += (v0.xy + drift + turb)*uDt/uSimPx;
+  bool wrap = false;
+  if (pos.x < 0.){ pos.x += 1.; wrap = true; } else if (pos.x > 1.){ pos.x -= 1.; wrap = true; }
+  if (pos.y < 0.){ pos.y += 1.; wrap = true; } else if (pos.y > 1.){ pos.y -= 1.; wrap = true; }
+  if (wrap){ e = 0.; d = 0.; f = 0.; ad = 0.; }
+  oA = vec4(pos, e, c);
+  oB = vec4(d, f, ad, 0.);
+}`;
+
+const VS_PTS = `#version 300 es
+precision highp float;
+uniform sampler2D uPA, uPB; uniform int uPW; uniform float uShoreN, uPt, uGain, uV0;
+out float vE;
+${COMMON}
+void main(){
+  ivec2 ij = ivec2(gl_VertexID % uPW, gl_VertexID / uPW);
+  vec4 p = texelFetch(uPA, ij, 0); vec4 q = texelFetch(uPB, ij, 0);
+  float b = q.y*2.6 + p.z*1.1;
+  if (b < .006){ gl_Position = vec4(2., 2., 2., 1.); gl_PointSize = 1.; vE = 0.; return; }
+  vec4 h = hash42(vec2(ij) + 7.5);
+  float s = (p.y + uV0)/(1. + uV0);
+  float yTop = uShoreN + p.y*(1. - uShoreN);
+  gl_Position = vec4(p.x*2. - 1., 1. - 2.*yTop, 0., 1.);
+  gl_PointSize = max(1., uPt*(.5 + 1.6*s)*(.7 + .6*h.y)*(.8 + .5*min(q.y, 1.)));
+  vE = b*uGain*(.5 + h.w);
+}`;
+const VS_DROP = `#version 300 es
+precision highp float;
+layout(location = 0) in vec4 aP;
+out float vE;
+void main(){ gl_Position = vec4(aP.xy, 0., 1.); gl_PointSize = aP.z; vE = aP.w; }`;
+const FS_PTS = `#version 300 es
+precision highp float;
+in float vE; out vec4 o;
+void main(){
+  vec2 q = gl_PointCoord*2. - 1.; float r2 = dot(q, q);
+  if (r2 > 1.) discard;
+  float core = exp(-r2*12.), halo = exp(-r2*3.)*.2*(1. - r2);
+  o = vec4((vec3(.34, .95, 1.)*core*1.35 + vec3(0., .50, 1.)*halo)*vE, 1.);
+}`;
+
+const FS_BLUR = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uSrc; uniform vec2 uDir;
+void main(){
+  vec3 c = texture(uSrc, vUv).rgb*.227;
+  c += (texture(uSrc, vUv + uDir*1.385).rgb + texture(uSrc, vUv - uDir*1.385).rgb)*.316;
+  c += (texture(uSrc, vUv + uDir*3.231).rgb + texture(uSrc, vUv - uDir*3.231).rgb)*.070;
+  o = vec4(c, 1.);
+}`;
+
+/* 2x downsample with a 4x4 tent footprint, so thin sparkle rows are never skipped */
+const FS_DOWN = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uSrc; uniform vec2 uTx;
+void main(){
+  o = vec4((texture(uSrc, vUv + uTx*vec2(-1., -1.)).rgb + texture(uSrc, vUv + uTx*vec2(1., -1.)).rgb
+          + texture(uSrc, vUv + uTx*vec2(-1., 1.)).rgb + texture(uSrc, vUv + uTx*vec2(1., 1.)).rgb)*.25, 1.);
+}`;
+
+const STAR_ORBIT = `
+uniform sampler2D uStarTrails;
+uniform vec4 uStarOrbit;
+vec3 orbitStars(vec2 pd, float angle, float lod){
+  vec2 q=(pd-uStarOrbit.xy)/uStarOrbit.z;
+  float ca=cos(angle),sa=sin(angle);
+  q=vec2(ca*q.x+sa*q.y,-sa*q.x+ca*q.y);
+  return textureLod(uStarTrails,vec2(.5+.5*q.x,.5-.5*q.y),lod).rgb;
+}
+`;
+const FS_STAR_HISTORY = `#version 300 es
+precision highp float;
+in vec2 vUv;out vec4 o;
+uniform sampler2D uHistory;
+uniform vec2 uRes;uniform float uDt,uStep;
+${STAR_ORBIT}
+void main(){
+  vec2 pd=vec2(vUv.x*uRes.x,(1.-vUv.y)*uRes.y);
+  vec3 light=vec3(0.);
+  for(int i=0;i<4;i++) light+=orbitStars(pd,uStarOrbit.w-uStep*(float(i)+.5)/4.,0.);
+  light*=.25;
+  float away=smoothstep(4.,24.,length(pd-uStarOrbit.xy));
+  // Five-second decay leaves continuous faint arcs while the original star heads stay crisp.
+  vec3 history=texture(uHistory,vUv).rgb*exp(-uDt/5.);
+  history+=light*uDt*.65*away;
+  o=vec4(min(history,vec3(.6)),1.);
+}
+`;
+
+const VS_SWIMMER = `#version 300 es
+precision highp float;
+layout(location=0) in vec3 aPosition;
+layout(location=1) in vec3 aNormal;
+layout(location=2) in float aMaterial;
+layout(location=3) in float aHeight;
+uniform vec4 uBox;
+out vec3 vNormal; out float vMaterial, vHeight;
+void main() {
+  vec2 uv=(aPosition.xy-uBox.xy)/(uBox.zw-uBox.xy);
+  gl_Position=vec4(uv.x*2.-1.,1.-uv.y*2.,aPosition.z,1.);
+  vNormal=aNormal; vMaterial=aMaterial; vHeight=aHeight;
+}`;
+const FS_SWIMMER = `#version 300 es
+precision highp float;
+in vec3 vNormal; in float vMaterial, vHeight;
+uniform float uUnder, uDay;
+out vec4 o;
+void main() {
+  if ((uUnder<.5 && vHeight<0.) || (uUnder>.5 && vHeight>=0.)) discard;
+  vec3 n=normalize(vNormal), l=normalize(vec3(-.45,.3,.85));
+  float skin=1.-step(.5,vMaterial), hair=step(1.5,vMaterial)*(1.-step(2.5,vMaterial));
+  vec3 base=vec3(.86,.70,.60);
+  if(vMaterial>.5) base=vec3(.055,.19,.17);
+  if(vMaterial>1.5) base=mix(vec3(.42,.205,.07),vec3(.67,.405,.16),clamp(fract(vMaterial)*4.,0.,1.));
+  if(vMaterial>2.5) base=vec3(.92,.86,.69);
+  if(vMaterial>3.5) base=vec3(.78,.48,.15);
+  if(vMaterial>4.5) base=vec3(.21,.12,.085);
+  if(vMaterial>5.5) base=vec3(.54,.25,.23);
+  if(vMaterial>6.5) base=vec3(.27,.14,.065);
+  float diffuse=max((dot(n,l)+.30)/1.30,0.);
+  float soft=.34+.66*diffuse;
+  float spec=pow(max(dot(n,normalize(l+vec3(0.,-.65,.76))),0.),mix(24.,65.,hair));
+  float rim=pow(1.-abs(dot(n,normalize(vec3(0.,-.65,.76)))),3.);
+  vec3 daylight=base*soft+vec3(1.,.91,.77)*spec*(.055+hair*.22);
+  daylight+=vec3(.13,.22,.26)*rim*.22;
+  // A small amount of scattered blue light models the wake illuminating wet skin.
+  vec3 night=base*.035+vec3(.018,.042,.057)*(.25+.75*rim)*(1.-hair*.65);
+  o=vec4(mix(night,daylight,uDay),exp(min(0.,vHeight)*.6));
+}`;
+
+const FS_CLOUD = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform float uTime, uAspect;
+${COMMON}
+// Time is a third noise dimension: the cloud volume evolves independently of wind.
+float cloudNoise(vec3 p) {
+  vec3 i=floor(p), f=fract(p);
+  f=f*f*f*(f*(f*6.-15.)+10.);
+  vec2 a=i.xy+i.z*vec2(37.,17.);
+  vec2 b=a+vec2(37.,17.);
+  float lo=mix(mix(hash12(a),hash12(a+vec2(1,0)),f.x),
+               mix(hash12(a+vec2(0,1)),hash12(a+vec2(1)),f.x),f.y);
+  float hi=mix(mix(hash12(b),hash12(b+vec2(1,0)),f.x),
+               mix(hash12(b+vec2(0,1)),hash12(b+vec2(1)),f.x),f.y);
+  return mix(lo,hi,f.z);
+}
+float cloudVolume(vec2 p,float evolution) {
+  float sum=0.,weight=.5;
+  for(int i=0;i<4;i++) {
+    sum+=weight*cloudNoise(vec3(p,evolution));
+    p=p*2.03+17.1; evolution=evolution*1.45+9.7; weight*=.5;
+  }
+  return sum;
+}
+float cloudField(vec2 p) {
+  vec2 wind=vec2(uTime*.022,uTime*.002);
+  vec2 q=p-wind;
+  vec2 curl=vec2(vnoise(q*.53+uTime*.006),vnoise(q*.61+vec2(7.,-uTime*.004)));
+  float evolution=uTime*.028+3.4;
+  float bank=cloudVolume(q+curl*.65,evolution);
+  float detail=cloudNoise(vec3(q*2.1-wind*.22,evolution*1.7+12.));
+  return smoothstep(.46,.75,bank*.86+detail*.14);
+}
+void main() {
+  vec2 uv=vec2(vUv.x,1.-vUv.y);
+  vec2 p=vec2(uv.x*uAspect,uv.y*1.45)*3.8+vec2(9.,1.);
+  float bank=cloudField(p);
+  float sunward=cloudField(p+vec2(.065,-.09));
+  // High, wind-combed ice clouds move independently of the rounded lower bank.
+  float veil=cloudVolume(vec2(p.x*.65-uTime*.010,p.y*2.8)+vec2(23.,0.),uTime*.014+21.);
+  veil=smoothstep(.46,.70,veil)*.28;
+  float horizon=1.-smoothstep(.78,1.02,uv.y);
+  o=vec4(bank*horizon,sunward*horizon,veil*horizon,1.);
+}`;
+
+const FS_COMP = `#version 300 es
+precision highp float;
+out vec4 o;
+uniform sampler2D uSky, uStar, uWave, uGlow, uB1, uB2, uB3, uWord, uStarHistory, uClouds, uWoman, uWomanUnder, uAgitation, uControls, uMoonSurface;
+uniform vec4 uQuestionBox, uToggleBox;
+uniform float uControlMode;
+uniform float uStarBlend;
+${STAR_ORBIT}
+uniform vec2 uRes; uniform float uShore, uDpr, uTime, uScint, uV0, uTilt, uReflK, uAmbK, uFrame, uGlowOn;
+uniform vec4 uWordBox, uMet; uniform vec2 uMetP;
+uniform vec4 uLight; // daylight, twilight, night visibility, warm-horizon tint
+uniform vec2 uSun;
+uniform vec4 uSolar; // atmospheric solar transmission RGB and elevation in radians
+uniform vec3 uCloudSolar;
+uniform float uPaq;
+uniform float uPaqLift;
+uniform vec3 uLogoDot;
+uniform vec3 uMoonAnchor;
+uniform vec3 uMoonLight; // signed light direction x, z, illuminated fraction
+uniform vec4 uCapA[${NCAP}]; uniform vec4 uCapB[${NCAP}]; uniform float uCapMaterial[${NCAP}]; uniform int uNCap; uniform vec4 uSwBox, uRing; uniform float uRingK;
+${COMMON}
+float skyAirmass(float elevation) {
+  float e=max(0.,elevation);
+  return 1./(sin(e)+.50572*pow(degrees(e)+6.07995,-1.6364));
+}
+float scatterPhase(float cosine,float g) {
+  float k=1.+g*g-2.*g*cosine;
+  return (1.-g*g)/(12.566*k*sqrt(k));
+}
+vec3 sunsetAtmosphere(vec2 pd,float t,float occlusion) {
+  const vec3 rayleigh=vec3(.036,.097,.240), hazeDepth=vec3(.080,.095,.110), ozone=vec3(.018,.032,.001);
+  float e=uSolar.w, viewElevation=(1.-t)*.60;
+  vec2 d=(pd-vec2(uSun.x*uRes.x,uSun.y*uShore))/uShore;
+  float cosine=cos(length(d*vec2(.6,1.))*.60);
+  float aloft=e+.035+.045*(1.-t);
+  vec3 sunlight=exp(-(rayleigh+hazeDepth+ozone)*skyAirmass(aloft)*mix(1.,.45,1.-t))*smoothstep(-.11,0.,aloft);
+  float path=skyAirmass(viewElevation);
+  vec3 ray=(1.-exp(-rayleigh*path))*.75*(1.+cosine*cosine);
+  vec3 haze=(1.-exp(-hazeDepth*path))*scatterPhase(cosine,.76)*exp(-occlusion*1.5);
+  vec3 light=sunlight*(ray*2.4+haze*1.1);
+  // Broad warm aerosol light, graded into cool upper air rather than a white horizon.
+  float horizon=pow(t,2.2), azimuth=exp(-d.x*d.x/.95);
+  float warmAir=smoothstep(-.15,-.015,e)*(.38+.62*azimuth)*horizon;
+  light=mix(light,light*vec3(1.12,.70,.48),warmAir*.85);
+  light+=vec3(.76,.19,.065)*warmAir*.30;
+  float purple=(1.-smoothstep(-.04,.02,e))*smoothstep(-.16,-.06,e);
+  vec2 q=(d-vec2(0.,-.32))*vec2(.5,1.);
+  light+=vec3(.70,.18,.32)*purple*exp(-dot(q,q)/.13);
+  light+=vec3(.018,.034,.085)*(1.-.4*t)*smoothstep(-.24,-.02,e);
+  return light;
+}
+vec4 wordAt(vec2 pd, float lod){
+  vec2 q = (pd - uWordBox.xy)/uWordBox.zw;
+  if (q.x < 0. || q.y < 0. || q.x > 1. || q.y > 1.) return vec4(0.);
+  vec4 ink=textureLod(uWord,q,lod);
+  float dotRegion=1.-step(uLogoDot.z*1.185,length(pd-uLogoDot.xy));
+  return ink*(1.-dotRegion*(1.-smoothstep(.08,.72,uLight.x)))*(1.-smoothstep(0.,.5,uPaq));
+}
+vec4 controlAt(vec2 pd,vec4 box,float slot){
+  vec2 q=(pd-box.xy)/box.zw;
+  if(q.x<0.||q.y<0.||q.x>1.||q.y>1.) return vec4(0.);
+  return texture(uControls,vec2((q.x+slot)/3.,q.y));
+}
+vec4 controlsAt(vec2 pd){
+  return controlAt(pd,uQuestionBox,0.)*.76*(1.-smoothstep(0.,.4,uPaq));
+}
+// Analytic slopes: long wind waves crossed by softer capillary ripples.
+// Fade unresolved wavelengths near the horizon instead of letting them shimmer.
+vec2 waveSlope(vec2 w, vec2 direction, float frequency, float amplitude, float speed, float phase){
+  float angle = dot(w,direction)*frequency-uTime*speed+phase;
+  float footprint=fwidth(angle);
+  return direction*(frequency*amplitude*cos(angle)/(1.+footprint*footprint));
+}
+vec2 ambientSlope(vec2 w){
+  vec2 swell=waveSlope(w,vec2(.18,.984),.72,.55,.72,0.);
+  swell+=waveSlope(w,vec2(-.36,.933),1.23,.26,.95,2.3);
+  vec2 fine=waveSlope(w,vec2(.46,.888),2.17,.12,1.26,4.1);
+  fine+=waveSlope(w,vec2(-.62,.785),3.83,.043,1.67,1.7);
+  fine+=waveSlope(w,vec2(.30,.954),6.71,.016,2.22,5.4);
+  fine+=waveSlope(w,vec2(-.21,.978),10.3,.005,3.06,.9);
+  // Slowly travelling wind patches make glassy pools between detailed ripple trains.
+  float breeze=vnoise(w*.065+vec2(uTime*.014,-uTime*.008));
+  float detail=vnoise(w*.23+vec2(7.,uTime*.02));
+  return swell*(.8+.22*breeze)+fine*(.38+.9*smoothstep(.25,.75,breeze)*(.7+.3*detail));
+}
+vec3 meteor(vec2 p){
+  if (uMetP.y <= 0.) return vec3(0.);
+  vec2 A = uMet.xy, B = uMet.zw; vec2 H = mix(A, B, uMetP.x); vec2 dir = normalize(B - A);
+  vec2 T = H - dir*min(length(B - A)*.35, length(H - A));
+  vec2 pa = p - T, ba = H - T; float h = clamp(dot(pa, ba)/max(dot(ba, ba), 1e-3), 0., 1.);
+  vec2 d = pa - ba*h; float w = uDpr*.8;
+  return vec3(.82, .9, 1.)*uMetP.y*exp(-dot(d, d)/(w*w))*h*h;
+}
+// The same environment lights the sky and its rippled water reflection.
+vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
+  vec2 uv = vec2(pd.x/uRes.x, 1. - pd.y/uRes.y);
+  vec4 sk = textureLod(uSky, uv, lod);
+  float starLod = reflected ? lod*.2 : lod*.75;
+  vec4 stars = textureLod(uStar, uv, starLod);
+  float t = clamp(pd.y/uShore, 0., 1.);
+  float openSky = 1. - sk.a;
+  vec3 warm = mix(vec3(.72,.40,.24),vec3(.84,.27,.12),uLight.w);
+  float dusk=uLight.y;
+  vec3 daySky = mix(vec3(.10, .31, .57), vec3(.62, .77, .79), pow(t, 1.4));
+  vec3 atmosphere=daySky;
+  if(dusk>.001) {
+    vec2 skyUV=vec2(pd.x/uRes.x,1.-pd.y/uShore);
+    float occlusion=textureLod(uClouds,mix(skyUV,vec2(uSun.x,1.-uSun.y),.35),0.).r;
+    atmosphere=mix(daySky,sunsetAtmosphere(pd,t,occlusion),dusk);
+  }
+  // Separate distant, air-softened woodland from nearer olive-green crowns.
+  float nearForest=smoothstep(.19,.54,stars.a);
+  float leafShade=clamp((stars.a-.55)/.45,0.,1.);
+  vec3 woodland=mix(vec3(.19,.265,.27),vec3(.085,.165,.105)*(.70+.65*leafShade),nearForest);
+  float sunHeight=smoothstep(-.04,.40,uSolar.w);
+  woodland*=.70+.30*sunHeight;
+  vec3 warmRim=vec3(.20,.10,.035)*dusk*smoothstep(-.12,.04,uSolar.w);
+  woodland+=warmRim*(.3+.7*leafShade);
+  vec3 col=sk.rgb*(1.-uLight.x)+atmosphere*max(uLight.x,dusk)*openSky+woodland*sk.a*max(uLight.x,.09*dusk);
+  float scint = 1. + uScint*(.025 + .07*t*t)*(vnoise(pd/uDpr/5. + vec2(uTime*.2, uTime*.13))*2. - 1.);
+  float moving = uStarBlend;
+  vec3 starHeads = mix(stars.rgb, orbitStars(pd,uStarOrbit.w,starLod)*openSky,moving);
+  if (reflected) {
+    // Integrate each reflected point over a short vertical footprint: broken light,
+    // not a second pristine sky or a layer of decorative sparkles.
+    float spread=(.65+lod*1.5)*uDpr;
+    vec2 dy=vec2(0.,spread/uRes.y);
+    vec3 sideA=mix(textureLod(uStar,uv+dy,starLod).rgb,orbitStars(pd-vec2(0.,spread),uStarOrbit.w,starLod)*openSky,moving);
+    vec3 sideB=mix(textureLod(uStar,uv-dy,starLod).rgb,orbitStars(pd+vec2(0.,spread),uStarOrbit.w,starLod)*openSky,moving);
+    starHeads=(starHeads*.5+(sideA+sideB)*.25)*smoothstep(0.,6.*uDpr,pd.y);
+  }
+  vec3 trails = textureLod(uStarHistory,vec2(pd.x/uRes.x,1.-pd.y/uShore),lod*.75).rgb;
+  col += (starHeads + trails*openSky*moving)*scint*uLight.z*starGain;
+  vec2 sunD = vec2(pd.x - uSun.x*uRes.x, pd.y - uSun.y*uShore)/uShore;
+  float sunR = length(sunD);
+  float sunFlatten=mix(1.,.80,dusk*smoothstep(.75,1.,uSun.y));
+  float horizonAir=dusk*smoothstep(.55,1.,uSun.y);
+  // Tiny refraction in low, warm air; the limb never becomes a hard vector edge.
+  vec2 refractedSun=sunD;
+  refractedSun.y+=horizonAir*.00065*(vnoise(vec2(sunD.x*380.,uTime*.38))-.5);
+  float sunDiscR=length(refractedSun/vec2(1.,sunFlatten));
+  float sunSize=mix(.032,.040,dusk);
+  float discMu=sqrt(max(0.,1.-pow(sunDiscR/sunSize,2.)));
+  float limbSoft=max(fwidth(sunDiscR)*.75,.0007)+horizonAir*.0008;
+  float disk = (1. - smoothstep(sunSize-limbSoft,sunSize+limbSoft,sunDiscR))*(.4+.6*discMu);
+  float rimDistance=max(0.,sunDiscR-sunSize);
+  float solarVeil=dusk*(.20*exp(-pow(rimDistance/.0045,2.))+.065*exp(-pow(rimDistance/.018,2.)));
+  solarVeil*=smoothstep(sunSize*.80,sunSize,sunDiscR);
+  float aboveHorizon=1.-smoothstep(1.04,1.075,uSun.y);
+  vec3 sunColour = mix(vec3(1.,.94,.76),pow(uSolar.rgb/max(uSolar.r,.0001),vec3(.35))*vec3(1.,.92,.80),dusk);
+
+  // Share the stellar orbit, but render the moon only in this instantaneous pass.
+  // It is never written into the star-history texture, so it cannot leave a trail.
+  // The lunar disc is the dot of the i: anchored to the responsive artwork.
+  vec2 moonCenter=uMoonAnchor.xy;
+  float moonSize=uMoonAnchor.z/uShore;
+  vec2 moonD=(pd-moonCenter)/uShore;
+  float moonR=length(moonD);
+  vec2 mq=moonD/moonSize;
+  float mz=sqrt(max(0.,1.-dot(mq,mq)));
+  float incidence=mq.x*uMoonLight.x+mz*uMoonLight.y;
+  float terminator=smoothstep(-.016,.016,incidence);
+  float moonDisk=1.-smoothstep(moonSize-.0006,moonSize+.0006,moonR);
+  vec2 moonUV=vec2(.5+atan(mq.x,max(mz,.0001))/6.2831853,.5+asin(clamp(mq.y,-1.,1.))/3.14159265);
+  vec3 albedo=textureLod(uMoonSurface,moonUV,reflected?1.5:0.).rgb;
+  // Lunar regolith is backscattering: retain terrain detail across the lit face,
+  // with a gently rounded terminator and barely perceptible earthshine.
+  float lunarLight=terminator*(.30+.70*sqrt(max(0.,incidence)));
+  float earthshine=.025*(1.-uMoonLight.z)*(1.-terminator);
+  vec3 lunarTone=clamp((albedo-vec3(.42))*1.12+vec3(.46),vec3(.04),vec3(.92));
+  float lunarShimmer=1.+uScint*.025*sin(uTime*.53);
+  vec3 moonSurface=lunarTone*vec3(1.02,1.025,1.04)*(lunarLight*1.3+earthshine)*lunarShimmer;
+  float moonVisibility=1.-smoothstep(.08,.72,uLight.x);
+  // Dawn air is in front of the moon: the unlit side must not punch a black hole
+  // in a bright sky. Earthshine yields to sky radiance while the lit face remains.
+  float lunarDayHaze=smoothstep(.015,.28,uLight.x);
+  float lunarCoverage=mix(1.,terminator,lunarDayHaze);
+  moonSurface=mix(moonSurface,moonSurface*.55+col*.82,lunarDayHaze);
+  col=mix(col,moonSurface,moonDisk*openSky*moonVisibility*lunarCoverage);
+  float moonHalo=exp(-moonR*moonR/.0035)*.014*uMoonLight.z;
+  col+=vec3(.76,.83,.94)*moonHalo*uLight.z*openSky*moonVisibility;
+  // Advected cloud volumes: shaded interiors, translucent edges and wind-combed cirrus.
+  vec3 clouds=textureLod(uClouds,vec2(pd.x/uRes.x,1.-pd.y/uShore),0.).rgb;
+  float cloud=clouds.r, sunward=clouds.g;
+  float silver=clamp((cloud-sunward)*3.,0.,1.);
+  float opticalDepth=cloud*3.3+clouds.b*1.3;
+  float transmission=exp(-opticalDepth);
+  vec3 cloudLight=mix(vec3(.36,.48,.62),vec3(.94,.94,.88),clamp(.44+sunward*.34+silver*.48,0.,1.));
+  float forwardScatter=exp(-sunR*sunR/.065);
+  cloudLight+=vec3(1.,.91,.74)*silver*forwardScatter*.36;
+  float under=1.-smoothstep(-.02,.10,uSolar.w);
+  float litFace=mix(sunward,(1.-cloud)*.7+silver*.3,under);
+  vec3 coolShade=vec3(.16,.22,.34)*(.12+.88*uLight.x)*smoothstep(-.26,0.,uSolar.w);
+  if(dusk>.001) {
+    // Direct light retreats across the cloud deck as Earth shadows the lower clouds.
+    float sunAz=exp(-sunD.x*sunD.x/.6);
+    float cloudSun=uSolar.w+.02+.075*t*sunAz;
+    float cloudPath=skyAirmass(cloudSun);
+    vec3 cloudBeam=exp(-(vec3(.036,.097,.240)*1.3+vec3(.018,.032,.001))*cloudPath);
+    cloudBeam*=pow(max(cloudBeam.r,.001),-.75)*smoothstep(-.014,.014,cloudSun);
+    vec3 skyFill=mix(coolShade,atmosphere*.6,.55)*(.45+.55*(1.-cloud));
+    float highLight=smoothstep(-.19,-.025,uSolar.w);
+    vec3 eveningCloud=max(skyFill,vec3(.019,.027,.043))
+      +uCloudSolar*cloudBeam*(litFace*2.8+silver*.7)
+      +cloudBeam*silver*scatterPhase(cos(sunR*.60),.8)*.6
+      +cloudBeam*highLight*clouds.b*.35;
+    cloudLight=mix(cloudLight,eveningCloud,dusk);
+  }
+  float cloudDay=max(uLight.x,dusk*.62);
+  col=mix(col,mix(vec3(.019,.027,.043),cloudLight,cloudDay),(1.-transmission)*openSky*mix(.48,.92,cloudDay));
+  // Atmospheric aureole has a broad falloff; the disc softens behind passing cloud.
+  float aureole=.16*exp(-sunR*sunR/.035)+.085*exp(-sunR*sunR/.18);
+  float innerGlow=.34*exp(-sunR*sunR/.0035);
+  col+=sunColour*(disk*mix(1.15,4.2,dusk)*transmission+solarVeil*sqrt(transmission)+innerGlow*sqrt(transmission)*mix(1.,.18,dusk)+aureole*(.45+.55*transmission)*(1.-dusk))*uLight.x*openSky*aboveHorizon;
+  float haze = exp(-pow((t-.89)/.14,2.));
+  col = mix(col,mix(vec3(.66,.76,.75),warm,dusk),haze*.09*uLight.x*openSky);
+  float peak=max(col.r,max(col.g,col.b));
+  float shoulder=peak>.8?(.8+.2*(1.-exp(-(peak-.8)/.2)))/peak:1.;
+  col*=mix(1.,shoulder,dusk);
+  // Resolve the luminous solar face after exposure compression so the bright
+  // atmosphere cannot wash it into an indistinct orange smudge.
+  vec3 solarFace=mix(vec3(1.,.69,.34),vec3(1.,.96,.82),smoothstep(0.,.17,uSolar.w));
+  float solarPresence=smoothstep(.02,.35,uLight.x)*openSky*aboveHorizon;
+  col=mix(col,solarFace,disk*pow(transmission,.45)*solarPresence*.96);
+  col+=sunColour*solarVeil*.22*sqrt(transmission)*solarPresence;
+  return col;
+}
+/* cubic B-spline upsample from 4 bilinear taps (Sigg & Hadwiger 2005), hides the texel grid of coarse glow */
+vec3 bspline(sampler2D t, vec2 uv){
+  vec2 sz = vec2(textureSize(t, 0));
+  vec2 p = uv*sz - .5; vec2 i = floor(p), f = p - i, f2 = f*f, f3 = f2*f;
+  vec2 w0 = (1. - 3.*f + 3.*f2 - f3)/6., w1 = (4. - 6.*f2 + 3.*f3)/6., w2 = (1. + 3.*f + 3.*f2 - 3.*f3)/6., w3 = f3/6.;
+  vec2 g0 = w0 + w1, g1 = w2 + w3;
+  vec2 h0 = (i - .5 + w1/g0)/sz, h1 = (i + 1.5 + w3/g1)/sz;
+  return g0.y*(g0.x*texture(t, h0).rgb + g1.x*texture(t, vec2(h1.x, h0.y)).rgb)
+       + g1.y*(g0.x*texture(t, vec2(h0.x, h1.y)).rgb + g1.x*texture(t, h1).rgb);
+}
+vec4 womanAt(sampler2D tex,vec2 p) {
+  vec2 uv=(p-uSwBox.xy)/(uSwBox.zw-uSwBox.xy);
+  if(any(lessThan(uv,vec2(0.))) || any(greaterThan(uv,vec2(1.)))) return vec4(0.);
+  return texture(tex,vec2(uv.x,1.-uv.y));
+}
+vec3 swimmerColour(float material){
+  vec3 skin=vec3(.43,.28,.20), suit=vec3(.055,.13,.17), hair=vec3(.045,.028,.022);
+  vec3 daylight = material>1.5 ? hair : (material>.5 ? suit : skin);
+  return mix(vec3(.010,.012,.018),daylight,uLight.x);
+}
+/* hue-preserving tone map with a little white in the hottest cores */
+vec3 tone(vec3 g){ float m = max(g.r, max(g.g, g.b)); vec3 c = g*(1. - exp(-1.3*m))/max(m, 1e-4); return c + vec3(.85, .95, 1.)*smoothstep(1., 3.5, m)*.22; }
+void main(){
+  vec2 fc = gl_FragCoord.xy-vec2(0.,uPaqLift*uRes.y*.12);
+  vec2 pd = vec2(fc.x, uRes.y - fc.y);
+  vec3 col;
+  if (pd.y < uShore){
+    vec4 sk = texture(uSky, fc/uRes);
+    col = environmentAt(pd, 0., 1., false) + meteor(pd)*(1. - sk.a)*uLight.z;
+  } else {
+    float Hw = uRes.y - uShore;
+    float v = (pd.y - uShore)/Hw;
+    float s = (v + uV0)/(1. + uV0);
+    vec2 suv = vec2(pd.x/uRes.x, v);
+    vec2 tx = 1.5/vec2(textureSize(uWave, 0));
+    float hl = texture(uWave, suv - vec2(tx.x, 0.)).r, hr = texture(uWave, suv + vec2(tx.x, 0.)).r;
+    float hd = texture(uWave, suv - vec2(0., tx.y)).r, hu = texture(uWave, suv + vec2(0., tx.y)).r;
+    vec2 sl = vec2(s*(hr - hl), s*s*uTilt*(hu - hd))/1.5;
+    vec2 w = vec2((pd.x - .5*uRes.x)/(s*uDpr), Hw*(1. + uV0)/(uTilt*s*uDpr))/13.;
+    vec2 as = ambientSlope(w);
+    float fade = smoothstep(0., .3, v);
+    float surfaceFade = mix(.12,1.,fade);
+    vec2 off = sl*uReflK*uDpr + as*uAmbK*uDpr*surfaceFade*(.35 + .65*s);
+    off.y *= 1.6;
+    vec2 rp = vec2(pd.x, 2.*uShore - pd.y) + off;
+    rp.y = min(rp.y, uShore - 1.);
+    float rough = clamp(length(off)/(14.*uDpr), 0., 1.);
+    vec2 surfaceSlope=as*.065+sl*.32;
+    vec3 normal=normalize(vec3(-surfaceSlope.x,1.,-surfaceSlope.y));
+    vec3 viewDirection=normalize(vec3((.5-pd.x/uRes.x)*.5,.035+.74*v,1.));
+    float lod = .35 + 1.45*rough + (1. - fade)*.65;
+    vec3 refl = environmentAt(rp, lod, 1.485, true);
+    // A small anisotropic footprint keeps lettering in the same optical surface.
+    vec2 blurStep=vec2(0.,(.35+rough*1.6)*uDpr);
+    vec4 wd=wordAt(rp,lod+.4)*.6;
+    wd+=(wordAt(rp-blurStep,lod+.4)+wordAt(rp+blurStep,lod+.4))*.2;
+    float wordLight = 1. + .025*sin(uTime*.349 + rp.x/uRes.x*2.);
+    refl = refl*(1. - wd.a*.85) + wd.rgb*.72*wordLight;
+    vec2 controlBlur=blurStep*.3;
+    vec4 controls=controlsAt(rp)*.8;
+    controls+=(controlsAt(rp-controlBlur)+controlsAt(rp+controlBlur))*.1;
+    refl*=1.-controls.a*.7;
+    // A small slope-dependent Fresnel variation ties brightness to the actual surface.
+    float grazing = clamp(1.-v+as.y*.025*fade,0.,1.);
+    float incidence=clamp(dot(normal,viewDirection),0.,1.);
+    float fresnel=.0204+.9796*pow(1.-incidence,5.);
+    float R=mix(.13+.7*pow(grazing,3.2),fresnel,.35);
+    /* swimmer: underwater limbs (refracted by the ripples), parts above the surface, and their broken reflection */
+    float matA = 0., matR = 0., matU = 0.;
+    float mU = 0., mA = 0., mR = 0., dAbove = 1e5, dRef = 1e5, outline = 0., ring = 0.;
+    bool inBox = pd.x > uSwBox.x && pd.x < uSwBox.z && pd.y > uSwBox.y && pd.y < uSwBox.w;
+    if (inBox){
+      vec2 pu = pd + off*.3;
+      vec2 pr = vec2(pd.x, 2.*uRing.y - pd.y) + off*1.3;
+      float dU = 1e5, depU = 0.;
+      for (int i = 0; i < ${NCAP}; i++){
+        if (i >= uNCap) break;
+        vec4 A = uCapA[i], B = uCapB[i];
+        vec2 ba = A.zw - A.xy; float bb = max(dot(ba, ba), 1e-3);
+        vec2 pa = pd - A.xy; float h = clamp(dot(pa, ba)/bb, 0., 1.);
+        float da = length(pa-ba*h)-mix(B.x,B.y,h);
+        if (mix(B.z,B.w,h)>0. && da<dAbove) { dAbove=da; matA=uCapMaterial[i]; }
+        vec2 ra = pr - A.xy; float h3 = clamp(dot(ra, ba)/bb, 0., 1.);
+        float dr = length(ra-ba*h3)-mix(B.x,B.y,h3);
+        if (mix(B.z,B.w,h3)>0. && dr<dRef) { dRef=dr; matR=uCapMaterial[i]; }
+        vec2 qa = pu - A.xy; float h2 = clamp(dot(qa, ba)/bb, 0., 1.);
+        float y2 = mix(B.z, B.w, h2);
+        float d2 = length(qa - ba*h2) - mix(B.x, B.y, h2);
+        if (y2 <= 0. && d2 < dU){ dU = d2; depU = -y2; matU=uCapMaterial[i]; }
+      }
+      mA = clamp(.5 - dAbove, 0., 1.);
+      mR = (1. - smoothstep(-1.5*uDpr, 1.5*uDpr, dRef)) * step(uRing.y, pd.y);
+      mU = (1. - smoothstep(-1.5*uDpr, 1.5*uDpr, dU)) * exp(-depU*1.6);
+      outline = exp(-pow(dU/(1.3*uDpr), 2.)) * exp(-depU*1.1);        // plankton flashing against the skin
+      vec2 rq = (pd - uRing.xy)/uRing.zw;
+      ring = exp(-pow((length(rq) - 1.)/.25, 2.)) * uRingK;
+      ring *= .35+.65*smoothstep(.25,.72,vnoise(pd/(uDpr*3.)+vec2(uTime*.2,0.)));             // disturbed water at the neck
+    }
+    vec4 woman=womanAt(uWoman,pd);
+    vec4 submerged=womanAt(uWomanUnder,pd+off*.3);
+    vec4 reflected=womanAt(uWoman,vec2(pd.x,2.*uRing.y-pd.y)+off*1.3);
+    float humanVisibility=1.-smoothstep(0.,.5,uPaq);
+    mA=woman.a*humanVisibility; mU=submerged.a*humanVisibility;
+    mR=reflected.a*step(uRing.y,pd.y)*humanVisibility;
+    vec3 lit = vec3(0.), diff = vec3(0.), gS = vec3(0.);
+    if (uGlowOn > .5){
+      vec2 guv = (fc + clamp(vec2(off.x, -off.y)*.08, -3.*uDpr, 3.*uDpr))/uRes;
+      gS = bspline(uGlow, guv);
+      vec3 gM = bspline(uB1, guv), gW = bspline(uB2, guv), gX = bspline(uB3, guv);
+      diff = gM*.95 + gW*1.25 + gX*vec3(.25, .8, 1.3)*2.0;             // light scattered up through the water
+      lit = (gM*.9 + gW*1.8 + gX*2.6)*vec3(.55, .9, 1.);               // limbs lit from below
+      vec3 wakeLight=vec3(.015,.28,.46)*texture(uAgitation,suv).a;
+      diff+=wakeLight;
+      lit+=wakeLight*.6;
+    }
+    float glowVisibility = mix(1., .045, uLight.x)*humanVisibility;
+    lit *= glowVisibility;
+    vec3 headCol = woman.rgb + tone(lit*1.2)*.14;
+    if (mR > 0.) refl = mix(refl, reflected.rgb*.8 + tone(lit)*.22, mR*.85);
+    col = mix(vec3(.003, .008, .014), vec3(.025, .095, .115), uLight.x)*(1. - .35*v) + refl*R;
+    // Small luminous glyphs need a visibility floor in the dark foreground water.
+    // Their position, blur and distortion still come from the same reflected surface.
+    col+=controls.rgb*max(.48,R*.72);
+    // Directional sun glints follow the same normals as the reflections.
+    vec3 sunDirection=normalize(vec3((uSun.x-.5)*1.4,max(.08,1.-uSun.y),-1.));
+    vec3 halfDirection=normalize(viewDirection+sunDirection);
+    vec3 microfacet=normal-halfDirection;
+    float sunGlint=mix(pow(max(dot(normal,halfDirection),0.),220.),exp(-microfacet.x*microfacet.x/.0012-dot(microfacet.yz,microfacet.yz)/.012),uLight.y);
+    vec3 reflectedSun=mix(vec3(1.,.94,.78),uSolar.rgb/max(uSolar.r,.0001),uLight.y);
+    col+=reflectedSun*sunGlint*mix(.055,.28,uLight.y)*uLight.x*fade*(1.-mA)*(1.-smoothstep(.98,1.035,uSun.y));
+    // A rough water surface stretches the sun into a broken path toward the viewer.
+    float belowSun=(pd.y-(2.-uSun.y)*uShore)/Hw;
+    float nearSun=clamp(belowSun,0.,1.);
+    float solarWidth=(.007+.032*nearSun)*(1.+.8*v);
+    float solarCross=(pd.x/uRes.x-uSun.x+off.x/uRes.x*1.6)/solarWidth;
+    float solarPath=exp(-solarCross*solarCross)*exp(-nearSun*2.4)*smoothstep(-.018,.02,belowSun);
+    vec2 glintSpace=pd/uDpr*vec2(.09,.55)+vec2(off.x/uDpr*.02,uTime*.35);
+    float clusters=smoothstep(.45,.85,vnoise(glintSpace))*smoothstep(.3,.7,vnoise(glintSpace*.37+vec2(7.1,uTime*.1)));
+    float broken=max(clusters*.8,clamp(sunGlint*40.,0.,1.))*(.25+.75*smoothstep(.2,.6,vnoise(glintSpace*.21)));
+    col+=reflectedSun*solarPath*broken*.34*uLight.y*uLight.x*fade*(1.-mA)*(1.-smoothstep(.98,1.035,uSun.y));
+    col = mix(col,submerged.rgb*vec3(.55,.78,.80),mU*mix(.4,.52,uLight.x));
+    if (uGlowOn > .5){
+      vec3 trans = gS*(1. - .8*mU) + diff*(1. - .5*mU) + lit*mU;
+      trans += (vec3(.10, .70, 1.)*.12 + diff*1.0 + gS*.5)*outline;
+      trans += (vec3(.12, .75, 1.)*.45 + diff*.9)*ring;
+      col += tone(trans*1.3)*glowVisibility;
+    }
+    if (mA > 0.){
+      float rim = 1. - smoothstep(0., 3.*uDpr, -dAbove);
+      col = mix(col, headCol + tone(lit*1.2)*.6*rim, mA);
+    }
+  }
+  vec2 q = fc/uRes - .5;
+  col *= mix(1., .72, smoothstep(.35, 1.05, length(q*vec2(1.15, 1.))));
+  col += (hashI(fc + vec2(mod(uFrame*53., 997.), 0.)) - .5)/255.;
+  o = vec4(col, 1.);
+}`;
+
+/* ---------- GL helpers ---------- */
+let starHistoryOK = false;
+let P = {}, vao, dropVao, dropBuf, wordTex, controlTex, moonTex, blackTex, T = {}, SIM = false, hasCBF = false;
+let questionBox=[0,0,1,1], toggleBox=[0,0,1,1];
+function compile(type, src){
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+function program(vs, fs){
+  const p = gl.createProgram();
+  gl.attachShader(p, compile(gl.VERTEX_SHADER, vs)); gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  const u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++){ const info = gl.getActiveUniform(p, i); u[info.name.replace(/\[0\]$/, '')] = gl.getUniformLocation(p, info.name); }
+  return { p, u };
+}
+function tex(w, h, ifmt, fmt, type, filter, data){
+  const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter === gl.NEAREST ? gl.NEAREST : gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, ifmt, w, h, 0, fmt, type, data || null);
+  return t;
+}
+function target(w, h, ifmt, fmt, type, filter, data, data2, two){
+  const t = tex(w, h, ifmt, fmt, type, filter, data);
+  const t1 = two ? tex(w, h, ifmt, fmt, type, filter, data2) : null;
+  const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+  if (two){ gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, t1, 0); gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]); }
+  const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  return { t, t1, f, w, h, ok };
+}
+function freeAll(){ for (const k in T){ if(T[k].depth) gl.deleteRenderbuffer(T[k].depth); gl.deleteTexture(T[k].t); if (T[k].t1) gl.deleteTexture(T[k].t1); gl.deleteFramebuffer(T[k].f); } T = {}; }
+function bindTex(unit, t, loc){ gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t); gl.uniform1i(loc, unit); }
+function drawTo(tg){ gl.bindFramebuffer(gl.FRAMEBUFFER, tg ? tg.f : null); gl.viewport(0, 0, tg ? tg.w : cw, tg ? tg.h : ch); }
+function full(){ gl.drawArrays(gl.TRIANGLES, 0, 3); }
+
+const DROP_MAX = 256;
+const dropData = new Float32Array(DROP_MAX*4);
+function initGL(){
+  hasCBF = !!gl.getExtension('EXT_color_buffer_float');
+  const hasHalf = hasCBF || !!gl.getExtension('EXT_color_buffer_half_float');
+  P.sky = program(VS_FULL, FS_SKY);
+  P.comp = program(VS_FULL, FS_COMP);
+  P.cloud = program(VS_FULL, FS_CLOUD);
+  P.woman = program(VS_SWIMMER, FS_SWIMMER);
+  initWomanMesh();
+  P.starHistory = program(VS_FULL, FS_STAR_HISTORY);
+  SIM = hasHalf;
+  if (SIM){
+    try {
+      P.vel = program(VS_FULL, FS_VEL); P.wave = program(VS_FULL, FS_WAVE);
+      P.part = program(VS_FULL, FS_PART); P.pts = program(VS_PTS, FS_PTS); P.drop = program(VS_DROP, FS_PTS);
+      P.blur = program(VS_FULL, FS_BLUR); P.down = program(VS_FULL, FS_DOWN);
+    } catch (err) { console.warn(err); SIM = false; }
+  }
+  dropVao = gl.createVertexArray(); gl.bindVertexArray(dropVao);
+  dropBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, dropBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, dropData.byteLength, gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 0, 0);
+  vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+  blackTex = tex(1, 1, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, gl.LINEAR, new Uint8Array(4));
+  wordTex = tex(1, 1, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, gl.LINEAR, new Uint8Array(4));
+  controlTex = tex(1, 1, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, gl.LINEAR, new Uint8Array(4));
+  drawControls();
+  moonTex=tex(1,1,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,gl.LINEAR,new Uint8Array([150,148,144,255]));
+  const moonTarget=moonTex, moonImage=new Image();
+  moonImage.onload=()=>{
+    if(gl.isContextLost() || moonTarget!==moonTex) return;
+    gl.bindTexture(gl.TEXTURE_2D,moonTarget);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,moonImage);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+  };
+  moonImage.src='assets/lroc-color-2k.jpg';
+}
+
+/* ---------- original star field, slowly rotated with a fading exposure ---------- */
+let starRadius = 1, starLastTime = 0, starLastAngle = 0;
+let moonMinute=-1;
+let moonAnchor=[0,0,1];
+const moonLight=new Float32Array(3);
+function updateMoonPhase(now=Date.now()) {
+  const minute=Math.floor(now/60000);
+  if(minute===moonMinute) return;
+  moonMinute=minute;
+  const date=new Date(now), illumination=Astronomy.Illumination('Moon',date);
+  const phase=Astronomy.MoonPhase(date), z=2*illumination.phase_fraction-1;
+  moonLight.set([(phase<180?1:-1)*Math.sqrt(Math.max(0,1-z*z)),z,illumination.phase_fraction]);
+}
+function starMotion(time, still = false) {
+  if (still) return { angle: 0, span: 0 };
+  const t = Math.max(0, time - 3.15);
+  const angle = (.00585 * 1.3 * 1.10 * 1.05)*(t - 5*(1 - Math.exp(-t/5)));
+  return { angle, span: Math.min(.11, angle) };
+}
+function setupStarTrails() {
+  starRadius = Math.hypot(.72*W, .76*shoreCss)*1.04;
+  const size = Math.min(3072, gl.getParameter(gl.MAX_TEXTURE_SIZE), Math.ceil(starRadius*dpr*2));
+  T.starAtlas = target(size,size,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,gl.LINEAR);
+  const histW=Math.min(cw,1600), histH=Math.max(1,Math.round(histW*shoreCss/W));
+  T.starA = target(histW,histH,gl.RGBA16F,gl.RGBA,gl.HALF_FLOAT,gl.LINEAR);
+  T.starB = target(histW,histH,gl.RGBA16F,gl.RGBA,gl.HALF_FLOAT,gl.LINEAR);
+  starHistoryOK = T.starA.ok && T.starB.ok && T.starAtlas.ok;
+  if (!starHistoryOK) {
+    // Static original stars remain available on devices without renderable half floats.
+    starLastTime=ambT; starLastAngle=0; return;
+  }
+  const p=P.sky; gl.useProgram(p.p); drawTo(T.starAtlas);
+  gl.uniform1f(p.u.uAtlasRadius,starRadius*dpr);
+  full(); gl.uniform1f(p.u.uAtlasRadius,0);
+  gl.bindTexture(gl.TEXTURE_2D,T.starAtlas.t);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  for (const target of [T.starA,T.starB]) {
+    drawTo(target);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+  starLastTime=ambT;starLastAngle=starMotion(starClock,reduced).angle;
+}
+function updateStarTrails(state) {
+  if (!starHistoryOK) return;
+  const dt=Math.max(0,Math.min(.1,ambT-starLastTime));
+  if (reduced || state.angle===0) {
+    for (const target of [T.starA,T.starB]) {drawTo(target);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);}
+  } else if (dt>0) {
+    const p=P.starHistory;gl.useProgram(p.p);drawTo(T.starB);
+    bindTex(0,T.starAtlas.t,p.u.uStarTrails);bindTex(1,T.starA.t,p.u.uHistory);
+    gl.uniform2f(p.u.uRes,cw,shoreCss*dpr);
+    bindTex(10,T.cloud.t,p.u.uClouds);
+  bindTex(11,T.woman.t,p.u.uWoman); bindTex(12,T.womanUnder.t,p.u.uWomanUnder);
+  gl.uniform4f(p.u.uStarOrbit,cw*.72,shoreCss*dpr*.24,starRadius*dpr,state.angle%(Math.PI*2));
+    gl.uniform1f(p.u.uStep,state.angle-starLastAngle);
+    gl.uniform1f(p.u.uDt,dt);full();[T.starA,T.starB]=[T.starB,T.starA];
+  }
+  starLastTime=ambT;starLastAngle=state.angle;
+}
+
+/* ---------- sizing ---------- */
+let W = 1, H = 1, dpr = 1, cw = 1, ch = 1, shoreCss = 1, Hw = 1, pW = 256, pH = 64, M = 50, unit = 1;
+let wordBox = [0, 0, 1, 1], wordReady = false, sized = false;
+function resize(){
+  // keep the swimmer and its target where they are on screen
+  let keep = null;
+  if (sized){ const a = project(SW.X, SW.Z, 0), b = project(SW.tx, SW.tz, 0);
+    keep = [a[0]/W, (a[1] - shoreCss)/Hw, b[0]/W, (b[1] - shoreCss)/Hw]; }
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = Math.max(1, window.innerWidth); H = Math.max(1, window.innerHeight);
+  cw = Math.max(1, Math.round(W*dpr)); ch = Math.max(1, Math.round(H*dpr));
+  cvs.width = cw; cvs.height = ch;
+  shoreCss = Math.round(H*SHORE); Hw = H - shoreCss;
+  unit = Math.min(1.3, Math.max(.7, Math.min(W, H)/800));
+  M = 98*Math.max(unit, .8);
+  freeAll();
+  const SF = hasCBF ? gl.RGBA16F : gl.RGBA8, ST = hasCBF ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE;
+  T.sky = target(cw, ch, SF, gl.RGBA, ST, gl.LINEAR, null, null, true);
+  if (!T.sky.ok){ freeAll(); T.sky = target(cw, ch, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, gl.LINEAR, null, null, true); }
+  T.cloud = target(512,256,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,gl.LINEAR);
+  for(const name of ['woman','womanUnder']) {
+    T[name]=target(384,384,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,gl.LINEAR);
+    T[name].depth=gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER,T[name].depth);
+    gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,384,384);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,T[name].f);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,T[name].depth);
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  if (SIM){
+    const N = W*Hw > 300000 ? 46000 : 34000;
+    const cols = Math.max(32, Math.round(Math.sqrt(N*W/Hw))), rows = Math.max(32, Math.round(cols*Hw/W));
+    const HF = gl.RGBA16F, HT = gl.HALF_FLOAT, L = gl.LINEAR;
+    T.velA = target(cols, rows, HF, gl.RGBA, HT, L); T.velB = target(cols, rows, HF, gl.RGBA, HT, L);
+    T.wavA = target(cols, rows, HF, gl.RGBA, HT, L); T.wavB = target(cols, rows, HF, gl.RGBA, HT, L);
+    const count = Math.min(65536, Math.max(24576, Math.round(W*Hw/7)));
+    pW = 256; pH = Math.ceil(count/pW);
+    const data = new Float32Array(pW*pH*4);
+    for (let i = 0; i < pW*pH; i++){
+      data[i*4] = Math.random(); data[i*4 + 1] = Math.pow(Math.random(), .85);
+      data[i*4 + 2] = 0; data[i*4 + 3] = .8 + .2*Math.random();
+    }
+    const PF = hasCBF ? gl.RGBA32F : gl.RGBA16F;
+    T.pA = target(pW, pH, PF, gl.RGBA, gl.FLOAT, gl.NEAREST, data, null, true);
+    T.pB = target(pW, pH, PF, gl.RGBA, gl.FLOAT, gl.NEAREST, null, null, true);
+    T.glow = target(Math.ceil(cw/2), Math.ceil(ch/2), HF, gl.RGBA, HT, L);
+    for (const [a, b, k] of [['b1h', 'b1', 4], ['b2h', 'b2', 8], ['b3h', 'b3', 16]]){
+      T[a + 'd'] = target(Math.ceil(cw/k), Math.ceil(ch/k), HF, gl.RGBA, HT, L);
+      T[a] = target(Math.ceil(cw/k), Math.ceil(ch/k), HF, gl.RGBA, HT, L);
+      T[b] = target(Math.ceil(cw/k), Math.ceil(ch/k), HF, gl.RGBA, HT, L);
+    }
+    for (const k in T) if (!T[k].ok){ SIM = false; break; }
+  }
+  renderSky();
+  setupStarTrails();
+  drawWord();
+  positionControlReflections();
+  refreshSwimBounds();
+  if (keep){ [SW.X, SW.Z] = worldFromScreen(keep[0]*W, shoreCss + keep[1]*Hw); SW.Z=Math.max(SW.Z,swimMinZ); setTarget(keep[2]*W,shoreCss+keep[3]*Hw); }
+  else startOpeningSwim();
+  if (autoOn && !reduced) targetOpeningSwim();
+  prevSlots.fill(null); drops.length = 0; landings.length = 0;
+  sized = true;
+}
+function renderSky(){
+  const p = P.sky; gl.useProgram(p.p); drawTo(T.sky);
+  gl.uniform1f(p.u.uAtlasRadius,0);
+  gl.uniform2f(p.u.uRes, cw, ch); gl.uniform1f(p.u.uShore, shoreCss*dpr);
+  gl.uniform1f(p.u.uU, dpr*Math.min(1.3, Math.max(.5, H/900))); gl.uniform1f(p.u.uDpr, dpr);
+  full();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  for (const t of [T.sky.t, T.sky.t1]){
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.generateMipmap(gl.TEXTURE_2D);
+  }
+}
+/* Rasterize the actual UI glyphs once; the lake samples this atlas through its waves. */
+function positionControlReflections(){
+  const box=id=>{const r=document.getElementById(id).getBoundingClientRect();
+    return [(r.left+r.width/2-16)*dpr,(r.top+r.height/2-16)*dpr,32*dpr,32*dpr];};
+  questionBox=box('faq-open'); toggleBox=box('light-toggle');
+}
+async function drawControls(){
+  const selectors=['#faq-open svg','#light-toggle .sun-icon','#light-toggle .moon-icon'];
+  const atlas=document.createElement('canvas'); atlas.width=192; atlas.height=64;
+  const ctx=atlas.getContext('2d');
+  await Promise.all(selectors.map(async(selector,i)=>{
+    const source=document.querySelector(selector),svg=source.cloneNode(true);
+    const w=i===0?44:40,h=i===0?52:40;
+    svg.setAttribute('xmlns','http://www.w3.org/2000/svg');
+    svg.setAttribute('width',w);svg.setAttribute('height',h);
+    svg.removeAttribute('class');svg.style.color=getComputedStyle(source).color;
+    const img=new Image();
+    await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;
+      img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));});
+    const dw=w*(i===0?.95:1),dh=h*(i===0?.9:1);
+    ctx.drawImage(img,i*64+(64-dw)/2,(64-dh)/2,dw,dh);
+  }));
+  gl.bindTexture(gl.TEXTURE_2D,controlTex);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,atlas);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
+}
+/* Logo and tagline share one texture, so both reflect through the same water. */
+const wc = document.createElement('canvas'); const wx = wc.getContext('2d');
+function drawWord(){
+  const image = mark.querySelector('img');
+  if (image && (!image.complete || !image.naturalWidth)) return;
+  const spans = [...mark.querySelectorAll('span')];
+  const fs = parseFloat(getComputedStyle(mark).fontSize);
+  const rects = image ? [image.getBoundingClientRect()] : spans.map(s => s.getBoundingClientRect());
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const r of rects){ x0 = Math.min(x0, r.left); y0 = Math.min(y0, r.top); x1 = Math.max(x1, r.right); y1 = Math.max(y1, r.bottom); }
+  const taglineWords = [...tagline.querySelectorAll('span')];
+  const taglineRects = taglineWords.map(word => word.getBoundingClientRect());
+  for (const r of taglineRects) { x0=Math.min(x0,r.left); y0=Math.min(y0,r.top); x1=Math.max(x1,r.right); y1=Math.max(y1,r.bottom); }
+  const pad = image ? 2 : fs*.2; x0 -= pad; y0 -= pad; x1 += pad; y1 += pad;
+  const k = Math.min(dpr, 1.5);
+  wc.width = Math.max(1, Math.ceil((x1 - x0)*k)); wc.height = Math.max(1, Math.ceil((y1 - y0)*k));
+  wx.setTransform(k, 0, 0, k, 0, 0); wx.clearRect(0, 0, x1 - x0, y1 - y0);
+  if (image) {
+    const r=rects[0];
+    wx.drawImage(image,r.left-x0,r.top-y0,r.width,r.height);
+    const dotX=r.left+r.width*.715,dotY=r.top+r.height*.315;
+    moonAnchor=[dotX*dpr,dotY*dpr,r.width*.0245*dpr];
+    // Keep the original dot in this atlas; wordAt crossfades it with the moon.
+  }
+  else {
+    wx.font = `${getComputedStyle(mark).fontWeight} ${fs}px ${getComputedStyle(mark).fontFamily}`; wx.textBaseline = 'alphabetic';
+    const asc = wx.measureText('Qualia').fontBoundingBoxAscent || fs*.9;
+    spans.forEach((s, i) => {
+      const x = rects[i].left - x0, y = rects[i].top - y0 + asc;
+      if (mark.dataset.outline === 'true') {
+        wx.strokeStyle = '#fff'; wx.lineWidth = Math.max(1, fs*.009); wx.strokeText(s.textContent, x, y);
+      } else { wx.fillStyle = getComputedStyle(s).color; wx.fillText(s.textContent, x, y); }
+    });
+  }
+  wx.textBaseline='alphabetic';
+  taglineWords.forEach((word,i)=>{
+    const captionStyle=getComputedStyle(word.parentElement);
+    wx.font=`${captionStyle.fontWeight} ${captionStyle.fontSize} ${captionStyle.fontFamily}`;
+    wx.fillStyle=captionStyle.color;
+    if('letterSpacing' in wx) wx.letterSpacing=captionStyle.letterSpacing;
+    const metrics=wx.measureText('Ag');
+    const ascent=metrics.fontBoundingBoxAscent || parseFloat(captionStyle.fontSize)*.9;
+    const descent=metrics.fontBoundingBoxDescent || parseFloat(captionStyle.fontSize)*.25;
+    const r=taglineRects[i];
+    wx.fillText(word.textContent,r.left-x0,r.top-y0+(r.height-ascent-descent)/2+ascent);
+  });
+  if ('letterSpacing' in wx) wx.letterSpacing = '0px';
+  gl.bindTexture(gl.TEXTURE_2D, wordTex);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, wc);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  wordBox = [x0*dpr, y0*dpr, (x1 - x0)*dpr, (y1 - y0)*dpr];
+  wordReady = true;
+}
+
+/* ---------- camera: water plane <-> screen (CSS px). World units are CSS px at the bottom edge ---------- */
+function sOfV(v){ return (v + V0)/(1 + V0); }
+function worldFromScreen(x, y){ const s = sOfV((y - shoreCss)/Hw); return [(x - W/2)/s, Hw*(1 + V0)/(TILT*s)]; }
+function project(X, Z, ym){   // ym: metres above the surface; underwater points at their apparent (refracted) depth
+  const s = Hw*(1 + V0)/(TILT*Math.max(Z, 1)), v = s*(1 + V0) - V0;
+  const ya = (ym < 0 ? ym*.75 : ym)*M;
+  return [W/2 + X*s, shoreCss + v*Hw - ya*s, s];
+}
+
+/* ---------- vector helpers ---------- */
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const mul = (a, k) => [a[0]*k, a[1]*k, a[2]*k];
+const dot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+const len = a => Math.hypot(a[0], a[1], a[2]);
+const norm = a => { const l = len(a) || 1; return [a[0]/l, a[1]/l, a[2]/l]; };
+const lerp = (a, b, t) => [a[0] + (b[0] - a[0])*t, a[1] + (b[1] - a[1])*t, a[2] + (b[2] - a[2])*t];
+const mir = (p, sg) => [p[0], p[1]*sg, p[2]];
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+function cb(ph, c, w){ let d = ph - c; d -= Math.round(d); return Math.exp(-(d/w)*(d/w)); }   // cyclic bump
+/* two-bone IK: joint placed on the side of the pole vector */
+function ik(a, t, l1, l2, pole){
+  const d = sub(t, a); let dist = len(d); const dir = dist > 1e-6 ? mul(d, 1/dist) : [1, 0, 0];
+  dist = clamp(dist, Math.abs(l1 - l2) + 1e-3, l1 + l2 - 1e-3);
+  const along = (l1*l1 + dist*dist - l2*l2)/(2*dist);
+  const hh = Math.sqrt(Math.max(0, l1*l1 - along*along));
+  const p = norm(sub(pole, mul(dir, dot(pole, dir))));
+  return { mid: add(add(a, mul(dir, along)), mul(p, hh)), end: add(a, mul(dir, dist)) };
+}
+/* Periodic Hermite curve with phase-aware tangents: no wrist/ankle speed jumps at keys. */
+function keyAt(keys, ph){
+  const n = keys.length; ph = ((ph % 1) + 1) % 1;
+  let i = n - 1; for (let k = 0; k < n; k++){ if (keys[k][0] > ph){ i = k - 1; break; } }
+  if (i < 0) i = n - 1;
+  const k0 = keys[(i - 1 + n) % n], k1 = keys[i], k2 = keys[(i + 1) % n], k3 = keys[(i + 2) % n];
+  let t1 = k1[0], t2 = k2[0]; if (t2 <= t1) t2 += 1; let p = ph; if (p < t1) p += 1;
+  let t0 = k0[0], t3 = k3[0];
+  while (t0 >= t1) t0 -= 1;
+  while (t3 <= t2) t3 += 1;
+  const u = (p - t1)/(t2 - t1), u2 = u*u, u3 = u2*u; const out = [0, 0, 0];
+  for (let c = 1; c < 4; c++){
+    const p0 = k0[c], p1 = k1[c], p2 = k2[c], p3 = k3[c];
+    const m1 = (p2 - p0)/(t2 - t0)*(t2 - t1), m2 = (p3 - p1)/(t3 - t1)*(t2 - t1);
+    out[c - 1] = (2*u3 - 3*u2 + 1)*p1 + (u3 - 2*u2 + u)*m1 + (-2*u3 + 3*u2)*p2 + (u3 - u2)*m2;
+  }
+  return out;
+}
+
+/* ---------- the swimmer: breaststroke and treading water, local metres (forward, right, up) ---------- */
+// wrist path, right arm: glide, outsweep, catch, insweep, hands together under the chin, shoot forward, glide
+const HAND_K = [[0,.54,.09,-.13],[.13,.50,.27,-.16],[.26,.34,.42,-.25],[.37,.16,.29,-.28],[.46,.19,.10,-.17],[.56,.40,.075,-.11],[.66,.54,.09,-.13]];
+// ankle path, right leg: streamlined, heels drawn up, feet turned out, whip kick, together
+const FOOT_K = [[0,-1.41,.085,-.27],[.36,-1.41,.085,-.27],[.49,-.99,.19,-.18],[.57,-1.08,.36,-.28],[.66,-1.33,.24,-.30],[.74,-1.41,.085,-.27]];
+let openingComplete = false;
+const footer = document.querySelector('.foot');
+let swimMaxY=Infinity, swimMinZ=0, swimFooterTop=Infinity;
+const SW = { X: 0, Z: 0, th: 0, turnV: 0, phase: .62, cadence: 1/2.7, burstLeft: 0, effort: 0, tread: 0, tph: 0, go: true, tx: 0, tz: 0, v: 0, arrivedAt: 0 };
+function sprintSwimmer(){
+  // Refresh a short burst without resetting the pose or building an endless click queue.
+  SW.burstLeft = 2;
+}
+function strokeSpeed(ph){
+  return .56 + .88*cb(ph,.72,.14) + .48*cb(ph,.32,.12);
+}
+// Reserve enough foreground for the complete swimmer in any stroke or heading.
+// The near side of a 1.7m body envelope at 1.35m depth must remain above the footer.
+function refreshSwimBounds(){
+  swimFooterTop=footer.getBoundingClientRect().top;
+  const floor=swimFooterTop-18;
+  let low=shoreCss, high=shoreCss+Hw*.95;
+  for(let i=0;i<24;i++) {
+    const y=(low+high)/2, z=worldFromScreen(W*.5,y)[1];
+    if(project(0,z-M*1.7,-1.35)[1] > floor) high=y; else low=y;
+  }
+  swimMaxY=low;
+  swimMinZ=worldFromScreen(W*.5,swimMaxY)[1];
+  if(sized) {
+    SW.Z=Math.max(SW.Z,swimMinZ);
+    const target=project(SW.tx,SW.tz,0);
+    setTarget(target[0],target[1]);
+  }
+}
+function setTarget(x, y){
+  const cx=clamp(x,W*.06,W*.94), cy=clamp(y,Math.min(shoreCss+Hw*.1,swimMaxY),swimMaxY);
+  [SW.tx,SW.tz]=worldFromScreen(cx,cy);
+}
+function skeleton(){
+  const w = SW.tread, ph = SW.phase, tt = SW.tph;
+  const b = cb(ph, .37, .19)*(1 - w);
+  const sh = lerp([0, 0, -.10 + .085*b], [0, 0, -.12], w);
+  const head = lerp([.24 + .03*b, .008*Math.sin(tt*.7), -.015 + .11*b], [.10, .009*Math.sin(tt*.55), .105+.008*Math.sin(tt*1.4)], w);
+  const hip = lerp([-.58, 0, -.20 - .025*b], [-.23, 0, -.52], w);
+  const J = { sh, head, hip, arms: [], legs: [], breath: b };
+  const om = tt*2*Math.PI/1.5;
+  for (const sg of [1, -1]){
+    const shoulder = add(sh, [.009*Math.sin(tt*.8)*sg, .165*sg, .008*Math.sin(tt*.8)*sg]);
+    const handT = [.14 + .055*Math.sin(om + 1), (.51 + .055*Math.sin(om))*sg, -.18 + .025*Math.cos(om)];
+    const a = ik(shoulder, lerp(mir(keyAt(HAND_K, ph), sg), handT, w), .30, .28, norm(lerp([-.3, .8*sg, .25], [-.25, .3*sg, -.65], w)));
+    const tip = add(a.end, mul(norm(sub(a.end, a.mid)), .12));
+    J.arms.push([shoulder, a.mid, a.end, tip]);
+    const hipS = add(hip, [0, .13*sg, 0]);
+    const om2 = tt*2*Math.PI/1.7 + (sg < 0 ? Math.PI : 0);
+    const footT = [.02 + .13*Math.cos(om2), (.17 + .045*Math.sin(om2))*sg, -1.03 + .05*Math.sin(om2)];
+    const l = ik(hipS, lerp(mir(keyAt(FOOT_K, ph), sg), footT, w), .44, .42, norm(lerp([0, .5*sg, -.85], [1, .35*sg, 0], w)));
+    const shin = norm(sub(l.end, l.mid));
+    const kick = cb(ph, .59, .10)*(1 - w);
+    let fd = norm(add(mul(shin, 1 - kick), mul([-.3, .8*sg, 0], kick)));
+    fd = norm(lerp(fd, norm(add(shin, [.8, 0, 0])), w));
+    J.legs.push([hipS, l.mid, l.end, add(l.end, mul(fd, .15))]);
+  }
+  return J;
+}
+function toWorld(p){
+  const c = Math.cos(SW.th), s = Math.sin(SW.th);   // forward (c, s), right (s, -c) on the water plane
+  return [SW.X + (c*p[0] + s*p[1])*M, SW.Z + (s*p[0] - c*p[1])*M, p[2]];
+}
+function updateSwimmer(dt){
+  // Speed up the opening journey and its strokes together; normal steering keeps its pace.
+  if (!openingComplete) dt *= 1.25;
+  const dx = SW.tx - SW.X, dz = SW.tz - SW.Z, dist = Math.hypot(dx, dz)/M;
+  if (SW.go && dist < .6){ SW.go = false; SW.arrivedAt = simT; if (!openingComplete) { openingComplete = true; autoOn = false; } }
+  else if (!SW.go && dist > 1.2) SW.go = true;
+  const bursting = SW.burstLeft > 0;
+  const openingBoost = openingComplete ? 0 : openingSwimEffort();
+  SW.effort += ((bursting ? 1 : openingBoost) - SW.effort)*(1 - Math.exp(-dt*7));
+  SW.tread += (((SW.go || bursting) ? 0 : 1) - SW.tread)*(1 - Math.exp(-dt*(bursting && !reduced ? 4.5 : 1.8)));
+  let da = Math.atan2(dz, dx) - SW.th; da -= Math.round(da/(2*Math.PI))*2*Math.PI;
+  const turnLimit = (reduced ? .65 : 1.6875)*(SW.go ? 1 : .25);
+  SW.turnV += (clamp(da*(reduced ? 1.6 : 2.5), -turnLimit, turnLimit) - SW.turnV)*(1 - Math.exp(-dt*(reduced ? 3.2 : 5.625)));
+  SW.th += SW.turnV*dt;
+  const swimW = 1 - SW.tread;
+  const cadence = reduced ? 1/3.0 + .18*SW.effort : 1/2.7 + .38*SW.effort;
+  SW.cadence += (cadence - SW.cadence)*(1 - Math.exp(-dt*5));
+  const advance = dt*SW.cadence;
+  SW.phase = (SW.phase + advance) % 1;
+  SW.burstLeft = Math.max(0, SW.burstLeft - advance);
+  SW.tph += dt*(reduced ? .5 : 1);
+  const sprintPower = bursting && !reduced ? .7*SW.effort : 0;
+  const desiredV = strokeSpeed(SW.phase)*(1.35 + (reduced ? .15 : .65)*SW.effort + sprintPower)*swimW*Math.max(.15, Math.cos(da))*Math.min(1, dist/1.2);
+  // Carry momentum through the glide and ease into each catch and kick.
+  SW.v += (desiredV - SW.v)*(1 - Math.exp(-dt*(bursting && !reduced ? 6 : 2.7)));
+  SW.v = Math.min(SW.v, dist/Math.max(dt, 1e-3));
+  SW.X += Math.cos(SW.th)*SW.v*M*dt; SW.Z += Math.sin(SW.th)*SW.v*M*dt;
+  if(SW.Z<swimMinZ) { SW.Z=swimMinZ; SW.v=0; }
+}
+function openingSwimEffort(){
+  const startY=shoreCss+Hw*.16, endY=project(SW.tx,SW.tz,0)[1];
+  const progress=clamp((project(SW.X,SW.Z,0)[1]-startY)/Math.max(1,endY-startY),0,1);
+  const ease=clamp((progress-.52)/(2/3-.52),0,1);
+  return .5*(1-ease*ease*(3-2*ease));
+}
+// A deliberate opening route: emerge at the distant centre, then settle above the caption.
+function targetOpeningSwim(){
+  const captionTop = swimFooterTop;
+  const gap = clamp(M*.8 + 14, 74, 102);
+  setTarget(W*.5, clamp(captionTop-gap, shoreCss+Hw*.25, shoreCss+Hw*.90));
+}
+function startOpeningSwim(){
+  openingComplete=false;autoOn=true;
+  [SW.X, SW.Z] = worldFromScreen(W*.5, shoreCss+Hw*.16);
+  SW.v=0;SW.turnV=0;SW.burstLeft=0;SW.effort=0;
+  if (reduced){
+    targetOpeningSwim();SW.X=SW.tx;SW.Z=SW.tz;
+    SW.go=false;SW.tread=1;SW.th=-Math.PI/2;openingComplete=true;autoOn=false;
+  } else {
+    targetOpeningSwim();SW.go=true;SW.tread=0;
+    SW.th=Math.atan2(SW.tz-SW.Z,SW.tx-SW.X);
+  }
+}
+
+/* ---------- glowing droplets flicked into the air ---------- */
+const drops = [], landings = [];
+const acc = [0, 0, 0];
+function spawn(wp, vw, n, up, spread){
+  for (let i = 0; i < n && drops.length < DROP_MAX; i++){
+    drops.push({ X: wp[0], Z: wp[1], y: Math.max(0, wp[2]) + .02,
+      vx: vw[0]*.6 + (Math.random() - .5)*spread*M, vz: vw[1]*.6 + (Math.random() - .5)*spread*M,
+      vy: up*(.5 + Math.random()), b: .6 + .6*Math.random(), sz: .7 + .8*Math.random() });
+  }
+}
+function updateDrops(dt){
+  for (let i = drops.length - 1; i >= 0; i--){
+    const d = drops[i];
+    d.X += d.vx*dt; d.Z += d.vz*dt; d.y += d.vy*dt; d.vy -= 9.8*dt;
+    if (d.y < 0 && d.vy < 0){ landings.push([d.X, d.Z, d.b]); drops.splice(i, 1); }
+  }
+  if (landings.length > 8) landings.splice(0, landings.length - 8);
+}
+
+/* ---------- per-frame splats from the swimmer ---------- */
+const spA = new Float32Array(NSP*4), sqA = new Float32Array(NSP*4);
+const capA = new Float32Array(NCAP*4), capB = new Float32Array(NCAP*4);
+const capMaterial = new Float32Array(NCAP);
+const swBox = [0, 0, 0, 0], ring = [0, 0, 1, 1];
+let ringK = 0;
+const prevSlots = new Array(NSP).fill(null);
+const slotWV = Array.from({ length: NSP }, () => [0, 0]);
+let nCap = 0, prevHeadY = 0;
+let bodyWV = [0, 0];
+/* limbs push water relative to the moving body; only a little is carried along */
+function setSlot(i, wp, rw, mixK, stim, push, extraV, rel){
+  const sc = project(wp[0], wp[1], wp[2]);
+  const pv = prevSlots[i];
+  let vx = 0, vy = 0, ws = 0;
+  if (pv && pv.dt > 0){
+    vx = (sc[0] - pv.sx)/pv.dt; vy = (sc[1] - pv.sy)/pv.dt;
+    ws = Math.hypot((wp[0] - pv.X)/M, (wp[1] - pv.Z)/M, wp[2] - pv.y)/pv.dt;
+    slotWV[i][0] = (wp[0] - pv.X)/pv.dt; slotWV[i][1] = (wp[1] - pv.Z)/pv.dt;
+  }
+  prevSlots[i] = { sx: sc[0], sy: sc[1], X: wp[0], Z: wp[1], y: wp[2], dt: 0 };
+  if (rel){
+    const e = .05, q = project(wp[0] + bodyWV[0]*e, wp[1] + bodyWV[1]*e, wp[2]);
+    vx -= rel*(q[0] - sc[0])/e; vy -= rel*(q[1] - sc[1])/e;
+  }
+  if (extraV){ vx += extraV[0]; vy += extraV[1]; }
+  spA.set([sc[0]/W, (sc[1] - shoreCss)/Hw, vx, vy], i*4);
+  sqA.set([rw*M, mixK, stim, push], i*4);
+  return ws;
+}
+function swimmerFrame(dt){
+  for (const p of prevSlots) if (p) p.dt = dt;
+  const J = skeleton();
+  const wv = mul([Math.cos(SW.th), Math.sin(SW.th), 0], SW.v*M);   // body velocity, world units/s
+  bodyWV = [wv[0], wv[1]];
+  const bs = clamp(SW.v/1.2, 0, 1.2);
+  const lim = (ws, lo) => clamp((ws - lo)/1.1, 0, 1.2);
+  // hands, feet, elbows
+  for (let k = 0; k < 2; k++){
+    const arm = J.arms[k], leg = J.legs[k];
+    const hand = toWorld(lerp(arm[2], arm[3], .5));
+    const hs = lim(setSlot(k, hand, .3, 0, 0, 0, null, .8), .18-.10*SW.tread);
+    const near = clamp(1 + arm[2][2]/.15, 0, 1);
+    sqA.set([(.3+.035*SW.tread)*M, .35*hs, hs*(1.2+.9*SW.tread), .015*hs*near], k*4);
+    const foot = toWorld(leg[2]);
+    const fs = lim(setSlot(2 + k, foot, .2, 0, 0, 0, null, .8), .20-.10*SW.tread);
+    const footLight=Math.exp(Math.min(0,leg[2][2])*.65);
+    sqA.set([.32*M, .45*fs, fs*(1.3+.5*SW.tread)*footLight, 0], (2 + k)*4);
+    const elb = toWorld(arm[1]);
+    const es = lim(setSlot(4 + k, elb, .15, 0, 0, 0, null, .8), .22);
+    sqA.set([.24*M, .25*es, es*.8, 0], (4 + k)*4);
+    // droplets: hands moving fast near the surface
+    if (!reduced){
+      const hy = arm[2][2], hsp = hs;
+      if (hy > -.11 && hsp > .5){ acc[k] += dt*28*(hsp - .4); }
+      else if (SW.tread > .6 && hy > -.26 && hsp > .1){ acc[k] += dt*4; }
+      if (acc[k] >= 1){ const n = Math.floor(acc[k]); acc[k] -= n;
+        spawn([hand[0], hand[1], 0], slotWV[k], n, .8 + .45*hsp, .35); }
+    }
+  }
+  // bow wave on both shoulders: water pushed forward and out makes the V
+  const c = Math.cos(SW.th), s = Math.sin(SW.th);
+  for (let k = 0; k < 2; k++){
+    const sg = k ? -1 : 1;
+    const bp = toWorld([.12, .3*sg, 0]);
+    const o1 = project(bp[0], bp[1], 0), o2 = project(bp[0] + s*sg*M, bp[1] - c*sg*M, 0);
+    const out = [(o2[0] - o1[0])*1.5*SW.v, (o2[1] - o1[1])*1.5*SW.v];
+    setSlot(6 + k, bp, .16, 0, 0, 0, out, .6);
+    sqA.set([.2*M, .6*bs, 1.1*bs, .012*bs], (6 + k)*4);
+  }
+  // head: ripples, more when lifting to breathe
+  const hw = toWorld([J.head[0], 0, 0]);
+  setSlot(8, hw, .15, 0, 0, 0, null, .6);
+  const hy = J.head[2], hvy = (hy - prevHeadY)/Math.max(dt, 1e-3); prevHeadY = hy;
+  sqA.set([.22*M, .3*bs, .35*bs + .45*Math.abs(hvy)*SW.tread, .012*bs + .02*clamp(Math.abs(hvy), 0, 1.5) + .004*SW.tread], 8*4);
+  if (!reduced && hvy > .35 && acc[2] < 50){ acc[2] += dt*30*hvy; if (acc[2] >= 1){ const n = Math.floor(acc[2]); acc[2] -= n; spawn([hw[0], hw[1], 0], wv, n, .7, .45); } }
+  // body wake along the centre line
+  const hp = toWorld(J.hip);
+  setSlot(9, hp, .22, 0, 0, 0, null, .8);
+  sqA.set([.35*M, .3*bs, .55*bs, 0], 9*4);
+  // droplet landings
+  for (let k = 0; k < 2; k++){
+    const L = landings.pop();
+    if (L){ const sc = project(L[0], L[1], 0); spA.set([sc[0]/W, (sc[1] - shoreCss)/Hw, 0, 0], (10 + k)*4); sqA.set([.07*M, 0, .8*L[2], .012], (10 + k)*4); }
+    else sqA.set([1, 0, 0, 0], (10 + k)*4);
+  }
+  landings.length = 0;
+  buildWomanMesh(J);
+  // Conservative capsules retained for wake outlines and the atlas bounds.
+  // Adult Venus figure; natural proportions and a tapered waist.
+  const waist = lerp(J.sh,J.hip,.55);
+  const list = [
+    [J.arms[0][0],J.arms[1][0],.068,.068],
+    [J.sh,waist,.15,.105,0,0], [waist,J.hip,.105,.165,0,0],
+    [J.sh,J.head,.052,.052], [J.head,J.head,.10,.10,.07]
+  ];
+  for (let k = 0; k < 2; k++){
+    const a = J.arms[k], l = J.legs[k];
+    list.push([a[0], a[1], .055, .045], [a[1], a[2], .045, .035], [a[2], a[3], .04, .025]);
+    list.push([l[0], l[1], .085, .06], [l[1], l[2], .055, .04], [l[2], l[3], .04, .028]);
+  }
+  // Wet hair trails behind her head in three soft, independently moving locks.
+  const crown = add(J.head,[-.045,0,.035]);
+  list.push([crown,add(crown,[-.10,0,-.02]),.105,.09,.07,2]);
+  for (let strand=0;strand<3;strand++) {
+    let prev=add(crown,[-.06,(strand-1)*.055,0]);
+    for (let segment=1;segment<=4;segment++) {
+      const f=segment/4;
+      const sway=Math.sin(SW.tph*2.1-f*3.+strand*.7)*.045*f;
+      const next=[crown[0]-.06-f*.94, (strand-1)*(.055+.035*f)+sway-SW.turnV*.04*f, crown[2]*(1-f)-.035*f];
+      list.push([prev,next,.047*(1-f*.65),.04*(1-f*.8),.04,2]);
+      prev=next;
+    }
+  }
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  nCap = list.length;
+  list.forEach((cp, i) => {
+    capMaterial[i]=cp[5] || 0;
+    const wa = toWorld(cp[0]), wb = toWorld(cp[1]);
+    const a = project(wa[0], wa[1], wa[2]), b = project(wb[0], wb[1], wb[2]);
+    const ra = cp[2]*M*a[2]*dpr, rb = cp[3]*M*b[2]*dpr;
+    capA.set([a[0]*dpr, a[1]*dpr, b[0]*dpr, b[1]*dpr], i*4);
+    const yb = cp[4] || 0; capB.set([ra, rb, cp[0][2] + yb, cp[1][2] + yb], i*4);
+    x0 = Math.min(x0, a[0]*dpr - ra, b[0]*dpr - rb); x1 = Math.max(x1, a[0]*dpr + ra, b[0]*dpr + rb);
+    y0 = Math.min(y0, a[1]*dpr - ra, b[1]*dpr - rb); y1 = Math.max(y1, a[1]*dpr + ra, b[1]*dpr + rb);
+  });
+  // waterline around the neck (or the crown during the glide)
+  const ya = J.sh[2], yh = J.head[2];
+  let wl, rk;
+  if (ya < 0 && yh > 0){ wl = lerp(J.sh, J.head, -ya/(yh - ya)); rk = 1; } else { wl = J.head; rk = yh + .07 > 0 ? .6 : .3; }
+  const ww = toWorld([wl[0], wl[1], 0]), rc = project(ww[0], ww[1], 0);
+  const rr = .15*M*rc[2]*dpr;
+  ring[0] = rc[0]*dpr; ring[1] = rc[1]*dpr; ring[2] = rr; ring[3] = rr*Math.max(rc[2]*TILT, .2); ringK = rk;
+  const m = 10*dpr; swBox[0] = x0 - m; swBox[1] = y0 - m; swBox[2] = x1 + m;
+  swBox[3] = Math.max(y1, 2*ring[1] - y0) + m;
+}
+
+/* ---------- a continuous, softly lit swimmer rather than flat limb silhouettes ---------- */
+let womanVAO, womanBuffer, womanCount=0;
+const womanData=new Float32Array(24000*8);
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+function initWomanMesh() {
+  womanVAO=gl.createVertexArray(); gl.bindVertexArray(womanVAO);
+  womanBuffer=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,womanBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER,womanData.byteLength,gl.DYNAMIC_DRAW);
+  for(const [i,n,offset] of [[0,3,0],[1,3,3],[2,1,6],[3,1,7]]) {
+    gl.enableVertexAttribArray(i);gl.vertexAttribPointer(i,n,gl.FLOAT,false,32,offset*4);
+  }
+}
+function meshVertex(v,n,material) {
+  const w=toWorld(v), p=project(...w), c=Math.cos(SW.th), sn=Math.sin(SW.th);
+  const k=womanCount++*8;
+  womanData.set([p[0]*dpr,p[1]*dpr,clamp((w[1]-SW.Z)/(M*5)-v[2]*.23,-.95,.95),
+    c*n[0]+sn*n[1],sn*n[0]-c*n[1],n[2],material,v[2]],k);
+}
+function meshTube(points,radii,material,sides=12) {
+  const rings=[];
+  let previousSide=null;
+  for(let j=0;j<points.length;j++) {
+    const tangent=norm(sub(points[Math.min(j+1,points.length-1)],points[Math.max(0,j-1)]));
+    // Transport the cross-section along the curve without flipping at steep joints.
+    const transported=previousSide && sub(previousSide,mul(tangent,dot(previousSide,tangent)));
+    const side=transported && len(transported)>.001 ? norm(transported) : norm(cross(Math.abs(tangent[2])>.9 ? [1,0,0] : [0,0,1],tangent));
+    previousSide=side;
+    const up=norm(cross(tangent,side)), [rw,back,front=back]=radii[j];
+    const ring=[];
+    for(let i=0;i<sides;i++) {
+      const angle=i/sides*Math.PI*2, co=Math.cos(angle), si=Math.sin(angle),rh=si<0?front:back;
+      ring.push([add(points[j],add(mul(side,co*rw),mul(up,si*rh))),norm(add(mul(side,co/Math.max(rw,.002)),mul(up,si/Math.max(rh,.002))))]);
+    }
+    rings.push(ring);
+  }
+  for(let j=1;j<rings.length;j++) for(let i=0;i<sides;i++) {
+    const next=(i+1)%sides;
+    for(const [r,k] of [[j-1,i],[j,i],[j,next],[j-1,i],[j,next],[j-1,next]]) meshVertex(...rings[r][k],material);
+  }
+}
+function meshEllipsoid(center,radius,material) {
+  const points=[], radii=[];
+  const steps=material>2.5?4:10, sides=material>2.5?8:16;
+  for(let j=0;j<=steps;j++) {
+    const a=j/steps*Math.PI;
+    points.push(add(center,[Math.cos(a)*radius[0],0,0]));
+    radii.push([Math.sin(a)*radius[1],Math.sin(a)*radius[2]]);
+  }
+  meshTube(points,radii,material,sides);
+}
+function limbMesh(a,b,r0,r1,rootScale=.65) {
+  const pts=[], rs=[];
+  for(let j=0;j<=6;j++) {
+    const t=j/6;
+    pts.push(lerp(a,b,t));
+    const r=(r0*(1-t)+r1*t)*(j===0 ? rootScale : j===6 ? .65 : 1.);
+    rs.push([r,r*.9]);
+  }
+  meshTube(pts,rs,0);
+}
+function buildWomanMesh(J) {
+  womanCount=0;
+  // One continuous adult nude form, with a soft chest, waist and rounded pelvis.
+  const upper=add(J.sh,[.035,0,.008]);
+  const bodyAxis=norm(sub(J.hip,J.sh));
+  const centres=[add(upper,mul(bodyAxis,-.045)),upper,lerp(J.sh,J.hip,.18),lerp(J.sh,J.hip,.40),lerp(J.sh,J.hip,.60),lerp(J.sh,J.hip,.81),J.hip,add(J.hip,mul(bodyAxis,.06)),add(J.hip,mul(bodyAxis,.10))];
+  const profile=[[.065,.045,.045],[.155,.085,.10],[.15,.095,.135],[.123,.077,.10],[.106,.076,.088],[.15,.12,.10],[.178,.14,.105],[.14,.12,.095],[.03,.04,.03]];
+  const torsoPoints=[],torsoRadii=[];
+  for(let j=0;j<centres.length-1;j++) for(let k=0;k<3;k++) {
+    const t=k/3, ease=t*t*(3-2*t);
+    torsoPoints.push(lerp(centres[j],centres[j+1],t));
+    torsoRadii.push(profile[j].map((r,i)=>r+(profile[j+1][i]-r)*ease));
+  }
+  torsoPoints.push(centres.at(-1));torsoRadii.push(profile.at(-1));
+  meshTube(torsoPoints,torsoRadii,0,24);
+  meshTube([J.arms[0][0],J.sh,J.arms[1][0]],[[.055,.052],[.075,.063],[.055,.052]],0,12);
+  meshTube([J.sh,lerp(J.sh,J.head,.65),J.head],[[.055,.052],[.039,.043],[.052,.054]],0,12);
+  // A single long oval face: crown, brow, cheek, tapered jaw and small chin.
+  const face=[[-.015,.110,.003,.003],[-.012,.086,.046,.054],[.002,.057,.070,.077],[.018,.027,.071,.083],[.026,0,.061,.077],[.036,-.033,.046,.057],[.042,-.064,.025,.034],[.043,-.084,.003,.004]];
+  meshTube(face.map(([x,z])=>add(J.head,[x,0,z])),face.map(([, ,w,d])=>[w,d]),0,20);
+  // Small nose ridge and quiet, heavy-lidded eyes rather than protruding dots.
+  meshTube([add(J.head,[.094,0,.045]),add(J.head,[.115,0,.015]),add(J.head,[.101,0,.006])],[[.009,.006],[.012,.013],[.008,.005]],0,8);
+  for(const side of [-1,1]) {
+    meshEllipsoid(add(J.head,[.088,side*.032,.031]),[.004,.017,.003],5);
+    meshEllipsoid(add(J.head,[.079,side*.034,.044]),[.004,.018,.003],7);
+  }
+  meshEllipsoid(add(J.head,[.096,0,-.028]),[.004,.019,.004],6);
+  for(let k=0;k<2;k++) {
+    const a=J.arms[k],l=J.legs[k],sg=k===0?1:-1;
+    meshTube([lerp(J.sh,a[0],.70),a[0],lerp(a[0],a[1],.35),lerp(a[0],a[1],.8),a[1],lerp(a[1],a[2],.25),lerp(a[1],a[2],.65),a[2]],
+      [[.050,.047],[.054,.050],[.049,.045],[.035,.033],[.032,.031],[.038,.034],[.030,.026],[.022,.020]],0,16);
+    meshTube([a[2],lerp(a[2],a[3],.45),a[3]],[[.025,.019],[.034,.015],[.013,.009]],0);
+    // A tucked thumb and tapered fingers, with no cartoon mittens.
+    const thumb=add(lerp(a[2],a[3],.35),[.014,-sg*.032,-.002]);
+    meshTube([a[2],thumb,add(thumb,[.03,0,0])],[[.016,.014],[.012,.011],[.003,.003]],0,8);
+    meshTube([lerp(J.hip,l[0],.60),l[0],lerp(l[0],l[1],.25),lerp(l[0],l[1],.70),l[1],lerp(l[1],l[2],.27),lerp(l[1],l[2],.55),lerp(l[1],l[2],.86),l[2]],
+      [[.112,.10],[.105,.097],[.093,.083],[.063,.058],[.049,.045],[.063,.056],[.052,.047],[.034,.031],[.026,.025]],0,18);
+    meshTube([l[2],lerp(l[2],l[3],.5),l[3]],[[.033,.028],[.043,.025],[.022,.015]],0);
+  }
+  // Long wet copper-gold hair: a coherent swept mass, fine tapered locks and delayed wave motion.
+  const crown=add(J.head,[-.045,0,.025]);
+  meshEllipsoid(crown,[.079,.081,.099],2);
+  const tail=[],widths=[];
+  for(let j=0;j<=8;j++) {
+    const t=j/8, bend=Math.sin(SW.tph*1.15-t*3.1)*.037*t*t;
+    tail.push([crown[0]-.025-.82*t,crown[1]+bend-SW.turnV*.08*t*t,
+      crown[2]*(1-t)*(1-t)-.015*t]);
+    widths.push([.075*(1-t)*(.9+.3*Math.sin(t*Math.PI))+.002,.017*(1-t)+.002]);
+  }
+  meshTube(tail,widths,2,16);
+  for(let lock=0;lock<9;lock++) {
+    const pts=[],rs=[];
+    for(let j=0;j<=7;j++) {
+      const t=j/7, side=(lock-4)/4;
+      pts.push([crown[0]-.045-(.65+lock*.033)*t,crown[1]+side*(.055+.09*Math.sin(t*Math.PI))+
+        Math.sin(SW.tph*1.15-t*3.1+lock*.35)*.033*t-SW.turnV*.08*t*t,
+        crown[2]*(1-t)*(1-t)-.013*t]);
+      rs.push([.018*(1-t)+.001,.004*(1-t)+.0008]);
+    }
+    meshTube(pts,rs,2+lock*.028,6);
+  }
+  // One tiny ivory blossom tucked into the hair supplies a restrained whimsical detail.
+  const flower=add(crown,[.012,.074,.052]);
+  for(let k=0;k<5;k++) {
+    const a=k/5*Math.PI*2;
+    meshEllipsoid(add(flower,[Math.cos(a)*.017,Math.sin(a)*.014,.003]),[.016,.012,.006],3);
+  }
+  meshEllipsoid(add(flower,[0,0,.008]),[.009,.009,.008],4);
+}
+function renderWoman() {
+  gl.bindVertexArray(womanVAO); gl.bindBuffer(gl.ARRAY_BUFFER,womanBuffer);
+  gl.bufferSubData(gl.ARRAY_BUFFER,0,womanData.subarray(0,womanCount*8));
+  const p=P.woman;gl.useProgram(p.p);
+  gl.uniform4fv(p.u.uBox,swBox);gl.uniform1f(p.u.uDay,LIGHT.values[0]);
+  gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
+  for(let under=0;under<2;under++) {
+    drawTo(under?T.womanUnder:T.woman);
+    gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    gl.uniform1f(p.u.uUnder,under);
+    gl.drawArrays(gl.TRIANGLES,0,womanCount);
+  }
+  gl.disable(gl.DEPTH_TEST);gl.bindVertexArray(vao);
+}
+
+/* ---------- input ---------- */
+let autoOn = true;
+const activeTouches=new Set();
+function steer(e, force){
+  if (AUTO || document.getElementById('faq-dialog').open || e.target.closest?.('.light-controls, .signal-link, .wordmark-controls, #faq-open')) return false;
+  if ((window.visualViewport?.scale || 1)>1.01 || activeTouches.size>1 || (e.pointerType==='touch' && !e.isPrimary)) return false;
+  if (e.clientY>=swimFooterTop) return false;
+  if (!force && e.pointerType === 'mouse' && e.buttons === 0 && e.clientY < shoreCss) return false;
+  if (!openingComplete) {
+    if (!force) return false;
+    openingComplete = true;
+  }
+  autoOn = false;
+  setTarget(e.clientX, e.clientY);
+  return true;
+}
+addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || e.buttons) steer(e, false); }, { passive: true });
+addEventListener('pointerdown', e => {
+  if(e.pointerType==='touch') activeTouches.add(e.pointerId);
+  if(!e.isPrimary || e.button!==0) return;
+  if(steer(e,true)) sprintSwimmer();
+}, { passive: true });
+for(const type of ['pointerup','pointercancel']) addEventListener(type,e=>activeTouches.delete(e.pointerId),{passive:true});
+addEventListener('blur',()=>activeTouches.clear());
+/* ---------- a continuous night, slow dawn, daylight and dusk cycle ---------- */
+const lightPresets = { day:[1,0,0,0,.79,.31], night:[0,0,1,0,.79,.31] };
+// daylight, twilight, stars, warmth, sun x, sun y; y=1 is the water horizon.
+const sunriseKeys = [
+  [0,  0,   0,   1,    0,   .82, 1.32],
+  [7,  .025,.24, .42,  .35,  .82, 1.24],
+  [12, .40, .90, .08,  .75,  .812,1.12],
+  [14, .48, 1,   .035, .85,  .81, 1.04],
+  [22, .64, 1,   0,    1,   .80, .84],
+  [26, .80, 1,   0,    .80, .79, .75],
+  [30, 1,   0,   0,    0,   .79, .67]
+];
+// July 1 near central Portugal (39.5 N, solar declination about +23.1 deg).
+// NOAA spherical solar geometry; screen scaling preserves the local rise angle.
+function julySunX(y) {
+  const lat=39.5*Math.PI/180, dec=23.1*Math.PI/180;
+  const elevation=(1-y)*.60;
+  const azimuth=h=>Math.acos(clamp((Math.sin(dec)-Math.sin(lat)*Math.sin(h))/(Math.cos(lat)*Math.cos(h)),-1,1));
+  return .807-(azimuth(elevation)-azimuth(0))/.60*(shoreCss/W);
+}
+function sunriseAt(seconds) {
+  const t=clamp(seconds,0,30);
+  let k=0;while(k<sunriseKeys.length-2 && t>sunriseKeys[k+1][0]) k++;
+  const a=sunriseKeys[k],b=sunriseKeys[k+1],duration=b[0]-a[0],p=(t-a[0])/duration;
+  // Monotone cubic interpolation: continuous velocity without colour overshoot.
+  const tangent=(index,channel)=>{
+    if(index===0 || index===sunriseKeys.length-1) return 0;
+    const left=sunriseKeys[index-1],mid=sunriseKeys[index],right=sunriseKeys[index+1];
+    const h0=mid[0]-left[0],h1=right[0]-mid[0];
+    const d0=(mid[channel]-left[channel])/h0,d1=(right[channel]-mid[channel])/h1;
+    if(d0*d1<=0) return 0;
+    const w0=2*h1+h0,w1=h1+2*h0;
+    return (w0+w1)/(w0/d0+w1/d1);
+  };
+  const values=a.slice(1).map((value,i)=>{
+    const m0=tangent(k,i+1)*duration,m1=tangent(k+1,i+1)*duration;
+    return (2*p*p*p-3*p*p+1)*value+(p*p*p-2*p*p+p)*m0+(-2*p*p*p+3*p*p)*b[i+1]+(p*p*p-p*p)*m1;
+  });
+  values[4]=julySunX(values[5]);
+  return values;
+}
+// Preserve the warm-dawn pacing, then play the complete sunrise at double speed.
+const NIGHT_SECONDS=20, DAWN_SPEED=2, DUSK_SECONDS=7+(30-7)*4, DAY_SECONDS=150;
+const DAWN_SECONDS=DUSK_SECONDS/DAWN_SPEED;
+const CYCLE_SECONDS=NIGHT_SECONDS+DAWN_SECONDS+DAY_SECONDS+DUSK_SECONDS;
+function dawnTime(seconds) { return seconds<=7 ? seconds : 7+(seconds-7)/4; }
+function cycleAt(seconds) {
+  let t=((seconds%CYCLE_SECONDS)+CYCLE_SECONDS)%CYCLE_SECONDS;
+  if(t<NIGHT_SECONDS) {
+    const values=sunriseAt(0);
+    // Reposition below the horizon while the sun is completely invisible.
+    const dawnX=values[4];
+    values[4]=(1-dawnX)+(2*dawnX-1)*(t/NIGHT_SECONDS);
+    return {mode:'night',values};
+  }
+  t-=NIGHT_SECONDS;
+  if(t<DAWN_SECONDS) return {mode:'sunrise',values:sunriseAt(dawnTime(t*DAWN_SPEED))};
+  t-=DAWN_SECONDS;
+  if(t<DAY_SECONDS) {
+    const p=t/DAY_SECONDS, ease=p*p*(3-2*p);
+    const startX=julySunX(.67);
+    return {mode:'day',values:[1,0,0,0,startX+(1-2*startX)*ease,.67-.58*Math.pow(Math.sin(Math.PI*p),2)]};
+  }
+  t-=DAY_SECONDS;
+  const values=sunriseAt(dawnTime(DUSK_SECONDS-t));
+  values[4]=1-values[4];
+  return {mode:'sunset',values};
+}
+const LIGHT = { mode:'night', values:cycleAt(0).values, cycling:!reduced, elapsed:0, dawnQueued:false, dawnRelease:0 };
+let starClock=0;
+let controlMode=LIGHT.mode!=='night'?1:0;
+const lightToggle = document.getElementById('light-toggle');
+const smooth = (a,b,x) => { const t=clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); };
+function showLightMode() {
+  const isDay=LIGHT.mode!=='night';
+  const label = isDay ? 'Switch to night' : 'Switch to day';
+  lightToggle.dataset.mode=isDay?'day':'night';
+  lightToggle.setAttribute('aria-label',label);
+  lightToggle.title=label;
+}
+showLightMode();
+lightToggle.addEventListener('click',()=>{
+  LIGHT.cycling=false;
+  LIGHT.mode=LIGHT.mode === 'night' ? 'day' : 'night';
+  showLightMode();
+});
+function updateMoonDot() {
+  mark.style.setProperty('--dot-alpha',smooth(.08,.72,LIGHT.values[0]).toFixed(4));
+}
+function lightStep(dt) {
+  paqT=PAQ.t;paqProgress=PAQ.progress;
+  paqSkyTime=paqT>0?paqSkyTime+dt:0;
+  if(LIGHT.cycling) {
+    LIGHT.elapsed=(LIGHT.elapsed+dt)%CYCLE_SECONDS;
+    const state=cycleAt(LIGHT.elapsed);
+    LIGHT.values=state.values;
+    if(LIGHT.mode!==state.mode) {LIGHT.mode=state.mode;showLightMode();}
+  } else {
+    const target=lightPresets[LIGHT.mode], blend=reduced ? 1 : 1-Math.exp(-dt*1.1);
+    for(let i=0;i<target.length;i++) LIGHT.values[i]+=(target[i]-LIGHT.values[i])*blend;
+  }
+  updateMoonDot();
+  controlMode+=((LIGHT.mode!=='night'?1:0)-controlMode)*(reduced?1:1-Math.exp(-dt*18));
+  // Keep the full night orbit; starlight fades naturally into the dawn.
+  if(!reduced && LIGHT.values[2]>.65) starClock+=dt;
+}
+
+/* ---------- meteors: rare, faint, smooth in and out ---------- */
+const met = { on: false, t: 0, dur: 1, A: [0, 0], B: [0, 0], next: 14 + Math.random()*20 };
+function meteorStep(dt){
+  if (reduced){ met.on = false; return; }
+  if (!met.on && simT > met.next){
+    const x = W*(.1 + .8*Math.random()), y = shoreCss*(.05 + .35*Math.random());
+    const ang = (Math.random() < .5 ? 1 : -1)*(.35 + .5*Math.random()), L = Math.min(W, 900)*(.12 + .12*Math.random());
+    met.A = [x, y]; met.B = [x + Math.sin(ang)*L, y + Math.cos(ang)*L*.6]; met.t = 0; met.dur = .8 + .5*Math.random(); met.on = true;
+  }
+  if (met.on){ met.t += dt; if (met.t > met.dur){ met.on = false; met.next = simT + 20 + Math.random()*35; } }
+}
+
+/* ---------- loop ---------- */
+let raf = 0, last = 0, simT = 0, ambT = 0, frameN = 0, waveAcc = 0;
+function simStep(dt){
+  frameN++; simT += dt;
+  if (!reduced) ambT += dt;
+  if(paqT===0) {updateSwimmer(dt); updateDrops(dt); swimmerFrame(dt);}
+  meteorStep(dt);
+  if (!SIM) return;
+  let p = P.vel; gl.useProgram(p.p); drawTo(T.velB);
+  bindTex(0, T.velA.t, p.u.uVel);
+  gl.uniform1f(p.u.uDt, dt); gl.uniform1f(p.u.uDecay, 1.8);
+  gl.uniform4fv(p.u.uSp, spA); gl.uniform4fv(p.u.uSq, sqA);
+  gl.uniform2f(p.u.uSimPx, W, Hw); gl.uniform1f(p.u.uV0, V0); gl.uniform1f(p.u.uTilt, TILT);
+  full(); [T.velA, T.velB] = [T.velB, T.velA];
+
+  waveAcc = Math.min(waveAcc + dt, 4/120);
+  p = P.wave; gl.useProgram(p.p);
+  gl.uniform4fv(p.u.uSp, spA); gl.uniform4fv(p.u.uSq, sqA);
+  gl.uniform2f(p.u.uSimPx, W, Hw); gl.uniform1f(p.u.uV0, V0); gl.uniform1f(p.u.uTilt, TILT); gl.uniform1f(p.u.uK, .3);
+  let steps = 0;
+  while (waveAcc >= 1/120){
+    waveAcc -= 1/120; gl.uniform1f(p.u.uPush, steps === 0 ? 1 : 0);
+    drawTo(T.wavB); bindTex(0, T.wavA.t, p.u.uWave); full(); [T.wavA, T.wavB] = [T.wavB, T.wavA]; steps++;
+  }
+
+  p = P.part; gl.useProgram(p.p); drawTo(T.pB);
+  bindTex(0, T.pA.t, p.u.uPA); bindTex(1, T.pA.t1, p.u.uPB); bindTex(2, T.velA.t, p.u.uVel);
+  gl.uniform2f(p.u.uSimPx, W, Hw); gl.uniform1f(p.u.uDt, dt); gl.uniform1f(p.u.uTime, simT);
+  gl.uniform1f(p.u.uThr, 3.2); gl.uniform1f(p.u.uDrift, reduced ? 0 : 1);
+  gl.uniform1f(p.u.uV0, V0); gl.uniform1f(p.u.uTilt, TILT);
+  full(); [T.pA, T.pB] = [T.pB, T.pA];
+}
+function render(){
+  gl.useProgram(P.cloud.p); drawTo(T.cloud);
+  gl.uniform1f(P.cloud.u.uTime,ambT); gl.uniform1f(P.cloud.u.uAspect,W/shoreCss);
+  full();
+  renderWoman();
+  const starState = starMotion(starClock, reduced || !starHistoryOK);
+  updateStarTrails(starState);
+  if (SIM){
+    let p = P.pts; gl.useProgram(p.p); drawTo(T.glow);
+    gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+    bindTex(0, T.pA.t, p.u.uPA); bindTex(1, T.pA.t1, p.u.uPB);
+    gl.uniform1i(p.u.uPW, pW); gl.uniform1f(p.u.uShoreN, shoreCss/H);
+    gl.uniform1f(p.u.uPt, 2.1*dpr*.5*Math.max(unit, .85)*(T.glow.w*2/cw)); gl.uniform1f(p.u.uGain, 1.25*(1 + .35*clamp((900 - W)/500, 0, 1))); gl.uniform1f(p.u.uV0, V0);
+    gl.drawArrays(gl.POINTS, 0, pW*pH);
+    // droplets
+    const n = Math.min(drops.length, DROP_MAX);
+    if (n){
+      for (let i = 0; i < n; i++){
+        const d = drops[i]; const sc = project(d.X, d.Z, d.y);
+        dropData[i*4] = sc[0]/W*2 - 1; dropData[i*4 + 1] = 1 - sc[1]/H*2;
+        dropData[i*4 + 2] = Math.max(1.5, 3.2*d.sz*sc[2]*unit*dpr*.5); dropData[i*4 + 3] = 1.6*d.b;
+      }
+      gl.useProgram(P.drop.p);
+      gl.bindVertexArray(dropVao); gl.bindBuffer(gl.ARRAY_BUFFER, dropBuf);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, dropData, 0, n*4);
+      gl.drawArrays(gl.POINTS, 0, n);
+      gl.bindVertexArray(vao);
+    }
+    gl.disable(gl.BLEND);
+    // three widths of scatter under the surface
+    let src = T.glow;
+    for (const [a, b] of [['b1h', 'b1'], ['b2h', 'b2'], ['b3h', 'b3']]){
+      const d = T[a + 'd'];
+      p = P.down; gl.useProgram(p.p);
+      drawTo(d); bindTex(0, src.t, p.u.uSrc); gl.uniform2f(p.u.uTx, 1/src.w, 1/src.h); full();
+      p = P.blur; gl.useProgram(p.p);
+      drawTo(T[a]); bindTex(0, d.t, p.u.uSrc); gl.uniform2f(p.u.uDir, 1.5/d.w, 0); full();
+      drawTo(T[b]); bindTex(0, T[a].t, p.u.uSrc); gl.uniform2f(p.u.uDir, 0, 1.5/T[a].h); full();
+      src = T[b];
+    }
+  }
+  const p = P.comp; gl.useProgram(p.p); drawTo(null);
+  updateMoonPhase();
+  gl.uniform3fv(p.u.uMoonLight,moonLight);
+  const sceneLift=reduced?0:paqProgress;
+  // Let the logo disappear before its moon leaves; reverse this handoff on close.
+  const moonTravel=smooth(.3,1,paqT);
+  const dawnYield=smooth(-.10,.16,(1-LIGHT.values[5])*.60)*smooth(.02,.65,LIGHT.values[0]);
+  const moonOrbit=reduced?0:paqSkyTime*.0025;
+  const moonTarget=[cw*(.82+.13*Math.sin(moonOrbit)+(reduced?0:.035*dawnYield)),ch*(.095+.045*(1-Math.cos(moonOrbit))-(reduced?0:.025*dawnYield)),Math.min(cw*.027,24*dpr)];
+  const movingMoon=moonAnchor.map((v,i)=>v+(moonTarget[i]-v)*(reduced?0:moonTravel));
+  movingMoon[1]+=ch*.12*sceneLift; // Compensate camera lift in screen space.
+  gl.uniform3fv(p.u.uMoonAnchor,movingMoon);
+  gl.uniform3fv(p.u.uLogoDot,moonAnchor);
+  gl.uniform1f(p.u.uPaq,paqProgress);
+  gl.uniform1f(p.u.uPaqLift,sceneLift);
+  bindTex(0, T.sky.t, p.u.uSky); bindTex(1, T.sky.t1, p.u.uStar);
+  bindTex(2, SIM ? T.wavA.t : blackTex, p.u.uWave);
+  bindTex(3, SIM ? T.glow.t : blackTex, p.u.uGlow);
+  bindTex(4, SIM ? T.b1.t : blackTex, p.u.uB1);
+  bindTex(5, SIM ? T.b2.t : blackTex, p.u.uB2);
+  bindTex(6, SIM ? T.b3.t : blackTex, p.u.uB3);
+  bindTex(7, wordTex, p.u.uWord);
+  bindTex(8, starHistoryOK ? T.starAtlas.t : blackTex, p.u.uStarTrails);
+  bindTex(9, starHistoryOK && !reduced ? T.starA.t : blackTex, p.u.uStarHistory);
+  bindTex(10,T.cloud.t,p.u.uClouds);
+  bindTex(11,T.woman.t,p.u.uWoman); bindTex(12,T.womanUnder.t,p.u.uWomanUnder);
+  bindTex(13,SIM ? T.velA.t : blackTex,p.u.uAgitation);
+  bindTex(14,controlTex,p.u.uControls);
+  bindTex(15,moonTex,p.u.uMoonSurface);
+  gl.uniform4fv(p.u.uQuestionBox,questionBox);gl.uniform4fv(p.u.uToggleBox,toggleBox);
+  gl.uniform1f(p.u.uControlMode,controlMode);
+  gl.uniform4f(p.u.uStarOrbit, cw*.72, shoreCss*dpr*.24, starRadius*dpr, starState.angle%(Math.PI*2));
+  gl.uniform1f(p.u.uStarBlend, smooth(0,.003,starState.angle));
+  gl.uniform2f(p.u.uRes, cw, ch); gl.uniform1f(p.u.uShore, shoreCss*dpr); gl.uniform1f(p.u.uDpr, dpr);
+  gl.uniform1f(p.u.uTime, ambT); gl.uniform1f(p.u.uScint, reduced ? 0 : 1);
+  gl.uniform1f(p.u.uV0, V0); gl.uniform1f(p.u.uTilt, TILT);
+  gl.uniform1f(p.u.uReflK, 22); gl.uniform1f(p.u.uAmbK, 3.);
+  gl.uniform1f(p.u.uFrame, frameN); gl.uniform1f(p.u.uGlowOn, SIM ? 1 : 0);
+  gl.uniform4f(p.u.uLight, ...LIGHT.values.slice(0,4));
+  gl.uniform2f(p.u.uSun, LIGHT.values[4], LIGHT.values[5]);
+  const elevation=(1-LIGHT.values[5])*.60;
+  const airMass=e=>1/(Math.sin(Math.max(0,e))+.50572*Math.pow(Math.max(0,e)*180/Math.PI+6.07995,-1.6364));
+  const solar=[.134,.224,.351].map(tau=>Math.exp(-tau*airMass(elevation)));
+  const cloudSolar=[.134,.224,.351].map(tau=>Math.exp(-tau*airMass(elevation+.05)*.6)*smooth(-.14,-.02,elevation));
+  gl.uniform4f(p.u.uSolar,...solar,elevation);gl.uniform3fv(p.u.uCloudSolar,cloudSolar);
+  gl.uniform4f(p.u.uWordBox, wordBox[0], wordBox[1], wordReady ? wordBox[2] : 1e-3, wordReady ? wordBox[3] : 1e-3);
+  const mp = met.on ? met.t/met.dur : 0;
+  gl.uniform4f(p.u.uMet, met.A[0]*dpr, met.A[1]*dpr, met.B[0]*dpr, met.B[1]*dpr);
+  gl.uniform2f(p.u.uMetP, mp, met.on ? .32*Math.sin(Math.PI*mp)*(1-paqProgress) : 0);
+  gl.uniform4fv(p.u.uCapA, capA); gl.uniform4fv(p.u.uCapB, capB); gl.uniform1i(p.u.uNCap, nCap); gl.uniform1fv(p.u.uCapMaterial, capMaterial);
+  gl.uniform4f(p.u.uSwBox, swBox[0], swBox[1], swBox[2], swBox[3]);
+  gl.uniform4f(p.u.uRing, ring[0], ring[1], ring[2], ring[3]); gl.uniform1f(p.u.uRingK, ringK);
+  full();
+}
+function frame(now){
+  raf = requestAnimationFrame(frame);
+  const el = Math.max(0, (now - last)/1000); last = now;
+  if (el <= 0) return;
+  lightStep(Math.min(el, 1));
+  const sub = AUTO ? 3 : 1, dt = Math.min(1/30, el);
+  for (let k = 0; k < sub; k++) simStep(dt);
+  render();
+}
+function start(){ if (!raf && !document.hidden){ last = performance.now(); raf = requestAnimationFrame(frame); } }
+function stop(){ cancelAnimationFrame(raf); raf = 0; }
+
+let resizeQ = 0;
+addEventListener('resize', () => { cancelAnimationFrame(resizeQ); resizeQ = requestAnimationFrame(() => { resize(); }); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else start(); });
+cvs.addEventListener('webglcontextlost', e => { e.preventDefault(); stop(); });
+cvs.addEventListener('webglcontextrestored', () => { T = {}; P = {}; sized = false; boot(); });
+if (document.fonts){
+  document.fonts.ready.then(() => { if (!gl.isContextLost()) { drawWord(); if (sized && autoOn && !reduced) targetOpeningSwim(); } });
+}
+mark.addEventListener('load', () => { if (sized && !gl.isContextLost()) drawWord(); }, true);
+new ResizeObserver(() => { if (sized && !gl.isContextLost()) drawWord(); }).observe(document.querySelector('.brand-lockup'));
+new ResizeObserver(() => { if(sized) refreshSwimBounds(); }).observe(footer);
+document.addEventListener('qualia:wordmark-change', () => { if (sized && !gl.isContextLost()) drawWord(); });
+function boot(){
+  try { initGL(); resize(); start(); }
+  catch (err) { console.error(err); document.documentElement.classList.add('nogl'); stop(); }
+}
+boot();
+})();
+</script>
+</body>
+</html>

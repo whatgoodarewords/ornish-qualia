@@ -1,0 +1,4 @@
+Lunar surface map: NASA Scientific Visualization Studio, CGI Moon Kit.
+LROC WAC data: NASA/GSFC/Arizona State University.
+https://svs.gsfc.nasa.gov/4720/
+Source: https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_2k.jpg
