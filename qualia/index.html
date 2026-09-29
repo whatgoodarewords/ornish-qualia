@@ -479,7 +479,7 @@ function layoutQualiaFooter(mark,footer,H,shoreCss){
 const QUALIA_LOAD = (()=>{
   const screen=document.getElementById('loading-screen'),moon=document.getElementById('loading-moon');
   const pending=new Set(['graphics','fonts','wordmark','moon','woodland','swimmer']);
-  let ready=false,active=false,finishing=false,moonReveal=0,inkReveal=0,captionReveal=0,reflectionInk=0,reflectionCaption=0,portrait=null,controlsReveal=0,anchor=null,introFrame=0;
+  let ready=false,active=false,swimReady=false,finishing=false,moonReveal=0,inkReveal=0,captionReveal=0,reflectionInk=0,reflectionCaption=0,portrait=null,controlsReveal=0,anchor=null,introFrame=0;
   let phaseFrame=0,phaseShown=0,phaseFrom=0,phaseTarget=0,phaseStarted=0;
   const globe=screen.querySelector("svg"),root=document.documentElement;
   let lunarFraction=1,lunarWaxing=true;
@@ -489,7 +489,7 @@ const QUALIA_LOAD = (()=>{
   for(const part of ["ink","caption","meta","controls"])document.body.style.setProperty(`--intro-${part}`,0);
   document.body.style.setProperty("--intro-controls-events","none");
   function complete(){
-    if(ready)return;window.qualiaTrace?.setProgress(1);ready=true;active=true;moonReveal=inkReveal=captionReveal=reflectionInk=reflectionCaption=controlsReveal=1;
+    if(ready)return;window.qualiaTrace?.setProgress(1);ready=true;active=true;swimReady=true;moonReveal=inkReveal=captionReveal=reflectionInk=reflectionCaption=controlsReveal=1;
     cancelAnimationFrame(introFrame);cancelAnimationFrame(phaseFrame);clearTimeout(window.qualiaLoadEscape);
     for(const part of ["ink","caption","meta","controls"])document.body.style.setProperty(`--intro-${part}`,1);
     document.body.style.setProperty("--question-glint",0);
@@ -528,23 +528,24 @@ const QUALIA_LOAD = (()=>{
       }
       moonReveal=ease((elapsed-(still?0:720))/(still?200:180));
       globe.style.opacity=1-moonReveal;
-      // Paint for 1.5 seconds, then continue the one-second cascade.
+      // Paint for 2.5 seconds, then continue the one-second cascade.
       inkReveal=ease((elapsed-(still?0:880))/(still?200:180));
-      window.qualiaTrace?.setProgress(still?1:Math.max(0,Math.min(1,(elapsed-880)/1500)));
-      captionReveal=ease((elapsed-(still?0:2380))/(still?200:600));
+      window.qualiaTrace?.setProgress(still?1:Math.max(0,Math.min(1,(elapsed-880)/2500)));
+      swimReady=elapsed>=(still?200:3380);
+      captionReveal=ease((elapsed-(still?0:3380))/(still?200:600));
       // Reflections share their source's fade; the water supplies attenuation.
       reflectionInk=inkReveal;
       reflectionCaption=captionReveal;
-      const metaReveal=ease((elapsed-(still?0:3380))/(still?200:600));
-      controlsReveal=ease((elapsed-(still?0:4380))/(still?200:600));
-      const glint=still?0:Math.pow(Math.sin(Math.PI*Math.min(1,Math.max(0,(elapsed-4380)/600))),2);
+      const metaReveal=ease((elapsed-(still?0:4380))/(still?200:600));
+      controlsReveal=ease((elapsed-(still?0:5380))/(still?200:600));
+      const glint=still?0:Math.pow(Math.sin(Math.PI*Math.min(1,Math.max(0,(elapsed-5380)/600))),2);
       document.body.style.setProperty("--question-glint",glint);
       document.body.style.setProperty("--intro-ink",inkReveal);
       document.body.style.setProperty("--intro-caption",captionReveal);
       document.body.style.setProperty("--intro-meta",metaReveal);
       document.body.style.setProperty("--intro-controls",controlsReveal);
       document.body.style.setProperty("--intro-controls-events",controlsReveal>.1?"auto":"none");
-      if(elapsed>=(still?200:4980))complete();else introFrame=requestAnimationFrame(step);
+      if(elapsed>=(still?200:5980))complete();else introFrame=requestAnimationFrame(step);
     }
     introFrame=requestAnimationFrame(step);
   }
@@ -595,7 +596,7 @@ const QUALIA_LOAD = (()=>{
   watchImage('swimmer','assets/venus-head-v1.png?v=8030e18898b1');
   const fontsTimeout=setTimeout(()=>done('fonts'),4500);
   Promise.resolve(document.fonts?.ready).then(()=>{clearTimeout(fontsTimeout);done('fonts');},()=>{clearTimeout(fontsTimeout);done('fonts');});
-  return {done,setAnchor(value){anchor=value;},get moonReveal(){return moonReveal;},get inkReveal(){return inkReveal;},get captionReveal(){return captionReveal;},get controlsReveal(){return controlsReveal;},get reflectionInk(){return reflectionInk;},get reflectionCaption(){return reflectionCaption;},get portrait(){return portrait;},get active(){return active;},get ready(){return ready;}};
+  return {done,setAnchor(value){anchor=value;},get moonReveal(){return moonReveal;},get inkReveal(){return inkReveal;},get captionReveal(){return captionReveal;},get controlsReveal(){return controlsReveal;},get reflectionInk(){return reflectionInk;},get reflectionCaption(){return reflectionCaption;},get portrait(){return portrait;},get swimReady(){return swimReady;},get active(){return active;},get ready(){return ready;}};
 })();
 // One reversible clock for the lake, moon, dimming, typography and controls.
 const PAQ = (() => {
@@ -2597,7 +2598,7 @@ function burstCloud(e){
 }
 const activeTouches=new Set();
 function steer(e, force){
-  if (!QUALIA_LOAD.active || AUTO || document.getElementById('faq-dialog').open || e.target.closest?.('.light-controls, .signal-link, .wordmark-controls, #faq-open, #brand-ink-toggle')) return false;
+  if (!QUALIA_LOAD.swimReady || AUTO || document.getElementById('faq-dialog').open || e.target.closest?.('.light-controls, .signal-link, .wordmark-controls, #faq-open, #brand-ink-toggle')) return false;
   if ((window.visualViewport?.scale || 1)>1.01 || activeTouches.size>1 || (e.pointerType==='touch' && !e.isPrimary)) return false;
   if (e.clientY>=swimFooterTop) return false;
   if (!force && e.pointerType === 'mouse' && e.buttons === 0 && e.clientY < shoreCss) return false;
@@ -2674,7 +2675,7 @@ let raf = 0, last = 0, simT = 0, ambT = 0, frameN = 0, waveAcc = 0;
 function simStep(dt){
   frameN++; simT += dt;
   if (!reduced) ambT += dt;
-  if(paqT===0) {updateSwimmer(dt); updateDrops(dt); swimmerFrame(dt);}
+  if(paqT===0&&QUALIA_LOAD.swimReady) {updateSwimmer(dt); updateDrops(dt); swimmerFrame(dt);}
   meteorStep(dt);
   if (!SIM) return;
   let p = P.vel; gl.useProgram(p.p); drawTo(T.velB);
