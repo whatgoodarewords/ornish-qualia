@@ -130,7 +130,13 @@ body.ink-dark .mark,body.ink-dark .sub { color:#080b10; text-shadow:none; }
 /* The PAQ is another view of the same lake, not a separate opaque panel. */
 body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10px; }
 .hero { opacity:var(--paq-hero); }
-#faq-open { opacity:calc(.76 * var(--paq-control)); transition:none; }
+#faq-open { color:#fff; opacity:calc(.96 * var(--paq-control)); transition:none; }
+#faq-open svg { transition:filter .35s ease,transform .35s ease; }
+@media(hover:hover) {
+  #faq-open:hover svg { filter:drop-shadow(0 0 5px #dcefff70); transform:translateY(-1px) scale(.99,.94); }
+}
+#faq-open:focus-visible svg { filter:drop-shadow(0 0 5px #dcefff70); }
+@media(prefers-reduced-motion:reduce) { #faq-open svg { transition:none; } #faq-open:hover svg { transform:scale(.95,.9); } }
 #paq-dim { position:fixed; inset:0; z-index:5; pointer-events:none; opacity:var(--paq-dim); background:linear-gradient(to right,transparent 0%,rgb(2 8 14 / calc(var(--paq-reading,0) * .68)) 4%,rgb(2 8 14 / calc(var(--paq-reading,0) * .68)) 96%,transparent 100%),linear-gradient(to bottom,#02080e08 0%,#02080e14 18%,#02080e47 40%,#02080e6b 68%); }
 #faq-dialog { inset:0; width:100%; height:100dvh; max-width:none; max-height:none; margin:0; padding:0 max(7vw,calc((100vw - 900px)/2)) calc(var(--safe-bottom) + 64px); background:transparent; color:#eceae4; opacity:var(--paq-text); transition:none; }
 .faq-header,.faq-answers { transform:translateY(var(--paq-text-y)); }
@@ -405,6 +411,15 @@ float canopy(float x, float y, float cw, float hmin, float hmax, float seed){
   skyline += .35*(vnoise(vec2(x*1.91, seed + 31.)) - .5);
   return clamp((skyline - y)*uU + .5, 0., 1.);
 }
+// Photographic source has a pale sky fringe; discard sky by colour in the
+// material so the original foliage pixels remain unpainted and unwarped.
+vec4 woodlandPhoto(vec2 uv){
+  vec4 leaf=texture(uWoodland,uv);
+  float green=leaf.g-max(leaf.r,leaf.b);
+  float value=dot(leaf.rgb,vec3(.2126,.7152,.0722));
+  leaf.a*=smoothstep(.008,.045,green)*(1.-smoothstep(.64,.85,value));
+  return leaf;
+}
 /* star colour from B-V colour index (blackbody-like ramp, hot blue-white to cool orange) */
 vec3 bvColor(float bv){
   float x = clamp((bv + .4)/.4, 0., 4.999); float f = fract(x); int i = int(floor(x));
@@ -468,31 +483,44 @@ void main(){
   if (uAtlasRadius > 0.) { oSky = vec4(st, 1.); oStar = vec4(0.); return; }
   /* soft, layered broadleaf canopies on the far shore */
   float x = pd.x / uU, y = (uShore - pd.y) / uU;
-  // Compress the original rolling canopy locally, rather than cutting a notch.
-  // An asymmetric, softly tapering hollow retains every tree/hill irregularity.
+  // Lower the terrain itself, not the texture coordinates: vegetation must not
+  // stretch or pinch where the sunrise hollow meets the surrounding hills.
   float fromSun=pd.x/uRes.x-.807;
   float hollowWidth=fromSun<0.? .070 : .095;
   float solarHollow=exp(-pow(fromSun/hollowWidth,2.)*2.);
   solarHollow*=1.-smoothstep(.12,.18,abs(fromSun));
-  y*=1.+1.65*solarHollow;
+  float hollowScale=1.+1.65*solarHollow;
+  float shrubs=1.-smoothstep(.035,.135,abs(fromSun));
   float ridgeF = 8. + 14.*vnoise(vec2(x*.006, 1.)) + 5.*vnoise(vec2(x*.03, 2.));
+  ridgeF/=hollowScale;
   float covF = clamp((ridgeF - y)*uU + .5, 0., 1.);
   covF = max(covF, canopy(x, y - ridgeF*.65, 13., 9., 22., 3.));
   float ridgeN = 7. + 15.*vnoise(vec2(x*.006, 5.)) + 4.*vnoise(vec2(x*.025, 8.));
+  ridgeN/=hollowScale;
   float covN = clamp((ridgeN - y)*uU + .5, 0., 1.);
   covN = max(covN, canopy(x, y - ridgeN, 19., 16., 35., 11.));
   vec3 farLeaves=vec3(.19,.265,.27),nearLeaves=vec3(.085,.165,.105);
   if(uWoodlandReady>.5){
     // Preserve the low rolling ridges and sun hollow; real leaf alpha supplies
     // the smaller crown irregularities, replacing the repeated dome outlines.
-    float tx=1.-abs(1.-mod(x/280.,2.));
-    vec4 nearTrees=texture(uWoodland,vec2(tx,clamp(.78-(y-ridgeN)/80.,0.,1.)));
-    vec4 farTrees=texture(uWoodland,vec2(1.-tx,clamp(.76-(y-ridgeF*.65)/52.,0.,1.)));
+    float tx=1.-abs(1.-mod(x/560.,2.));
+    vec4 nearTrees=woodlandPhoto(vec2(tx,clamp(.60-(y-ridgeN)/140.,0.,.77)));
+    vec4 farTrees=woodlandPhoto(vec2(1.-tx,clamp(.56-(y-ridgeF*.65)/100.,0.,.77)));
     covN=max(clamp((ridgeN-y)*uU+.5,0.,1.),nearTrees.a);
     covF=max(clamp((ridgeF-y)*uU+.5,0.,1.),farTrees.a);
     nearLeaves=nearTrees.rgb*vec3(.64,.73,.69);
     farLeaves=mix(farTrees.rgb*vec3(.55,.65,.65),vec3(.20,.27,.29),.38);
+    // Dense foliage from the lower canopy supplies shrub colour without
+    // squeezing full tree crowns into the small foreground rise.
+    vec2 undergrowthUV=vec2(tx,.61+.11*vnoise(vec2(x*.13,y*.23)));
+    vec3 undergrowth=texture(uWoodland,undergrowthUV).rgb;
+    nearLeaves=mix(nearLeaves,undergrowth*vec3(.64,.73,.69),shrubs);
+    farLeaves=mix(farLeaves,undergrowth*vec3(.55,.65,.65),shrubs);
   }
+  float shrubN=max(clamp((ridgeN-y)*uU+.5,0.,1.),canopy(x,y-ridgeN,4.5,2.5,5.5,23.));
+  float shrubF=max(clamp((ridgeF-y)*uU+.5,0.,1.),canopy(x,y-ridgeF*.65,3.5,1.8,4.,29.));
+  covN=smoothstep(.35,.65,mix(covN,shrubN,shrubs));
+  covF=smoothstep(.35,.65,mix(covF,shrubF,shrubs));
   col = mix(col, farLeaves, covF);
   col = mix(col, nearLeaves, covN);
   float cov = max(covF, covN);
@@ -1329,7 +1357,7 @@ function initGL(){
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
     woodlandReady=true;if(T.sky)renderSky();
   };
-  woodlandImage.src='assets/woodland-v1.png';
+  woodlandImage.src='assets/woodland-photo.png';
 }
 
 /* ---------- original star field, slowly rotated with a fading exposure ---------- */
@@ -2221,8 +2249,8 @@ function sunriseAt(seconds) {
   values[4]=julySunX(values[5]);
   return values;
 }
-// Keep the warm-dawn progression within 25 seconds and run daylight 65% faster.
-const NIGHT_SECONDS=20, DAWN_SECONDS=25, DUSK_SECONDS=7+(30-7)*4, DAY_SECONDS=150/1.65;
+// Sunrise runs at 65% of its previous speed; daylight remains 65% faster.
+const NIGHT_SECONDS=20, DAWN_SECONDS=25/.65, DUSK_SECONDS=7+(30-7)*4, DAY_SECONDS=150/1.65;
 const DAWN_SPEED=DUSK_SECONDS/DAWN_SECONDS;
 const CYCLE_SECONDS=NIGHT_SECONDS+DAWN_SECONDS+DAY_SECONDS+DUSK_SECONDS;
 function dawnTime(seconds) { return seconds<=7 ? seconds : 7+(seconds-7)/4; }
