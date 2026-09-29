@@ -167,7 +167,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 #faq-close { font-size:0; }
 #faq-close::before,#faq-close::after { content:''; position:absolute; width:24px; height:1px; background:currentColor; left:10px; top:21px; transform:rotate(45deg); }
 #faq-close::after { transform:rotate(-45deg); }
-#faq-close,#faq-close:hover,.paq-contrast-word { color:var(--paq-ink,#fff); }
+#faq-close,#faq-close:hover,.paq-title-ink,.faq-heading-subtitle,.faq-authorship { color:#fff; }
 .faq-guild-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 28px; margin:24px 0 6px; padding:0; list-style:none; }
 .faq-guild-list li { margin:0; color:#eef0f2; font:400 20px/1.3 Alegreya,Georgia,serif; }
 @media(max-width:420px) { .faq-guild-list { grid-template-columns:1fr; gap:12px; } }
@@ -2331,49 +2331,6 @@ function simStep(dt){
   gl.uniform1f(p.u.uV0, V0); gl.uniform1f(p.u.uTilt, TILT);
   full(); [T.pA, T.pB] = [T.pB, T.pA];
 }
-// Sample the rendered scene, including the reading veil, separately behind each
-// physical header line. Only active while PAQ is visible; one tiny read per 300ms.
-const paqContrast = (() => {
-  const sample=document.createElement('canvas');sample.width=128;sample.height=80;
-  const ctx=sample.getContext('2d',{willReadFrequently:true});
-  const groups=[...document.querySelectorAll('.paq-title-ink,.faq-heading-subtitle,.faq-authorship')].map(el=>{
-    const words=el.textContent.trim().split(/\s+/);el.textContent='';
-    return words.map((word,i)=>{if(i)el.append(' ');const span=document.createElement('span');span.className='paq-contrast-word';span.textContent=word;el.append(span);return span;});
-  });
-  const close=document.getElementById('faq-close');let last=-Infinity;
-  const linear=v=>v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4);
-  return now=>{
-    if(!ctx||PAQ.t<=0||now-last<300)return;last=now;
-    const lines=[];
-    for(const words of groups){let line;for(const el of words){const r=el.getBoundingClientRect();if(r.bottom<=0||r.top>=H)continue;
-      if(!line||Math.abs(line.top-r.top)>2){line={left:r.left,right:r.right,top:r.top,bottom:r.bottom,els:[]};lines.push(line);}
-      line.right=r.right;line.bottom=Math.max(line.bottom,r.bottom);line.els.push(el);
-    }}
-    const r=close.getBoundingClientRect();lines.push({left:r.left+10,right:r.right-10,top:r.top+10,bottom:r.bottom-10,els:[close]});
-    ctx.clearRect(0,0,128,80);ctx.drawImage(cvs,0,0,128,80);
-    // These stops mirror #paq-dim; use its animated opacity, not the target state.
-    ctx.globalAlpha=Number(getComputedStyle(document.getElementById('paq-dim')).opacity);
-    let gradient=ctx.createLinearGradient(0,0,0,80);
-    [[0,8/255],[.18,20/255],[.4,71/255],[.68,107/255],[1,107/255]].forEach(([p,a])=>gradient.addColorStop(p,`rgba(2,8,14,${a})`));
-    ctx.fillStyle=gradient;ctx.fillRect(0,0,128,80);
-    gradient=ctx.createLinearGradient(0,0,128,0);const reading=Math.min(1,PAQ.scrollY/160)*.68;
-    [[0,0],[.04,reading],[.96,reading],[1,0]].forEach(([p,a])=>gradient.addColorStop(p,`rgba(2,8,14,${a})`));
-    ctx.fillStyle=gradient;ctx.fillRect(0,0,128,80);ctx.globalAlpha=1;
-    const pixels=ctx.getImageData(0,0,128,80).data;
-    for(const line of lines){let sum=0,n=0;
-      for(let y=0;y<3;y++)for(let x=0;x<11;x++){
-        const px=clamp(Math.floor((line.left+(line.right-line.left)*(x+.5)/11)/W*128),0,127);
-        const py=clamp(Math.floor((line.top+(line.bottom-line.top)*(y+.5)/3)/H*80),0,79),i=(py*128+px)*4;
-        sum+=.2126*linear(pixels[i]/255)+.7152*linear(pixels[i+1]/255)+.0722*linear(pixels[i+2]/255);n++;
-      }
-      const luminance=sum/n,previous=line.els[0].style.getPropertyValue('--paq-ink');
-      // Equal black/white contrast at sqrt(.0525)-.05; small dead band avoids shimmer.
-      const threshold=Math.sqrt(.0525)-.05;
-      const ink=previous&&Math.abs(luminance-threshold)<.008?previous:luminance>threshold?'#000':'#fff';
-      for(const el of line.els)el.style.setProperty('--paq-ink',ink);
-    }
-  };
-})();
 function render(){
   gl.useProgram(P.cloud.p); drawTo(T.cloud);
   gl.uniform1f(P.cloud.u.uTime,ambT); gl.uniform1f(P.cloud.u.uAspect,W/shoreCss);
@@ -2463,7 +2420,6 @@ function render(){
   gl.uniform4f(p.u.uSwBox, swBox[0], swBox[1], swBox[2], swBox[3]);
   gl.uniform4f(p.u.uRing, ring[0], ring[1], ring[2], ring[3]); gl.uniform1f(p.u.uRingK, ringK);
   full();
-  paqContrast(performance.now());
 }
 function frame(now){
   raf = requestAnimationFrame(frame);
