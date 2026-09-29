@@ -435,9 +435,9 @@ function paqMoonAt(seconds){
     orbit=1-ease((dusk-.60)/.40);
   }
   const {width,height,shore}=dimensions(),radius=sunRadius(cycleAt(t).values);
-  // Stay beside the header before crossing the open band above the treeline.
-  // At dawn the moon actually sets behind the same landscape, without a fade.
-  const x=width*(.90-.67*ease((orbit-.65)/.35));
+  // Keep one quiet setting path beside the header, with only a slight lateral drift.
+  // No late-dawn sweep across the sky: descend behind the nearby treeline.
+  const x=width*(.90-.025*orbit);
   const y=height*.095+(shore-height*.12+radius*2.5-height*.095)*Math.pow(orbit,1.45);
   return [x,y,radius];
 }
