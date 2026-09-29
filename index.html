@@ -6,7 +6,7 @@
 <script>
 document.documentElement.classList.add('is-loading');
 // Never strand the page if scripting or a third-party font fails to finish.
-window.qualiaLoadEscape=setTimeout(()=>document.documentElement.classList.remove('is-loading'),12000);
+window.qualiaLoadEscape=setTimeout(()=>{if(window.qualiaFinishLoading)window.qualiaFinishLoading();else document.documentElement.classList.remove('is-loading');},12000);
 </script>
 <title>Qualia — a phenomenological research party</title>
 <link rel="icon" type="image/png" href="assets/qualia-q.png">
@@ -18,9 +18,11 @@ window.qualiaLoadEscape=setTimeout(()=>document.documentElement.classList.remove
 <style>
   :root { color-scheme: dark; --safe-top:env(safe-area-inset-top,0px); --safe-right:env(safe-area-inset-right,0px); --safe-bottom:env(safe-area-inset-bottom,0px); --safe-left:env(safe-area-inset-left,0px); --edge-left:calc(var(--safe-left) + 16px); --edge-right:calc(var(--safe-right) + 16px); }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #010308; }
-  #loading-screen { position:fixed; inset:0; z-index:100; display:grid; place-items:center; background:#010308; opacity:1; transition:opacity .65s ease; pointer-events:auto; }
-  #loading-screen svg { width:30px; height:30px; overflow:visible; filter:drop-shadow(0 0 7px #dcecff18); }
-  html:not(.is-loading) #loading-screen { opacity:0; pointer-events:none; }
+  #loading-screen { position:fixed; inset:0; z-index:100; display:grid; place-items:center; background:transparent; opacity:1; transition:opacity .65s ease; pointer-events:auto; }
+  #loading-screen::before { content:""; position:absolute; inset:0; background:#010308; opacity:var(--loading-veil,1); }
+  #loading-screen svg { position:relative; z-index:1; width:30px; height:30px; overflow:visible; filter:drop-shadow(0 0 7px #dcecff18); }
+  html:not(.is-loading):not(.is-revealing) #loading-screen { opacity:0; pointer-events:none; }
+  html.nogl .mark { --dot-alpha:1; }
   html.is-loading #c,html.is-loading .hero,html.is-loading #faq-open,html.is-loading #brand-ink-toggle { visibility:hidden; }
   @media(prefers-reduced-motion:reduce) { #loading-screen { transition:opacity .15s linear; } }
   body {
@@ -139,8 +141,8 @@ body.ink-dark .mark,body.ink-dark .sub { color:#080b10; text-shadow:none; }
 <style>
 /* The PAQ is another view of the same lake, not a separate opaque panel. */
 body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10px; }
-.hero { opacity:var(--paq-hero); }
-#faq-open { color:#fff; opacity:calc(.96 * var(--paq-control)); transition:none; }
+.hero { opacity:calc(var(--paq-hero) * var(--intro-ink,1)); }
+#faq-open { color:#fff; opacity:calc(.96 * var(--paq-control) * var(--intro-ink,1)); transition:none; }
 #faq-open svg { transition:filter .35s ease,transform .35s ease; }
 @media(hover:hover) {
   #faq-open:hover svg { filter:drop-shadow(0 0 5px #dcefff70); transform:translateY(-1px) scale(.99,.94); }
@@ -260,7 +262,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
     <details class="faq-item"><summary><h3 id="faq-sleep">Where do I sleep?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Camping, glamping, vans, and private cabins.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-meals">What about food?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Four meals a day: Second Breakfast at 9am, Lunch at 1pm, Dinner at 7pm, and Breakfast at midnight :)</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-dependents">Can I bring a pet?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Pets are welcome, but they must fill out the application. We want everyone at this event to be sovereign and self-responsible.</p></div></details>
-    <details class="faq-item"><summary><h3 id="faq-burning-man">Is this some Burning Man thing?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No. Qualia strives to be tasteful. But we value the principles of sovereignty, agency, and participation.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-burning-man">Is this some Burning Man thing?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No. Qualia strives to be tasteful. But we value the principles of sovereignty, agency, participation, and civic responsibility.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q10">Is this event for profit?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>It will most assuredly lose money.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-catchphrases-heading">Alternative catchphrases</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><ul class="faq-catchphrases">
       <li><strong>a party for the fact that anything feels like anything at all</strong></li>
@@ -288,7 +290,41 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 const QUALIA_LOAD = (()=>{
   const screen=document.getElementById('loading-screen'),moon=document.getElementById('loading-moon');
   const pending=new Set(['graphics','fonts','wordmark','moon','woodland','swimmer']);
-  let ready=false,finishing=false;
+  let ready=false,finishing=false,moonReveal=0,inkReveal=0,anchor=null,introFrame=0;
+  const globe=screen.querySelector("svg"),root=document.documentElement;
+  document.body.style.setProperty("--intro-ink",0);
+  function complete(){
+    if(ready)return;ready=true;moonReveal=inkReveal=1;
+    cancelAnimationFrame(introFrame);clearTimeout(window.qualiaLoadEscape);
+    document.body.style.setProperty("--intro-ink",1);
+    root.classList.remove("is-loading","is-revealing");
+    document.body.removeAttribute("aria-busy");screen.setAttribute("aria-hidden","true");
+    setTimeout(()=>screen.remove(),700);
+  }
+  window.qualiaFinishLoading=complete;
+  const ease=t=>{t=Math.min(1,Math.max(0,t));return t*t*t*(t*(t*6-15)+10);};
+  function reveal(){
+    if(ready)return;
+    root.classList.add("is-revealing");root.classList.remove("is-loading");
+    const still=matchMedia("(prefers-reduced-motion: reduce)").matches||root.classList.contains("nogl");
+    const began=performance.now();
+    function step(now){
+      if(ready)return;
+      const elapsed=now-began,travel=ease(elapsed/1400);
+      screen.style.setProperty("--loading-veil",1-ease(elapsed/(still?250:900)));
+      if(!still&&anchor){
+        const dx=anchor[0]-innerWidth/2,dy=anchor[1]-innerHeight/2;
+        const bow=Math.min(64,Math.abs(dx)*.22);
+        globe.style.transform=`translate(${dx*travel}px,${dy*travel-4*travel*(1-travel)*bow}px) scale(${1+(anchor[2]/13.125-1)*travel})`;
+      }
+      moonReveal=ease((elapsed-(still?0:1250))/(still?250:300));
+      globe.style.opacity=1-moonReveal;
+      inkReveal=ease((elapsed-(still?100:1500))/(still?250:650));
+      document.body.style.setProperty("--intro-ink",inkReveal);
+      if(elapsed>=(still?350:2150))complete();else introFrame=requestAnimationFrame(step);
+    }
+    introFrame=requestAnimationFrame(step);
+  }
   document.body.setAttribute('aria-busy','true');
   function done(name){
     if(!pending.delete(name))return;
@@ -296,14 +332,8 @@ const QUALIA_LOAD = (()=>{
     screen.setAttribute('aria-valuenow',String(Math.round(progress*100)));
     moon.setAttribute('d',`M16 2A14 14 0 0 1 16 30A${r} 14 0 0 ${progress<.5?0:1} 16 2Z`);
     if(pending.size||finishing)return;finishing=true;
-    // Present the full moon, then let the complete lake show through the fade.
-    requestAnimationFrame(()=>setTimeout(()=>{
-      ready=true;clearTimeout(window.qualiaLoadEscape);
-      document.documentElement.classList.remove('is-loading');
-      document.body.removeAttribute('aria-busy');
-      screen.setAttribute('aria-hidden','true');
-      setTimeout(()=>screen.remove(),700);
-    },160));
+    // Full moon, then a shared destination with the real lunar dot; lettering last.
+    requestAnimationFrame(()=>setTimeout(reveal,160));
   }
   // Project the same NASA albedo map used by the lake onto a small lunar sphere.
   function moonPortrait(img){
@@ -341,7 +371,7 @@ const QUALIA_LOAD = (()=>{
   watchImage('swimmer','assets/venus-head-v1.png');
   const fontsTimeout=setTimeout(()=>done('fonts'),4500);
   Promise.resolve(document.fonts?.ready).then(()=>{clearTimeout(fontsTimeout);done('fonts');},()=>{clearTimeout(fontsTimeout);done('fonts');});
-  return {done,get ready(){return ready;}};
+  return {done,setAnchor(value){anchor=value;},get moonReveal(){return moonReveal;},get inkReveal(){return inkReveal;},get ready(){return ready;}};
 })();
 // One reversible clock for the lake, moon, dimming, typography and controls.
 const PAQ = (() => {
@@ -957,6 +987,7 @@ uniform vec4 uSolar; // atmospheric solar transmission RGB and elevation in radi
 uniform vec3 uCloudSolar;
 uniform float uPaq;
 uniform float uPaqLift;
+uniform float uIntroMoon, uIntroInk;
 uniform vec3 uLogoDot;
 uniform vec3 uMoonAnchor;
 uniform vec3 uMoonLight; // signed light direction x, z, illuminated fraction
@@ -997,12 +1028,12 @@ vec4 wordAt(vec2 pd, float lod){
   if (q.x < 0. || q.y < 0. || q.x > 1. || q.y > 1.) return vec4(0.);
   vec4 ink=textureLod(uWord,q,lod);
   float dotRegion=1.-step(uLogoDot.z*1.185,length(pd-uLogoDot.xy));
-  return ink*(1.-dotRegion*(1.-smoothstep(.08,.72,uLight.x)))*(1.-smoothstep(0.,.5,uPaq));
+  return ink*(1.-dotRegion*(1.-smoothstep(.08,.72,uLight.x)))*(1.-smoothstep(0.,.5,uPaq))*uIntroInk;
 }
 vec4 controlAt(vec2 pd,vec4 box,float slot){
   vec2 q=(pd-box.xy)/box.zw;
   if(q.x<0.||q.y<0.||q.x>1.||q.y>1.) return vec4(0.);
-  return texture(uControls,vec2((q.x+slot)/3.,q.y));
+  return texture(uControls,vec2((q.x+slot)/3.,q.y))*uIntroInk;
 }
 vec4 controlsAt(vec2 pd){
   return controlAt(pd,uQuestionBox,0.)*.76*(1.-smoothstep(0.,.4,uPaq));
@@ -1114,7 +1145,7 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   vec3 lunarTone=clamp((albedo-vec3(.42))*1.12+vec3(.46),vec3(.04),vec3(.92));
   float lunarShimmer=1.+uScint*.025*sin(uTime*.53);
   vec3 moonSurface=lunarTone*vec3(1.02,1.025,1.04)*(lunarLight*1.3+earthshine)*lunarShimmer;
-  float moonVisibility=1.-smoothstep(.08,.72,uLight.x);
+  float moonVisibility=(1.-smoothstep(.08,.72,uLight.x))*uIntroMoon;
   // Dawn air is in front of the moon: the unlit side must not punch a black hole
   // in a bright sky. Earthshine yields to sky radiance while the lit face remains.
   float lunarDayHaze=smoothstep(.015,.28,uLight.x);
@@ -1317,7 +1348,7 @@ void main(){
     float lunarCross=(pd.x-uMoonAnchor.x+off.x*1.35)/(uRes.x*(.004+.018*lunarNear));
     float lunarPath=exp(-lunarCross*lunarCross)*exp(-lunarNear*2.)*smoothstep(-.015,.025,lunarBelow);
     float lunarGlints=smoothstep(.48,.82,vnoise(glintSpace+vec2(19.,7.)))*smoothstep(.38,.75,vnoise(glintSpace*.43));
-    float lunarStrength=uMoonLight.z*uLight.z*(1.-smoothstep(.08,.72,uLight.x));
+    float lunarStrength=uIntroMoon*uMoonLight.z*uLight.z*(1.-smoothstep(.08,.72,uLight.x));
     col+=vec3(.76,.83,.94)*lunarPath*lunarGlints*.075*lunarStrength*fade*(1.-mA);
     col = mix(col,submerged.rgb*vec3(.55,.78,.80),mU*mix(.4,.52,uLight.x));
     if (uGlowOn > .5){
@@ -2478,6 +2509,9 @@ function render(){
   gl.uniform3fv(p.u.uMoonLight,moonLight);
   const sceneLift=reduced?0:paqProgress;
   const movingMoon=currentMoonPosition();
+  QUALIA_LOAD.setAnchor(movingMoon.map(v=>v/dpr));
+  gl.uniform1f(p.u.uIntroMoon,QUALIA_LOAD.moonReveal);
+  gl.uniform1f(p.u.uIntroInk,QUALIA_LOAD.inkReveal);
   gl.uniform3fv(p.u.uMoonAnchor,movingMoon);
   gl.uniform3fv(p.u.uLogoDot,moonAnchor);
   gl.uniform1f(p.u.uPaq,paqProgress);
