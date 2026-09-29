@@ -319,7 +319,7 @@ const QUALIA_LOAD = (()=>{
     const t=Math.min(1,Math.max(0,(now-phaseStarted)/180));
     phaseShown=phaseFrom+(phaseTarget-phaseFrom)*ease(t);
     const illumination=phaseOrigin+(lunarFraction-phaseOrigin)*phaseShown;
-    const r=Math.max(.001,14*Math.abs(Math.cos(Math.PI*illumination)));
+    const r=Math.max(.001,14*Math.abs(1-2*illumination));
     moon.setAttribute('d',`M16 2A14 14 0 0 1 16 30A${r} 14 0 0 ${illumination<.5?0:1} 16 2Z`);
     if(t<1)phaseFrame=requestAnimationFrame(paintPhase);
   }
@@ -361,7 +361,7 @@ const QUALIA_LOAD = (()=>{
     screen.setAttribute('aria-valuenow',String(Math.round(phaseTarget*100)));
     if(!phaseFrame)phaseFrame=requestAnimationFrame(paintPhase);
     if(pending.size||finishing)return;finishing=true;
-    // Full moon, then a shared destination with the real lunar dot; lettering last.
+    // Current lunar phase, then a shared destination with the real dot; lettering last.
     requestAnimationFrame(reveal);
   }
   // Project the same NASA albedo map used by the lake onto a small lunar sphere.
