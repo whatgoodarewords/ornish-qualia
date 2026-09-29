@@ -197,6 +197,14 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 .faq-guild-list li { margin:0; color:#eef0f2; font:400 20px/1.3 Alegreya,Georgia,serif; }
 @media(max-width:420px) { .faq-guild-list { grid-template-columns:1fr; gap:12px; } }
 @media(prefers-reduced-motion:reduce) { .faq-header,.faq-answers { transform:none; } }
+/* Local letter shadows follow daylight; the landscape has no dimming layer. */
+.faq-header,.faq-answers {
+  text-shadow:0 1px 2.5px rgb(0 9 17 / calc(var(--paq-daylight,0) * .38)),
+              0 3px 12px rgb(0 9 17 / calc(var(--paq-daylight,0) * .24));
+  transition:text-shadow .45s ease;
+}
+@media(prefers-reduced-motion:reduce) { .faq-header,.faq-answers { transition:none; } }
+
 </style>
 <style id="signal-water-styles">
 /* the existing invitation, held in a thin film of lake water. */
@@ -291,10 +299,9 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
       <li>The Hypnagogues</li>
       <li>Synesthetes</li>
       <li>The Somanauts</li>
-      <li>The Noticers</li>
       <li>Reality Testers</li>
       <li>The Society for Curious Tongues</li>
-      <li>Meditators &amp; Monks</li>
+      <li>Monk Guild</li>
     </ul></div></details>
     <details class="faq-item"><summary><h3 id="faq-potluck">Will there be a potluck?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Yes, there will be a phenomenological potluck the likes of which the world has never seen.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q8">How long is the event?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Five or six nights.<br><br>This is part of a phenomenological research residency month, continuing for the three weeks following the event.</p></div></details>
@@ -331,6 +338,19 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 // Both renderers consume the same lighting clock and artwork sources.
 const QUALIA_SHORE=.44;
 const QUALIA_ART={moon:'assets/lroc-color-2k.jpg',woodland:'assets/woodland-photo.png'};
+// Update only the open dialog, and only when a visible strength step changes.
+const paqReadabilityDialog=document.getElementById('faq-dialog');
+let paqReadabilityLevel=-1;
+function updatePaqReadability(day){
+  if(!paqReadabilityDialog.open)return;
+  let strength=Math.max(0,Math.min(1,(day-.06)/.70));
+  strength=strength*strength*(3-2*strength);
+  const level=Math.round(strength*100);
+  if(level===paqReadabilityLevel)return;
+  paqReadabilityLevel=level;
+  paqReadabilityDialog.style.setProperty('--paq-daylight',String(level/100));
+}
+
 function createQualiaCycle(dimensions){
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const lightPresets = { day:[1,0,0,0,.79,.31], night:[0,0,1,0,.79,.31] };
@@ -2592,6 +2612,7 @@ function lightStep(dt) {
     for(let i=0;i<target.length;i++) LIGHT.values[i]+=(target[i]-LIGHT.values[i])*blend;
   }
   updateMoonDot();
+  updatePaqReadability(LIGHT.values[0]);
   controlMode+=((LIGHT.mode!=='night'?1:0)-controlMode)*(reduced?1:1-Math.exp(-dt*18));
   // Keep the full night orbit; starlight fades naturally into the dawn.
   if(!reduced && LIGHT.values[2]>.65) starClock+=dt;

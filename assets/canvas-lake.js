@@ -143,7 +143,7 @@ function startCanvasLake(original) {
     raf=0;if(document.hidden)return;
     const dt=last?Math.min(.1,(now-last)/1000):0;last=now;
     if(QUALIA_LOAD.active&&!motion.matches)elapsed+=dt;
-    phaseMoon();const values=cycle.cycleAt(elapsed).values;
+    phaseMoon();const values=cycle.cycleAt(elapsed).values;updatePaqReadability(values[0]);
     ctx.setTransform(scale,0,0,scale,0,0);ctx.fillStyle='#02090e';ctx.fillRect(0,0,W,H);
     ctx.save();ctx.translate(0,motion.matches?0:-H*.12*PAQ.progress);
     drawSky(values,elapsed);ctx.drawImage(sky.c,0,0,W,shore);
