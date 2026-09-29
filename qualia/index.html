@@ -132,7 +132,7 @@ body.ink-dark .mark,body.ink-dark .sub { color:#080b10; text-shadow:none; }
 body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10px; }
 .hero { opacity:var(--paq-hero); }
 #faq-open { opacity:calc(.76 * var(--paq-control)); transition:none; }
-#paq-dim { position:fixed; inset:0; z-index:5; pointer-events:none; opacity:var(--paq-dim); background:linear-gradient(to right,transparent 0%,rgb(2 8 14 / calc(var(--paq-reading,0) * .84)) 12%,rgb(2 8 14 / calc(var(--paq-reading,0) * .84)) 88%,transparent 100%),linear-gradient(to bottom,#02080e10 0%,#02080e32 18%,#02080ed9 40%,#02080ef5 68%); }
+#paq-dim { position:fixed; inset:0; z-index:5; pointer-events:none; opacity:var(--paq-dim); background:linear-gradient(to right,transparent 0%,rgb(2 8 14 / calc(var(--paq-reading,0) * .68)) 4%,rgb(2 8 14 / calc(var(--paq-reading,0) * .68)) 96%,transparent 100%),linear-gradient(to bottom,#02080e08 0%,#02080e14 18%,#02080e47 40%,#02080e6b 68%); }
 #faq-dialog { inset:0; width:100%; height:100dvh; max-width:none; max-height:none; margin:0; padding:0 max(7vw,calc((100vw - 900px)/2)) calc(var(--safe-bottom) + 64px); background:transparent; color:#eceae4; opacity:var(--paq-text); transform:translateY(var(--paq-text-y)); transition:none; }
 #faq-dialog::backdrop { backdrop-filter:none; background:transparent; }
 .faq-header { position:relative; display:block; padding:clamp(100px,18vh,170px) 0 64px; background:none; }
@@ -219,7 +219,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
     <details class="faq-item"><summary><h3 id="faq-q3">Can anyone come?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No. It’s curated for character, via application.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-dependents">I want to bring a dependent.</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Children, pets… all sentient beings are welcome to apply. We do not discriminate. Everyone in attendance must apply and will be held to the same standard of curation.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q4">Is this a night thing?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>All chronotypes are welcome. There will be day and night programming. We’ll start more day-focused and end more evening-focused. The goal is for everyone to leave feeling better in their bodies than when they arrived.</p></div></details>
-    <details class="faq-item"><summary><h3 id="faq-stimulation">Will this be overstimulating?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Parts will. The land is vast, and soft, with many cozy nooks and quiet zones. We’ll have an outdoor sound curfew most nights. There will be an arc.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-stimulation">Will this be overstimulating?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Everything is opt-in. Parts may be, for some. This is an advanced event. The land is vast, and soft, with many cozy nooks and quiet zones. We’ll have an outdoor sound curfew most nights. There will be an arc.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q5">Can I bring something to life here?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Yes. It’s a hybrid: curated from the top down, co-created from the bottom up.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-guilds">Can we create a guild?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Yes! Guilds are like camps, but you don’t need to worry about food, water, or shade. Paradise has you covered.</p><h4 class="faq-guild-heading" id="faq-founding-guilds">Founding guilds</h4><ul class="faq-catchphrases faq-guild-list">
       <li>Aphantasians</li>
@@ -370,6 +370,8 @@ in vec2 vUv;
 layout(location = 0) out vec4 oSky;
 layout(location = 1) out vec4 oStar;
 uniform vec2 uRes; uniform float uShore, uU, uDpr, uAtlasRadius;
+uniform sampler2D uWoodland;
+uniform float uWoodlandReady;
 ${COMMON}
 float crownDome(float x, float centre, float radius, float height){
   float q = (x - centre)/radius;
@@ -472,8 +474,20 @@ void main(){
   float ridgeN = 7. + 15.*vnoise(vec2(x*.006, 5.)) + 4.*vnoise(vec2(x*.025, 8.));
   float covN = clamp((ridgeN - y)*uU + .5, 0., 1.);
   covN = max(covN, canopy(x, y - ridgeN, 19., 16., 35., 11.));
-  col = mix(col, vec3(.010, .013, .022), covF*.92);
-  col = mix(col, vec3(.0025, .0035, .006), covN);
+  vec3 farLeaves=vec3(.19,.265,.27),nearLeaves=vec3(.085,.165,.105);
+  if(uWoodlandReady>.5){
+    // Preserve the low rolling ridges and sun hollow; real leaf alpha supplies
+    // the smaller crown irregularities, replacing the repeated dome outlines.
+    float tx=1.-abs(1.-mod(x/280.,2.));
+    vec4 nearTrees=texture(uWoodland,vec2(tx,clamp(.78-(y-ridgeN)/80.,0.,1.)));
+    vec4 farTrees=texture(uWoodland,vec2(1.-tx,clamp(.76-(y-ridgeF*.65)/52.,0.,1.)));
+    covN=max(clamp((ridgeN-y)*uU+.5,0.,1.),nearTrees.a);
+    covF=max(clamp((ridgeF-y)*uU+.5,0.,1.),farTrees.a);
+    nearLeaves=nearTrees.rgb*vec3(.64,.73,.69);
+    farLeaves=mix(farTrees.rgb*vec3(.55,.65,.65),vec3(.20,.27,.29),.38);
+  }
+  col = mix(col, farLeaves, covF);
+  col = mix(col, nearLeaves, covN);
   float cov = max(covF, covN);
   oSky = vec4(col, cov);
   // Cache layered cloud structure once; the compositor drifts and lights this field.
@@ -933,12 +947,13 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   // Separate distant, air-softened woodland from nearer olive-green crowns.
   float nearForest=smoothstep(.19,.54,stars.a);
   float leafShade=clamp((stars.a-.55)/.45,0.,1.);
-  vec3 woodland=mix(vec3(.19,.265,.27),vec3(.085,.165,.105)*(.70+.65*leafShade),nearForest);
+  vec3 woodland=sk.rgb;
   float sunHeight=smoothstep(-.04,.40,uSolar.w);
   woodland*=.70+.30*sunHeight;
   vec3 warmRim=vec3(.20,.10,.035)*dusk*smoothstep(-.12,.04,uSolar.w);
   woodland+=warmRim*(.3+.7*leafShade);
-  vec3 col=sk.rgb*(1.-uLight.x)+atmosphere*max(uLight.x,dusk)*openSky+woodland*sk.a*max(uLight.x,.09*dusk);
+  vec3 nightEnvironment=sk.rgb*openSky+mix(vec3(.010,.013,.022),vec3(.0025,.0035,.006),nearForest)*sk.a;
+  vec3 col=nightEnvironment*(1.-uLight.x)+atmosphere*max(uLight.x,dusk)*openSky+woodland*sk.a*max(uLight.x,.09*dusk);
   float scint = 1. + uScint*(.025 + .07*t*t)*(vnoise(pd/uDpr/5. + vec2(uTime*.2, uTime*.13))*2. - 1.);
   float moving = uStarBlend;
   vec3 starHeads = mix(stars.rgb, orbitStars(pd,uStarOrbit.w,starLod)*openSky,moving);
@@ -969,7 +984,7 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   float solarVeil=dusk*(.20*exp(-pow(rimDistance/.0045,2.))+.065*exp(-pow(rimDistance/.018,2.)));
   solarVeil*=smoothstep(sunSize*.80,sunSize,sunDiscR);
   float aboveHorizon=1.-smoothstep(1.04,1.075,uSun.y);
-  vec3 sunColour = mix(vec3(1.,.94,.76),pow(uSolar.rgb/max(uSolar.r,.0001),vec3(.35))*vec3(1.,.92,.80),dusk);
+  vec3 sunColour = mix(vec3(1.,.91,.58),pow(uSolar.rgb/max(uSolar.r,.0001),vec3(.35))*vec3(1.,.91,.70),dusk);
 
   // Share the stellar orbit, but render the moon only in this instantaneous pass.
   // It is never written into the star-history texture, so it cannot leave a trail.
@@ -1217,7 +1232,7 @@ void main(){
 
 /* ---------- GL helpers ---------- */
 let starHistoryOK = false;
-let P = {}, vao, dropVao, dropBuf, wordTex, controlTex, moonTex, blackTex, T = {}, SIM = false, hasCBF = false;
+let P = {}, vao, dropVao, dropBuf, wordTex, controlTex, moonTex, woodlandTex, woodlandReady=false, blackTex, T = {}, SIM = false, hasCBF = false;
 let questionBox=[0,0,1,1], toggleBox=[0,0,1,1];
 function compile(type, src){
   const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
@@ -1296,6 +1311,18 @@ function initGL(){
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
   };
   moonImage.src='assets/lroc-color-2k.jpg';
+  woodlandReady=false;
+  woodlandTex=tex(1,1,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,gl.LINEAR,new Uint8Array(4));
+  const woodlandTarget=woodlandTex,woodlandImage=new Image();
+  woodlandImage.onload=()=>{
+    if(gl.isContextLost()||woodlandTarget!==woodlandTex)return;
+    gl.bindTexture(gl.TEXTURE_2D,woodlandTarget);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,woodlandImage);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+    woodlandReady=true;if(T.sky)renderSky();
+  };
+  woodlandImage.src='assets/woodland-v1.png';
 }
 
 /* ---------- original star field, slowly rotated with a fading exposure ---------- */
@@ -1441,6 +1468,7 @@ function resize(){
 }
 function renderSky(){
   const p = P.sky; gl.useProgram(p.p); drawTo(T.sky);
+  bindTex(0,woodlandTex,p.u.uWoodland);gl.uniform1f(p.u.uWoodlandReady,woodlandReady?1:0);
   gl.uniform1f(p.u.uAtlasRadius,0);
   gl.uniform2f(p.u.uRes, cw, ch); gl.uniform1f(p.u.uShore, shoreCss*dpr);
   gl.uniform1f(p.u.uU, dpr*Math.min(1.3, Math.max(.5, H/900))); gl.uniform1f(p.u.uDpr, dpr);
@@ -2186,9 +2214,9 @@ function sunriseAt(seconds) {
   values[4]=julySunX(values[5]);
   return values;
 }
-// Preserve the warm-dawn pacing, then play the complete sunrise at double speed.
-const NIGHT_SECONDS=20, DAWN_SPEED=2, DUSK_SECONDS=7+(30-7)*4, DAY_SECONDS=150;
-const DAWN_SECONDS=DUSK_SECONDS/DAWN_SPEED;
+// Keep the warm-dawn progression within 25 seconds and run daylight 65% faster.
+const NIGHT_SECONDS=20, DAWN_SECONDS=25, DUSK_SECONDS=7+(30-7)*4, DAY_SECONDS=150/1.65;
+const DAWN_SPEED=DUSK_SECONDS/DAWN_SECONDS;
 const CYCLE_SECONDS=NIGHT_SECONDS+DAWN_SECONDS+DAY_SECONDS+DUSK_SECONDS;
 function dawnTime(seconds) { return seconds<=7 ? seconds : 7+(seconds-7)/4; }
 function cycleAt(seconds) {
@@ -2319,10 +2347,10 @@ const paqContrast = (() => {
     // These stops mirror #paq-dim; use its animated opacity, not the target state.
     ctx.globalAlpha=Number(getComputedStyle(document.getElementById('paq-dim')).opacity);
     let gradient=ctx.createLinearGradient(0,0,0,80);
-    [[0,16/255],[.18,50/255],[.4,217/255],[.68,245/255],[1,245/255]].forEach(([p,a])=>gradient.addColorStop(p,`rgba(2,8,14,${a})`));
+    [[0,8/255],[.18,20/255],[.4,71/255],[.68,107/255],[1,107/255]].forEach(([p,a])=>gradient.addColorStop(p,`rgba(2,8,14,${a})`));
     ctx.fillStyle=gradient;ctx.fillRect(0,0,128,80);
-    gradient=ctx.createLinearGradient(0,0,128,0);const reading=Math.min(1,PAQ.scrollY/160)*.84;
-    [[0,0],[.12,reading],[.88,reading],[1,0]].forEach(([p,a])=>gradient.addColorStop(p,`rgba(2,8,14,${a})`));
+    gradient=ctx.createLinearGradient(0,0,128,0);const reading=Math.min(1,PAQ.scrollY/160)*.68;
+    [[0,0],[.04,reading],[.96,reading],[1,0]].forEach(([p,a])=>gradient.addColorStop(p,`rgba(2,8,14,${a})`));
     ctx.fillStyle=gradient;ctx.fillRect(0,0,128,80);ctx.globalAlpha=1;
     const pixels=ctx.getImageData(0,0,128,80).data;
     for(const line of lines){let sum=0,n=0;
