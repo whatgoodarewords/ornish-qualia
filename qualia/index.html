@@ -72,6 +72,10 @@ window.qualiaLoadEscape=setTimeout(()=>{if(window.qualiaFinishLoading)window.qua
   .sub-secondary { margin:0 auto 2px; max-width:100%; font:400 clamp(11px,1.05vw,14px)/1.4 "Libre Baskerville",Baskerville,Georgia,serif; letter-spacing:0; color:#bac7d6; text-wrap:balance; text-shadow:0 1px 8px #14213780; }
   .meta { margin:0; display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:8px; font:400 14px/1.5 "DM Sans",sans-serif; color:#edf0f3; }
   .meta .separator { opacity:.95; font:18px/1 Georgia,serif; margin:0 3px; }
+  @media(min-width:761px) and (min-height:481px) {
+    .meta { font-size:18px; gap:10px; }
+    .meta .separator { font-size:21px; }
+  }
   .signal-link { pointer-events:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:40px; box-sizing:border-box; max-width:100%; padding:6px 18px; margin-top:8px; background:#f6f1e6; color:#101b29; font:500 14px/1.4 "DM Sans",sans-serif; text-decoration:none; touch-action:manipulation; clip-path:polygon(12px 0,calc(100% - 12px) 0,calc(100% - 12px) 5px,calc(100% - 6px) 5px,calc(100% - 6px) 10px,100% 10px,100% calc(100% - 10px),calc(100% - 6px) calc(100% - 10px),calc(100% - 6px) calc(100% - 5px),calc(100% - 12px) calc(100% - 5px),calc(100% - 12px) 100%,12px 100%,12px calc(100% - 5px),6px calc(100% - 5px),6px calc(100% - 10px),0 calc(100% - 10px),0 10px,6px 10px,6px 5px,12px 5px); transition:background .2s; }
   .signal-link:hover { background:#fffaf0; }
   .signal-link:focus-visible { outline:none; box-shadow:inset 0 0 0 4px #74a7ba; }
@@ -236,6 +240,20 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 .signal-link:focus-visible { outline:1px solid #d9edf0; outline-offset:5px; box-shadow:none; }
 .signal-link:focus-visible .rim-still { stroke:#a4dce7; }
 .signal-link:active { color:white; }
+/* A rare, almost imperceptible glint on touch screens, after the entrance. */
+@keyframes mobile-water-glint {
+  0%, 70%, 100% { opacity:.96; }
+  79%, 86% { opacity:1; }
+}
+@media(max-width:760px) and (prefers-reduced-motion:no-preference) and (forced-colors:none), (hover:none) and (pointer:coarse) and (prefers-reduced-motion:no-preference) and (forced-colors:none) {
+  html:not(.is-loading):not(.is-revealing) #faq-open svg {
+    animation:mobile-water-glint 12s ease-in-out infinite;
+  }
+  html:not(.is-loading):not(.is-revealing) .signal-link > span:not(.signal-water),
+  html:not(.is-loading):not(.is-revealing) .signal-link > .arrow {
+    animation:mobile-water-glint 12s ease-in-out 4s infinite;
+  }
+}
 @media (prefers-reduced-motion:reduce) {
  .signal-link { transition:none; }
  .signal-water-grain,.signal-water-echo { display:none; }
