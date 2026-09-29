@@ -119,6 +119,10 @@ body.ink-dark .mark,body.ink-dark .sub { color:#080b10; text-shadow:none; }
 </style>
 <style>
   .mark.image-mark { font-size:0; line-height:0; }
+  .mark.image-mark { position:relative; }
+  .mark.is-tracing > img { opacity:0; }
+  .mark .wordmark-trace { position:absolute; inset:auto; top:0; left:50%; width:var(--wordmark-width); max-width:100%; height:auto; transform:translate(-50%,-20%); pointer-events:none; filter:drop-shadow(0 1px 2px #14213770); mask-image:radial-gradient(ellipse 2.9% 5.8% at 71.5% 31.5%,rgba(0,0,0,var(--dot-alpha,0)) 99%,#000 100%); }
+  body.ink-dark .mark .wordmark-trace { filter:brightness(0); }
   .mark.image-mark img { display:block; width:var(--wordmark-width); max-width:100%; height:auto; margin:auto; filter:drop-shadow(0 1px 2px #14213770); }
   .mark.image-mark[data-wordmark="16-interpenetrating-contour"] { height:calc(var(--wordmark-width) * .3); overflow:hidden; }
   .mark[data-wordmark="16-interpenetrating-contour"] img { transform:translateY(-20%); mask-image:radial-gradient(ellipse 2.9% 5.8% at 71.5% 31.5%,rgba(0,0,0,var(--dot-alpha,0)) 99%,#000 100%); }
@@ -334,6 +338,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
     <a class="signal-link" href="https://signal.group/#CjQKIEUrRqSJuQTnvetwsqKrlnMcP75vbt2LGmxpuD9OfnWuEhBmb3S-MWQ2-Tqc63s_XySz" target="_blank" rel="noopener noreferrer"><span>Signal group for details</span><svg class="arrow" aria-hidden="true" viewBox="0 0 40 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 26C11 29 25 23 23 14C21 5 11 8 13 16C15 25 30 20 35 5M27 8L35 5L37 13"/></svg></a>
   </div>
 </main>
+<script src="assets/wordmark-trace.js?v=56d1e22ba5c5"></script>
 <script src="assets/vendor/astronomy-2.1.19.min.js?v=f41139a87941"></script>
 <script>
 // Readiness milestones, not a pretend download percentage. Failed optional
@@ -483,7 +488,7 @@ const QUALIA_LOAD = (()=>{
   for(const part of ["ink","caption","meta","controls"])document.body.style.setProperty(`--intro-${part}`,0);
   document.body.style.setProperty("--intro-controls-events","none");
   function complete(){
-    if(ready)return;ready=true;active=true;moonReveal=inkReveal=captionReveal=reflectionInk=reflectionCaption=controlsReveal=1;
+    if(ready)return;window.qualiaTrace?.setProgress(1);ready=true;active=true;moonReveal=inkReveal=captionReveal=reflectionInk=reflectionCaption=controlsReveal=1;
     cancelAnimationFrame(introFrame);cancelAnimationFrame(phaseFrame);clearTimeout(window.qualiaLoadEscape);
     for(const part of ["ink","caption","meta","controls"])document.body.style.setProperty(`--intro-${part}`,1);
     document.body.style.setProperty("--question-glint",0);
@@ -523,7 +528,8 @@ const QUALIA_LOAD = (()=>{
       moonReveal=ease((elapsed-(still?0:720))/(still?200:180));
       globe.style.opacity=1-moonReveal;
       // One stage per second after landing; downloads and lunar travel stay quick.
-      inkReveal=ease((elapsed-(still?0:880))/(still?200:600));
+      inkReveal=ease((elapsed-(still?0:880))/(still?200:180));
+      window.qualiaTrace?.setProgress(still?1:Math.max(0,Math.min(1,(elapsed-880)/1000)));
       captionReveal=ease((elapsed-(still?0:1880))/(still?200:600));
       // Reflections share their source's fade; the water supplies attenuation.
       reflectionInk=inkReveal;
@@ -652,7 +658,7 @@ document.getElementById('brand-ink-toggle').addEventListener('click', e => {
 });
 </script>
 <script src="assets/wordmarks.js?v=e93c2ec03654"></script>
-<script src="assets/canvas-lake.js?v=a3fb0a777e8f"></script>
+<script src="assets/canvas-lake.js?v=4a4970ee40db"></script>
 <script>
 (() => {
 'use strict';
@@ -732,12 +738,25 @@ float canopy(float x, float y, float cw, float hmin, float hmax, float seed){
 }
 // Photographic source has a pale sky fringe; discard sky by colour in the
 // material so the original foliage pixels remain unpainted and unwarped.
-vec4 woodlandPhoto(vec2 uv){
-  vec4 leaf=texture(uWoodland,uv);
+vec4 woodlandSample(vec2 uv,vec2 dx,vec2 dy){
+  vec4 leaf=textureGrad(uWoodland,uv,dx,dy);
+  leaf.rgb/=max(leaf.a,.0001);
   float green=leaf.g-max(leaf.r,leaf.b);
   float value=dot(leaf.rgb,vec3(.2126,.7152,.0722));
-  leaf.a*=smoothstep(.008,.045,green)*(1.-smoothstep(.64,.85,value));
-  return leaf;
+  // Keep dark twigs as well as green leaves; remove only the pale sky fringe.
+  float foliage=max(smoothstep(.008,.045,green),1.-smoothstep(.18,.38,value));
+  leaf.a*=foliage*(1.-smoothstep(.64,.85,value));
+  return vec4(leaf.rgb*leaf.a,leaf.a);
+}
+vec4 woodlandPhoto(vec2 uv){
+  // Integrate coverage over the pixel footprint before storing this static
+  // atlas. No extra sampling is added to the scene's animation loop.
+  vec2 dx=dFdx(uv),dy=dFdy(uv);
+  vec4 leaf=(woodlandSample(uv+dx*.25+dy*.25,dx,dy)+
+          woodlandSample(uv-dx*.25+dy*.25,dx,dy)+
+          woodlandSample(uv+dx*.25-dy*.25,dx,dy)+
+          woodlandSample(uv-dx*.25-dy*.25,dx,dy))*.25;
+  return vec4(leaf.rgb/max(leaf.a,.0001),leaf.a);
 }
 /* star colour from B-V colour index (blackbody-like ramp, hot blue-white to cool orange) */
 vec3 bvColor(float bv){
@@ -828,18 +847,27 @@ void main(){
     covN=max(clamp((ridgeN-y)*uU+.5,0.,1.),nearTrees.a);
     covF=max(clamp((ridgeF-y)*uU+.5,0.,1.),farTrees.a);
     nearLeaves=nearTrees.rgb*vec3(.64,.73,.69);
-    farLeaves=mix(farTrees.rgb*vec3(.55,.65,.65),vec3(.20,.27,.29),.38);
+    farLeaves=mix(farTrees.rgb*vec3(.55,.65,.65),vec3(.20,.27,.29),.30);
     // Dense foliage from the lower canopy supplies shrub colour without
     // squeezing full tree crowns into the small foreground rise.
     vec2 undergrowthUV=vec2(tx,.61+.11*vnoise(vec2(x*.13,y*.23)));
-    vec3 undergrowth=texture(uWoodland,undergrowthUV).rgb;
+    vec4 undergrowthSample=texture(uWoodland,undergrowthUV);
+    vec3 undergrowth=undergrowthSample.rgb/max(undergrowthSample.a,.0001);
     nearLeaves=mix(nearLeaves,undergrowth*vec3(.64,.73,.69),shrubs);
     farLeaves=mix(farLeaves,undergrowth*vec3(.55,.65,.65),shrubs);
   }
   float shrubN=max(clamp((ridgeN-y)*uU+.5,0.,1.),canopy(x,y-ridgeN,4.5,2.5,5.5,23.));
   float shrubF=max(clamp((ridgeF-y)*uU+.5,0.,1.),canopy(x,y-ridgeF*.65,3.5,1.8,4.,29.));
-  covN=smoothstep(.35,.65,mix(covN,shrubN,shrubs));
-  covF=smoothstep(.35,.65,mix(covF,shrubF,shrubs));
+  // Coverage is already antialiased. Thresholding it again turns small leaves
+  // into a jagged cutout, especially against the bright dawn sky.
+  covN=mix(covN,shrubN,shrubs);
+  covF=mix(covF,shrubF,shrubs);
+  // In the narrow tree-to-shrub transition, resolve the mixed silhouettes
+  // with a pixel-sized edge rather than leaving translucent ghost crowns.
+  float transition=smoothstep(0.,.08,shrubs)*(1.-smoothstep(.92,1.,shrubs));
+  float edgeN=max(.01,fwidth(covN)*.5),edgeF=max(.01,fwidth(covF)*.5);
+  covN=mix(covN,smoothstep(.5-edgeN,.5+edgeN,covN),transition);
+  covF=mix(covF,smoothstep(.5-edgeF,.5+edgeF,covF),transition);
   col = mix(col, farLeaves, covF);
   col = mix(col, nearLeaves, covN);
   float cov = max(covF, covN);
@@ -1239,13 +1267,14 @@ vec3 sunsetAtmosphere(vec2 pd,float t,float occlusion) {
   // Broad warm aerosol light, graded into cool upper air rather than a white horizon.
   float horizon=pow(t,2.2), azimuth=exp(-d.x*d.x/.95);
   float warmAir=smoothstep(-.15,-.015,e)*(.38+.62*azimuth)*horizon;
-  light=mix(light,light*vec3(1.12,.70,.48),warmAir*.85);
-  light+=vec3(.76,.19,.065)*warmAir*.30;
+  light=mix(light,light*vec3(1.04,.90,.76),warmAir*.48);
+  light+=vec3(.60,.39,.24)*warmAir*.18;
   float purple=(1.-smoothstep(-.04,.02,e))*smoothstep(-.16,-.06,e);
   vec2 q=(d-vec2(0.,-.32))*vec2(.5,1.);
-  light+=vec3(.70,.18,.32)*purple*exp(-dot(q,q)/.13);
+  light+=vec3(.30,.23,.24)*purple*exp(-dot(q,q)/.26)*.48;
   light+=vec3(.018,.034,.085)*(1.-.4*t)*smoothstep(-.24,-.02,e);
-  return light;
+  float luminance=dot(light,vec3(.2126,.7152,.0722));
+  return mix(vec3(luminance),light,.78);
 }
 vec4 wordAt(vec2 pd, float lod){
   vec2 q = (pd - uWordBox.xy)/uWordBox.zw;
@@ -1269,7 +1298,7 @@ vec2 waveSlope(vec2 w, vec2 direction, float frequency, float amplitude, float s
   float footprint=fwidth(angle);
   return direction*(frequency*amplitude*cos(angle)/(1.+footprint*footprint));
 }
-vec2 ambientSlope(vec2 w){
+vec2 ambientSlope(vec2 w, float breeze){
   vec2 swell=waveSlope(w,vec2(.18,.984),.72,.55,.72,0.);
   swell+=waveSlope(w,vec2(-.36,.933),1.23,.26,.95,2.3);
   vec2 fine=waveSlope(w,vec2(.46,.888),2.17,.12,1.26,4.1);
@@ -1277,7 +1306,6 @@ vec2 ambientSlope(vec2 w){
   fine+=waveSlope(w,vec2(.30,.954),6.71,.016,2.22,5.4);
   fine+=waveSlope(w,vec2(-.21,.978),10.3,.005,3.06,.9);
   // Slowly travelling wind patches make glassy pools between detailed ripple trains.
-  float breeze=vnoise(w*.065+vec2(uTime*.014,-uTime*.008));
   float detail=vnoise(w*.23+vec2(7.,uTime*.02));
   return swell*(.8+.22*breeze)+fine*(.38+.9*smoothstep(.25,.75,breeze)*(.7+.3*detail));
 }
@@ -1297,9 +1325,9 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   vec4 stars = textureLod(uStar, uv, starLod);
   float t = clamp(pd.y/uShore, 0., 1.);
   float openSky = 1. - sk.a;
-  vec3 warm = mix(vec3(.72,.40,.24),vec3(.84,.27,.12),uLight.w);
+  vec3 warm = mix(vec3(.62,.49,.37),vec3(.67,.43,.30),uLight.w);
   float dusk=uLight.y;
-  vec3 daySky = mix(vec3(.10, .31, .57), vec3(.62, .77, .79), pow(t, 1.4));
+  vec3 daySky = mix(vec3(.24,.34,.43),vec3(.65,.70,.69),pow(t,1.4));
   vec3 atmosphere=daySky;
   if(dusk>.001) {
     vec2 skyUV=vec2(pd.x/uRes.x,1.-pd.y/uShore);
@@ -1316,7 +1344,7 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   woodland+=warmRim*(.3+.7*leafShade);
   // Air lies between the viewer and the far ridge, never over nearby leaf detail.
   vec3 airTint=mix(daySky,atmosphere,.72);
-  woodland=mix(woodland,airTint*.42,(1.-nearForest)*(.16+.08*dusk)*max(uLight.x,dusk));
+  woodland=mix(woodland,airTint*.52,(1.-nearForest)*(.24+.025*dusk)*max(uLight.x,dusk));
   vec3 nightEnvironment=sk.rgb*openSky+mix(vec3(.010,.013,.022),vec3(.0025,.0035,.006),nearForest)*sk.a;
   vec3 col=nightEnvironment*(1.-uLight.x)+atmosphere*max(uLight.x,dusk)*openSky+woodland*sk.a*max(uLight.x,.09*dusk);
   float scint = 1. + uScint*(.025 + .07*t*t)*(vnoise(pd/uDpr/5. + vec2(uTime*.2, uTime*.13))*2. - 1.);
@@ -1396,25 +1424,26 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   float silver=clamp((cloud-sunward)*3.,0.,1.);
   float opticalDepth=cloud*3.3+clouds.b*1.3;
   float transmission=exp(-opticalDepth);
-  vec3 cloudLight=mix(vec3(.36,.48,.62),vec3(.94,.94,.88),clamp(.44+sunward*.34+silver*.48,0.,1.));
+  vec3 cloudLight=mix(vec3(.44,.49,.53),vec3(.84,.85,.82),clamp(.44+sunward*.34+silver*.48,0.,1.));
   float forwardScatter=exp(-sunR*sunR/.065);
-  cloudLight+=vec3(1.,.91,.74)*silver*forwardScatter*.36;
+  cloudLight+=vec3(1.,.94,.83)*silver*forwardScatter*.18;
   float under=1.-smoothstep(-.02,.10,uSolar.w);
   float litFace=mix(sunward,(1.-cloud)*.7+silver*.3,under);
-  vec3 coolShade=vec3(.16,.22,.34)*(.12+.88*uLight.x)*smoothstep(-.26,0.,uSolar.w);
+  vec3 coolShade=vec3(.21,.25,.30)*(.12+.88*uLight.x)*smoothstep(-.26,0.,uSolar.w);
   if(dusk>.001) {
     // Direct light retreats across the cloud deck as Earth shadows the lower clouds.
     float sunAz=exp(-sunD.x*sunD.x/.6);
     float cloudSun=uSolar.w+.02+.075*t*sunAz;
     float cloudPath=skyAirmass(cloudSun);
     vec3 cloudBeam=exp(-(vec3(.036,.097,.240)*1.3+vec3(.018,.032,.001))*cloudPath);
-    cloudBeam*=pow(max(cloudBeam.r,.001),-.75)*smoothstep(-.014,.014,cloudSun);
+    cloudBeam*=pow(max(cloudBeam.r,.001),-.5)*smoothstep(-.014,.014,cloudSun);
+    cloudBeam=mix(vec3(dot(cloudBeam,vec3(.2126,.7152,.0722))),cloudBeam,.55);
     vec3 skyFill=mix(coolShade,atmosphere*.6,.55)*(.45+.55*(1.-cloud));
     float highLight=smoothstep(-.19,-.025,uSolar.w);
     vec3 eveningCloud=max(skyFill,vec3(.019,.027,.043))
-      +uCloudSolar*cloudBeam*(litFace*2.8+silver*.7)
-      +cloudBeam*silver*scatterPhase(cos(sunR*.60),.8)*.6
-      +cloudBeam*highLight*clouds.b*.35;
+      +uCloudSolar*cloudBeam*(litFace*1.65+silver*.45)
+      +cloudBeam*silver*scatterPhase(cos(sunR*.60),.8)*.38
+      +cloudBeam*highLight*clouds.b*.24;
     cloudLight=mix(cloudLight,eveningCloud,dusk);
   }
   float cloudDay=max(uLight.x,dusk*.62);
@@ -1422,7 +1451,7 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   // Atmospheric aureole has a broad falloff; the disc softens behind passing cloud.
   float aureole=.15*exp(-sunR*sunR/.022)+.045*exp(-sunR*sunR/.13);
   float innerGlow=.48*exp(-pow(rimDistance/.016,1.35));
-  vec3 glowColour=mix(vec3(1.,.94,.72),vec3(1.,.63,.28),horizonAir);
+  vec3 glowColour=mix(vec3(1.,.96,.84),vec3(1.,.80,.53),horizonAir);
   float solarAir=sqrt(transmission)*(.78+.22*silver);
   col+=(sunColour*disk*solarLimb*mix(1.35,3.4,dusk)*transmission
        +glowColour*(innerGlow+aureole+solarVeil*.45)*solarAir)*uLight.x*openSky*aboveHorizon;
@@ -1485,7 +1514,8 @@ void main(){
     float hd = texture(uWave, suv - vec2(0., tx.y)).r, hu = texture(uWave, suv + vec2(0., tx.y)).r;
     vec2 sl = vec2(s*(hr - hl), s*s*uTilt*(hu - hd))/1.5;
     vec2 w = vec2((pd.x - .5*uRes.x)/(s*uDpr), Hw*(1. + uV0)/(uTilt*s*uDpr))/13.;
-    vec2 as = ambientSlope(w);
+    float breeze=vnoise(w*.065+vec2(uTime*.014,-uTime*.008));
+    vec2 as = ambientSlope(w,breeze);
     float fade = smoothstep(0., .3, v);
     float surfaceFade = mix(.12,1.,fade);
     vec2 off = sl*uReflK*uDpr + as*uAmbK*uDpr*surfaceFade*(.35 + .65*s);
@@ -1496,10 +1526,10 @@ void main(){
     vec2 surfaceSlope=as*.065+sl*.32;
     vec3 normal=normalize(vec3(-surfaceSlope.x,1.,-surfaceSlope.y));
     vec3 viewDirection=normalize(vec3((.5-pd.x/uRes.x)*.5,.035+.74*v,1.));
-    // Broad wind patches vary the optical footprint without inventing extra waves.
-    float windPatch=vnoise(vec2(pd.x/uRes.x*4.6+uTime*.012,v*7.2-uTime*.019));
-    float windTexture=smoothstep(.24,.78,windPatch)*fade;
-    float lod = .35 + 1.45*rough + (1. - fade)*.65 + windTexture*.38;
+    // The same world-space breeze roughens and softens each patch of water.
+    // Perspective compresses the patches naturally toward the far shore.
+    float windTexture=smoothstep(.25,.75,breeze)*fade;
+    float lod = .35 + 1.45*rough + (1. - fade)*.65 + windTexture*.50;
     vec3 refl = environmentAt(rp, lod, 1.485, true);
     // A small anisotropic footprint keeps lettering in the same optical surface.
     vec2 blurStep=vec2(0.,(.35+rough*1.6+windTexture*.45)*uDpr);
@@ -1515,7 +1545,7 @@ void main(){
     float grazing = clamp(1.-v+as.y*.025*fade,0.,1.);
     float incidence=clamp(dot(normal,viewDirection),0.,1.);
     float fresnel=.0204+.9796*pow(1.-incidence,5.);
-    float R=mix(.13+.7*pow(grazing,3.2),fresnel,.35)*(1.-windTexture*.065);
+    float R=mix(.13+.7*pow(grazing,3.2),fresnel,.35)*(1.-windTexture*.10);
     /* swimmer: underwater limbs (refracted by the ripples), parts above the surface, and their broken reflection */
     float matA = 0., matR = 0., matU = 0.;
     float mU = 0., mA = 0., mR = 0., dAbove = 1e5, dRef = 1e5, outline = 0., ring = 0.;
@@ -1588,7 +1618,7 @@ void main(){
     vec2 glintSpace=pd/uDpr*vec2(.09,.55)+vec2(off.x/uDpr*.02,uTime*.35);
     float clusters=smoothstep(.45,.85,vnoise(glintSpace))*smoothstep(.3,.7,vnoise(glintSpace*.37+vec2(7.1,uTime*.1)));
     float broken=max(clusters*.8,clamp(sunGlint*40.,0.,1.))*(.25+.75*smoothstep(.2,.6,vnoise(glintSpace*.21)));
-    col+=reflectedSun*solarPath*broken*mix(.06,.42,uLight.y)*uLight.x*fade*(1.-mA)*(1.-smoothstep(.98,1.035,uSun.y));
+    col+=reflectedSun*solarPath*broken*mix(.06,.34,uLight.y)*uLight.x*fade*(1.-mA)*(1.-smoothstep(.98,1.035,uSun.y));
     // Cool, sparse microfacets under the moon: the same moving light as the sky.
     float lunarBelow=(pd.y-(2.*uShore-uMoonAnchor.y))/Hw;
     float lunarNear=clamp(lunarBelow,0.,1.);
@@ -1622,7 +1652,7 @@ void main(){
   col=mix(vec3(luminance),col,.978);
   col*=mix(vec3(.993,1.004,1.009),vec3(1.007,1.001,.989),smoothstep(.28,.9,luminance));
   float exposure=max(col.r,max(col.g,col.b));
-  if(exposure>.86)col*=(.86+.14*(1.-exp(-(exposure-.86)/.14)))/exposure;
+  if(exposure>.82)col*=(.82+.18*(1.-exp(-(exposure-.82)/.18)))/exposure;
   float midtone=smoothstep(.015,.18,luminance)*(1.-smoothstep(.58,.94,luminance));
   float grain=(hashI(floor(gl_FragCoord.xy/uDpr*1.25))-.5);
   col+=grain*(.28+1.30*midtone)*mix(.55,1.,1.-step(uShore,pd.y))/255.;
@@ -1716,7 +1746,9 @@ function initGL(){
   woodlandImage.onload=()=>{
     if(gl.isContextLost()||woodlandTarget!==woodlandTex)return;
     gl.bindTexture(gl.TEXTURE_2D,woodlandTarget);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,woodlandImage);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
     gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
     woodlandReady=true;if(T.sky)renderSky();
@@ -1925,7 +1957,7 @@ function drawWord(){
   if (image) {
     const r=rects[0];
     wx.filter=document.body.classList.contains('ink-dark')?'brightness(0)':'none';
-    wx.drawImage(image,r.left-x0,r.top-y0,r.width,r.height);
+    wx.drawImage(window.qualiaTrace?.source||image,r.left-x0,r.top-y0,r.width,r.height);
     wx.filter='none';
     const dotX=r.left+r.width*.715,dotY=r.top+r.height*.315;
     moonAnchor=[dotX*dpr,dotY*dpr,r.width*.0245*dpr];
@@ -2788,6 +2820,7 @@ if (document.fonts){
   document.fonts.ready.then(() => { if (!gl.isContextLost()) { drawWord(); if (sized && autoOn && !reduced) targetOpeningSwim(); } });
 }
 mark.addEventListener('load', () => { if (sized && !gl.isContextLost()) drawWord(); }, true);
+document.addEventListener('qualia:wordmark-trace',()=>{if(sized&&!gl.isContextLost())drawWord();});
 new ResizeObserver(() => { if (sized && !gl.isContextLost()) drawWord(); }).observe(document.querySelector('.brand-lockup'));
 new ResizeObserver(() => { if(sized){layoutFooter();refreshSwimBounds();} }).observe(footer);
 document.addEventListener('qualia:wordmark-change', () => { if (sized && !gl.isContextLost()) drawWord(); });
