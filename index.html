@@ -197,6 +197,39 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 @media(max-width:420px) { .faq-guild-list { grid-template-columns:1fr; gap:12px; } }
 @media(prefers-reduced-motion:reduce) { .faq-header,.faq-answers { transform:none; } }
 </style>
+<style id="signal-water-styles">
+/* the existing invitation, held in a thin film of lake water. */
+.signal-link {
+  --water-cut:polygon(12px 0,calc(100% - 12px) 0,calc(100% - 12px) 5px,calc(100% - 6px) 5px,calc(100% - 6px) 10px,100% 10px,100% calc(100% - 10px),calc(100% - 6px) calc(100% - 10px),calc(100% - 6px) calc(100% - 5px),calc(100% - 12px) calc(100% - 5px),calc(100% - 12px) 100%,12px 100%,12px calc(100% - 5px),6px calc(100% - 5px),6px calc(100% - 10px),0 calc(100% - 10px),0 10px,6px 10px,6px 5px,12px 5px);
+  --water-x:50%; --water-y:65%;
+  position:relative; isolation:isolate; overflow:visible; clip-path:none;
+  background:transparent; color:#f1f2e9; text-shadow:0 1px 5px #0008;
+  transition:color 260ms ease;
+}
+.signal-link:hover { background:transparent; color:#fffff7; }
+.signal-link > span:not(.signal-water), .signal-link > .arrow { position:relative; z-index:2; }
+.signal-water { position:absolute; inset:0; pointer-events:none; z-index:0; }
+.signal-water-surface { position:absolute; inset:0; clip-path:var(--water-cut); background:linear-gradient(172deg,rgba(13,36,43,.89),rgba(3,16,25,.86) 58%,rgba(7,25,34,.91)); box-shadow:inset 0 1px 13px #416e7717; }
+.signal-water-wash { position:absolute; inset:0; opacity:0; clip-path:var(--water-cut); background:radial-gradient(ellipse 100px 45px at var(--water-x) var(--water-y),#58c9e135,transparent 85%); }
+.signal-water-rim { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+.signal-water-rim .rim-still { fill:none; stroke:url(#signal-water-rest); stroke-width:.8; }
+.signal-water-rim .rim-awake { fill:none; stroke:url(#signal-water-touch); stroke-width:1.05; opacity:0; filter:drop-shadow(0 0 2px #5bddff60); }
+.signal-water-echo { position:absolute; left:8%; right:8%; top:75%; height:24px; opacity:0; background:radial-gradient(ellipse at 50% 20%,#43b5d228,transparent 68%); filter:blur(4px); }
+.signal-water-grain { position:absolute; width:1.4px; height:1px; border-radius:50%; background:#b3edfa; box-shadow:0 0 3px #5acef2; opacity:0; }
+.signal-link:focus-visible { outline:1px solid #d9edf0; outline-offset:5px; box-shadow:none; }
+.signal-link:focus-visible .rim-still { stroke:#a4dce7; }
+.signal-link:active { color:white; }
+@media (prefers-reduced-motion:reduce) {
+ .signal-link { transition:none; }
+ .signal-water-grain,.signal-water-echo { display:none; }
+ .signal-link:hover .rim-still { stroke:#a4dce7; }
+}
+@media (forced-colors:active) {
+ .signal-link { background:Canvas; color:LinkText; outline:1px solid LinkText; }
+ .signal-water { display:none; }
+}
+
+</style>
 </head>
 <body>
 <div id="loading-screen" role="progressbar" aria-label="Loading Qualia" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
@@ -240,14 +273,15 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 <dialog id="faq-dialog" aria-labelledby="faq-heading">
   <header class="faq-header"><h2 id="faq-heading" tabindex="-1"><span class="paq-title-ink">PAQ</span><span class="faq-heading-subtitle">Pre-emptively Answered Questions</span></h2><p class="faq-authorship">The following words were written by a human</p></header><button id="faq-close" type="button" aria-label="Close questions" autofocus>×</button>
   <div class="faq-answers">
-    <details class="faq-item" open><summary><h3 id="faq-q1">What is this about?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Effing the ineffable. A space to live new culture! It’s somewhere between a research symposium, the best house party you’ve ever been to, and a curated festival in private nature. Something like this hasn’t happened before, so honestly, we’re not quite sure.<br><br>This is a data-driven research event. This is more for doing phenomenological research than talking about research, but there will assuredly be talks.<br><br>This is part of a greater phenomenological research month, continuing for the three weeks following the event.<br><br>This is an advanced event. Side effects may include involuntary personal development, struggle, embodiment, coherence, unexpected tenderness, transcendence, and better questions.</p></div></details>
-    <details class="faq-item"><summary><h3 id="faq-q2">So it’s a party. What does that mean?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Qualia is not theoretical. Qualia is all that we know.<br><br>It means it’s fun. Dancing. Immersive, playful, curious, reverent, irreverent, in on the joke. We believe fun leads to focus, and focus leads to insight.</p></div></details>
+    <details class="faq-item" open><summary><h3 id="faq-q1">What is this about?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Effing the ineffable. A space to live new culture! It’s somewhere between a research symposium, the best house party you’ve ever been to, and a curated festival in private nature. Something like this hasn’t happened before, so honestly, we’re not quite sure.<br><br>This is a data-driven research event. This is more for doing phenomenological research than talking about research, but there will assuredly be talks.<br><br>Qualia is not theoretical. Qualia is all that we know.<br><br>Lastly, this is an advanced event. Side effects may include involuntary personal development, struggle, embodiment, coherence, unexpected tenderness, transcendence, and better questions.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q2">So it’s a party. What does that mean?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>It means it’s fun. Dancing. Immersive, playful, curious, reverent, irreverent, in on the joke. We believe fun leads to focus, and focus leads to insight.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-research">What happens to the research?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>We invite everyone to get their clipboards out and help establish the practices, norms, and ethics of this research collectively. This is part of making new culture.</p><p>We want to share what we learn. Any data collection will be opt-in, with a clear explanation of what’s being collected and why. We’ll share findings while protecting people’s privacy. Coming to the party doesn’t mean agreeing to be studied.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q9">Is this part of something bigger?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>A party to begin a month of phenomenological research. Afterwards, there’s an optional three-week residency: more time to follow a question, bring something to life, and live some life! Come for the party, or stay for the month.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q3">Can anyone come?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No. It’s curated for character, via application.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-suitability">Who is this event not appropriate for?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>This event is not appropriate for children, pregnant people, people with epilepsy or heart conditions, or smokers.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q6">I’m sober. Will that be weird?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No, qualia is a hell of a drug. You’ll fit right in.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q7">Any weird rules?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No alcohol, no ketamine, no smoking, no small talk.</p></div></details>
-    <details class="faq-item"><summary><h3 id="faq-stimulation">Will this be overstimulating?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Everything is opt-in. Parts may be, for some. This is an advanced event. The land is vast, and soft, with many cozy nooks and quiet zones. We’ll have an outdoor sound curfew most nights. There will be an arc.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-stimulation">Will this be overstimulating?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Parts may be, for some. This is an advanced event. Everything is opt-in. The land is vast, and soft, with many cozy nooks and quiet zones. We’ll have an outdoor sound curfew most nights. There will be an arc.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q4">Is this a night thing?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>All chronotypes are welcome. There will be day and night programming. We’ll start more day-focused and end more evening-focused. The goal is for everyone to leave feeling better in their bodies than when they arrived.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q5">Can I bring something to life here?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Yes. It’s a hybrid: curated from the top down, co-created from the bottom up.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-guilds">Can we create a guild?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Yes! Guilds are like camps, but you don’t need to worry about food, water, or shade. Paradise has you covered.</p><h4 class="faq-guild-heading" id="faq-founding-guilds">Founding guilds</h4><ul class="faq-catchphrases faq-guild-list">
@@ -262,14 +296,13 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
       <li>Meditators &amp; Monks</li>
     </ul></div></details>
     <details class="faq-item"><summary><h3 id="faq-potluck">Will there be a potluck?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Yes, there will be a phenomenological potluck the likes of which the world has never seen.</p></div></details>
-    <details class="faq-item"><summary><h3 id="faq-q8">How long is the event?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Five or six nights.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q8">How long is the event?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Five or six nights.<br><br>This is part of a phenomenological research residency month, continuing for the three weeks following the event.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-arrival">When can I arrive?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Wednesday or Friday. Arriving after 7pm on Wednesday costs €100 more. We want you here for the whole experience. If you’re a weekend warrior, you can afford it.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-sleep">Where do I sleep?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Camping, glamping, vans, and private cabins.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-meals">What about food?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Four meals a day: Second Breakfast at 9am, Lunch at 1pm, Dinner at 7pm, and Breakfast at midnight :)</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-dependents">Can I bring a pet?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Pets are welcome, but they must fill out the application. We want everyone at this event to be sovereign and self-responsible.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-burning-man">Is this some Burning Man thing?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No. Qualia strives to be tasteful. But we value the principles of sovereignty, agency, participation, and civic responsibility.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q10">Is this event for profit?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>It will most assuredly lose money.</p></div></details>
-    <details class="faq-item"><summary><h3 id="faq-research">What happens to the research?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>We invite everyone to get their clipboards out and help establish the practices, norms, and ethics of this research collectively. This is part of making new culture.</p><p>We want to share what we learn. Any data collection will be opt-in, with a clear explanation of what’s being collected and why. We’ll share findings while protecting people’s privacy. Coming to the party doesn’t mean agreeing to be studied.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-catchphrases-heading">Alternative catchphrases</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><ul class="faq-catchphrases">
       <li><strong>a party for the fact that anything feels like anything at all</strong></li>
       <li>a field trip into being</li>
@@ -2713,6 +2746,62 @@ function boot(){
 }
 boot();
 })();
+</script>
+<script id="signal-water-script">
+(()=>{
+  const link=document.querySelector('.signal-link');
+  if(!link||link.querySelector('.signal-water'))return;
+  const water=document.createElement('span');water.className='signal-water';water.setAttribute('aria-hidden','true');
+  water.innerHTML=`<span class="signal-water-echo"></span><span class="signal-water-surface"></span><span class="signal-water-wash"></span><svg class="signal-water-rim" aria-hidden="true"><defs><linearGradient id="signal-water-rest" x1="0" y1="0" x2="1" y2=".8"><stop stop-color="#83bacb" stop-opacity=".18"/><stop offset=".23" stop-color="#76d3eb" stop-opacity=".54"/><stop offset=".49" stop-color="#599aa8" stop-opacity=".12"/><stop offset=".79" stop-color="#70c7e5" stop-opacity=".42"/><stop offset="1" stop-color="#80c6d4" stop-opacity=".18"/></linearGradient><radialGradient id="signal-water-touch" gradientUnits="userSpaceOnUse" r="96"><stop stop-color="#c7f4ff" stop-opacity=".94"/><stop offset=".42" stop-color="#6dddf6" stop-opacity=".68"/><stop offset="1" stop-color="#4396b9" stop-opacity="0"/></radialGradient></defs><path class="rim-still"/><path class="rim-awake"/></svg>`;
+  link.prepend(water);
+  const rim=water.querySelector('svg'),paths=water.querySelectorAll('path'),touch=water.querySelector('radialGradient');
+  const wash=water.querySelector('.signal-water-wash'),awake=water.querySelector('.rim-awake'),echo=water.querySelector('.signal-water-echo');
+  const reduced=matchMedia('(prefers-reduced-motion:reduce)');
+  let w=0,h=0,last=-Infinity;
+  const layout=()=>{
+    w=link.clientWidth;h=link.clientHeight;
+    rim.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const d=`M12 .5H${w-12}V5.5H${w-6}V10.5H${w-.5}V${h-10.5}H${w-6}V${h-5.5}H${w-12}V${h-.5}H12V${h-5.5}H6V${h-10.5}H.5V10.5H6V5.5H12Z`;
+    paths.forEach(p=>p.setAttribute('d',d));
+  };
+  if('ResizeObserver' in window)new ResizeObserver(layout).observe(link);
+  else addEventListener('resize',layout,{passive:true});
+  layout();
+  function settle(){
+    water.getAnimations({subtree:true}).forEach(a=>a.cancel());
+    water.querySelectorAll('.signal-water-grain').forEach(el=>el.remove());
+  }
+  reduced.addEventListener('change',()=>{if(reduced.matches)settle()});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)settle()});
+  function point(e){
+    const b=link.getBoundingClientRect();
+    const x=e?.clientX===undefined?w*.67:Math.max(0,Math.min(w,e.clientX-b.left));
+    const y=e?.clientY===undefined?h*.65:Math.max(0,Math.min(h,e.clientY-b.top));
+    link.style.setProperty('--water-x',x+'px');link.style.setProperty('--water-y',y+'px');
+    touch.setAttribute('cx',x);touch.setAttribute('cy',y);
+    return x;
+  }
+  function bloom(e){
+    const now=performance.now();
+    if(reduced.matches||now-last<550||typeof awake.animate!=='function')return;
+    last=now;const x=point(e);settle();
+    // One short response, then stillness — no breathing loop or travelling shine.
+    awake.animate([{opacity:0},{opacity:.9,offset:.17},{opacity:.32,offset:.5},{opacity:0}],{duration:1900,easing:'ease-out'});
+    wash.animate([{opacity:0},{opacity:.8,offset:.2},{opacity:0}],{duration:1600,easing:'ease-out'});
+    echo.animate([{opacity:0,transform:'translateY(0) scaleX(.65)'},{opacity:.65,offset:.25},{opacity:0,transform:'translateY(9px) scaleX(1.18)'}],{duration:2100,easing:'ease-out'});
+    for(let i=0;i<7;i++){
+      const grain=document.createElement('i');grain.className='signal-water-grain';
+      grain.style.left=Math.max(14,Math.min(w-14,x+(i-3)*10+Math.sin(i*2)*6))+'px';
+      grain.style.top=(h-1+Math.sin(i)*1.4)+'px';water.append(grain);
+      const a=grain.animate([{opacity:0,transform:'translate(0,0)'},{opacity:.3+(i%3)*.13,offset:.13},{opacity:0,transform:`translate(${Math.sin(i*1.7)*9}px,${6+(i%4)*3}px)`}],{duration:950+(i%3)*230,delay:i*27,easing:'ease-out'});
+      a.onfinish=()=>grain.remove();a.oncancel=()=>grain.remove();
+    }
+  }
+  link.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')bloom(e)});
+  link.addEventListener('pointerdown',bloom,{passive:true});
+  link.addEventListener('focus',()=>{if(link.matches(':focus-visible'))bloom()});
+})();
+
 </script>
 </body>
 </html>
