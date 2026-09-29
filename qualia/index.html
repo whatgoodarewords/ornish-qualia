@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Libre+Baskerville:wght@400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;600&amp;family=Cormorant+Garamond:wght@400;600&amp;display=swap">
 <style>
   :root { color-scheme: dark; --safe-top:env(safe-area-inset-top,0px); --safe-right:env(safe-area-inset-right,0px); --safe-bottom:env(safe-area-inset-bottom,0px); --safe-left:env(safe-area-inset-left,0px); --edge-left:calc(var(--safe-left) + 16px); --edge-right:calc(var(--safe-right) + 16px); }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #010308; }
@@ -99,6 +100,10 @@
     .faq-item h3 { font-size:19px; text-wrap:initial; }
     .faq-item p { font-size:16px; line-height:1.7; }
   }
+#brand-ink-toggle { position:fixed; right:0; bottom:0; width:30px; height:30px; z-index:10; padding:0; border:0; background:transparent; cursor:default; }
+#brand-ink-toggle:focus-visible { outline:1px solid #8a9297; outline-offset:-3px; }
+body.ink-dark .mark.image-mark img { filter:brightness(0); }
+body.ink-dark .mark,body.ink-dark .sub { color:#080b10; text-shadow:none; }
 </style>
 <style>
   .mark.image-mark { font-size:0; line-height:0; }
@@ -150,14 +155,11 @@ body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10
 .faq-answer { padding:0 42px 38px 0; max-width:760px; }
 .faq-item p,.faq-catchphrases { font:400 clamp(18px,2vw,23px)/1.62 Georgia,'Times New Roman',serif; color:#d9dddc; }
 @media(max-width:600px) { #faq-dialog { padding-left:24px; padding-right:24px; } .faq-header { padding-top:116px; padding-bottom:44px; } .faq-item summary { padding:22px 0; gap:16px; } .faq-answer { padding-right:8px; padding-bottom:30px; } .faq-heading-subtitle { max-width:250px; } }
-#faq-dialog { --reading-face:"EB Garamond",Georgia,serif; }
+body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 .faq-item h3,.faq-item p,.faq-catchphrases,.faq-guild-heading { font-family:var(--reading-face); font-weight:400; font-synthesis:none; }
 .faq-item p,.faq-catchphrases { font-size:clamp(20px,2.1vw,25px); line-height:1.52; }
-.faq-type-picker { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-top:24px; font:400 12px/1.5 "DM Sans",sans-serif; color:#aab6bc; }
-.faq-type-picker select { max-width:100%; border:0; border-bottom:1px solid #cbd7dc55; border-radius:0; padding:7px 22px 7px 0; background:transparent; color:#e5e8e7; font:inherit; cursor:pointer; }
-.faq-type-picker select:focus-visible { outline:1px solid #c5e9ff; outline-offset:4px; }
-.faq-type-picker option { background:#081016; color:#eef0ec; }
-#faq-heading,.faq-heading-subtitle,.faq-authorship,.meta { font-family:var(--reading-face,Georgia,serif); }
+#faq-heading,.faq-item h3,.faq-guild-heading { font-family:Alegreya,Georgia,serif; }
+.faq-heading-subtitle,.faq-authorship,.meta { font-family:var(--reading-face,Georgia,serif); }
 .faq-heading-subtitle,.faq-authorship { font-size:clamp(16px,1.7vw,19px); letter-spacing:.015em; }
 .faq-item summary { max-width:760px; }
 .faq-item h3 { font-size:clamp(25px,2.8vw,34px); color:#eef0f2; }
@@ -165,6 +167,10 @@ body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10
 #faq-close { font-size:0; }
 #faq-close::before,#faq-close::after { content:''; position:absolute; width:24px; height:1px; background:currentColor; left:10px; top:21px; transform:rotate(45deg); }
 #faq-close::after { transform:rotate(-45deg); }
+#faq-close,#faq-close:hover,.paq-contrast-word { color:var(--paq-ink,#fff); }
+.faq-guild-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 28px; margin:24px 0 6px; padding:0; list-style:none; }
+.faq-guild-list li { margin:0; color:#eef0f2; font:400 20px/1.3 Alegreya,Georgia,serif; }
+@media(max-width:420px) { .faq-guild-list { grid-template-columns:1fr; gap:12px; } }
 @media(prefers-reduced-motion:reduce) { #faq-dialog { transform:none; } }
 </style>
 </head>
@@ -203,9 +209,10 @@ body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10
   <p id="wordmark-status" role="status" aria-live="polite"></p>
 </nav>
 <button id="faq-open" type="button" aria-label="Questions about Qualia" aria-haspopup="dialog" aria-controls="faq-dialog" aria-expanded="false"><!-- Original LensQuestionarium: Bodoni/Didone ball-terminal glyph from sw-dev/packages/app/src-oversize/components/ui/icons.tsx. --><svg viewBox="-710 -200 3970 4770" fill="currentColor" stroke="none" aria-hidden="true"><g transform="translate(0,4370) scale(1,-1)"><path d="M1033 4354c-178-28-389-106-554-206-109-66-220-166-306-278-57-74-80-119-121-246-44-132-56-223-43-319 25-186 32-203 118-295 70-76 138-120 237-156 74-26 79-26 168-15 150 19 252 84 301 191 66 141 62 264-9 357-30 39-115 103-163 123-53 21-147 18-215-8-55-21-60-22-77-6-54 48 4 247 103 358 45 50 165 146 183 146 3 0 29 11 58 25 68 33 138 53 272 76 179 31 285 21 500-47 201-63 387-269 442-488 39-156 28-392-28-601-20-72-85-208-127-265-57-76-223-239-368-359-192-161-274-250-311-337-17-38-23-78-27-179-11-255-16-841-8-875l8-35 105-1 106 0 2 375c1 348 3 382 22 451 31 108 59 157 130 226 81 76 133 112 234 158 140 65 300 157 422 243 113 80 247 236 355 413 23 38 58 135 84 235 54 205 13 535-89 704-57 97-71 117-111 164-67 82-273 246-389 310-256 143-610 206-904 161zM1119 456c-138-37-225-184-175-299 16-37 74-94 131-127 34-21 53-24 135-25 86 0 99 3 142 27 158 94 164 291 12 388-74 47-159 59-245 36z"/></g></svg></button>
+<button id="brand-ink-toggle" type="button" aria-label="Use black wordmark" aria-pressed="false"></button>
 <div id="paq-dim" aria-hidden="true"></div>
 <dialog id="faq-dialog" aria-labelledby="faq-heading">
-  <header class="faq-header"><h2 id="faq-heading" tabindex="-1">PAQ<span class="faq-heading-subtitle">Pre-emptively Answered Questions</span></h2><p class="faq-authorship">The following words were written by a human</p><label class="faq-type-picker" for="paq-font">Reading face <select id="paq-font"><option value="garamond">EB Garamond · literary</option><option value="alegreya">Alegreya · warm</option><option value="cormorant">Cormorant Garamond · airy</option><option value="literata">Literata · grounded</option><option value="humanist">Source Sans 3 · clear</option><option value="original">Georgia · original</option></select></label><button id="faq-close" type="button" aria-label="Close questions" autofocus>×</button></header>
+  <header class="faq-header"><h2 id="faq-heading" tabindex="-1"><span class="paq-title-ink">PAQ</span><span class="faq-heading-subtitle">Pre-emptively Answered Questions</span></h2><p class="faq-authorship">The following words were written by a human</p><button id="faq-close" type="button" aria-label="Close questions" autofocus>×</button></header>
   <div class="faq-answers">
     <details class="faq-item" open><summary><h3 id="faq-q1">What is this about?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Effing the ineffable. A space to live new culture! It’s somewhere between a research symposium, the best house party you’ve ever been to, and a curated festival in private nature. Something like this hasn’t happened before, so honestly, we’re not quite sure.<br><br>This is more for doing phenomenological research than talking about research, but there will assuredly be talks.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q2">So it’s a party. What does that mean?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>It means it’s fun. Dancing. Immersive, playful, curious, reverent, irreverent, in on the joke. We believe fun leads to focus, and focus leads to insight.</p></div></details>
@@ -215,16 +222,18 @@ body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10
     <details class="faq-item"><summary><h3 id="faq-stimulation">Will this be overstimulating?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Parts will. The land is vast, and soft, with many cozy nooks and quiet zones. We’ll have an outdoor sound curfew most nights. There will be an arc.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q5">Can I bring something to life here?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Yes. It’s a hybrid: curated from the top down, co-created from the bottom up.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-guilds">Can we create a guild?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Yes! Guilds are like camps, but you don’t need to worry about food, water, or shade. Paradise has you covered.</p><h4 class="faq-guild-heading" id="faq-founding-guilds">Founding guilds</h4><ul class="faq-catchphrases faq-guild-list">
-      <li><strong>Aphantasians</strong> — life without a mind’s eye.</li>
-      <li><strong>Lucid Dreamers</strong> — becoming conscious inside the dream.</li>
-      <li><strong>The Hypnagogues</strong> — meeting at the edge of sleep.</li>
-      <li><strong>Synesthetes</strong> — where the senses cross.</li>
-      <li><strong>The Somanauts</strong> — exploring experience from inside the body.</li>
-      <li><strong>The Noticers</strong> — paying unreasonable attention to ordinary things.</li>
-      <li><strong>Reality Testers</strong> — investigating what makes something feel real.</li>
-      <li><strong>The Society for Curious Tongues</strong> — mapping the experience of taste.</li>
-      <li><strong>Night Elves</strong> — exploring the world after dark.</li>
-      <li><strong>The Timeless</strong> — investigating what time feels like.</li>
+      <li>Aphantasians</li>
+      <li>Lucid Dreamers</li>
+      <li>The Hypnagogues</li>
+      <li>Synesthetes</li>
+      <li>The Somanauts</li>
+      <li>The Noticers</li>
+      <li>Reality Testers</li>
+      <li>The Society for Curious Tongues</li>
+      <li>Night Elves</li>
+      <li>The Timeless</li>
+      <li>Meditators &amp; Monks</li>
+      <li>Sexy Science</li>
     </ul></div></details>
     <details class="faq-item"><summary><h3 id="faq-meals">What about food?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Four meals a day: Second Breakfast at 9am, Lunch at 1pm, Dinner at 7pm, and Breakfast at midnight :)</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-potluck">Will there be a potluck?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Yes, there will be a phenomenological potluck the likes of which the world has never seen.</p></div></details>
@@ -307,30 +316,6 @@ const PAQ = (() => {
     if(!document.hidden)return;
     cancelAnimationFrame(raf);raf=0;state.t=state.target;paint();finish();
   });
-  const fontPicker=document.getElementById('paq-font');
-  const faces={
-    garamond:['"EB Garamond",Georgia,serif','EB+Garamond:wght@400;600'],
-    alegreya:['Alegreya,Georgia,serif','Alegreya:wght@400;600'],
-    cormorant:['"Cormorant Garamond",Georgia,serif','Cormorant+Garamond:wght@400;600'],
-    literata:['Literata,Georgia,serif','Literata:opsz,wght@18,400;18,600'],
-    humanist:['"Source Sans 3",sans-serif','Source+Sans+3:wght@400;600'],
-    original:['Georgia,"Times New Roman",serif',null]
-  };
-  const loaded=new Set();
-  function selectFace(key) {
-    if(!Object.hasOwn(faces,key))key='garamond';
-    const [family,query]=faces[key];
-    if(query&&!loaded.has(key)) {
-      const link=document.createElement('link');link.rel='stylesheet';
-      link.href=`https://fonts.googleapis.com/css2?family=${query}&display=swap`;
-      document.head.append(link);loaded.add(key);
-    }
-    dialog.style.setProperty('--reading-face',family);document.body.style.setProperty('--reading-face',family);fontPicker.value=key;
-    try{localStorage.setItem('qualia-paq-font',key);}catch{}
-  }
-  let savedFace='garamond';try{savedFace=localStorage.getItem('qualia-paq-font')||savedFace;}catch{}
-  selectFace(savedFace);
-  fontPicker.addEventListener('change',()=>selectFace(fontPicker.value));
   paint();return state;
 })();
 </script>
@@ -748,7 +733,45 @@ void main() {
   float moonSpec=pow(max(dot(n,normalize(moonL+vec3(0.,-.65,.76))),0.),mix(90.,125.,hair));
   float moonRim=pow(max(dot(n,moonL),0.),3.)*rim;
   night+=vec3(.76,.83,.94)*(moonSpec*(.12+hair*.08)+moonRim*.018)*uMoonSheen.w;
-  o=vec4(mix(night,daylight,uDay),exp(min(0.,vHeight)*.6));
+  float alpha=exp(min(0.,vHeight)*.6);
+  o=vec4(mix(night,daylight,uDay)*alpha,alpha);
+}`;
+
+const VS_VENUS_HEAD = `#version 300 es
+precision highp float;
+layout(location=0) in vec3 aPosition;
+layout(location=1) in vec3 aNormal;
+layout(location=2) in vec2 aUv;
+layout(location=3) in float aHeight;
+uniform vec4 uBox;
+out vec2 vUv; out vec3 vNormal; out float vHeight;
+void main(){
+  vec2 uv=(aPosition.xy-uBox.xy)/(uBox.zw-uBox.xy);
+  gl_Position=vec4(uv.x*2.-1.,1.-uv.y*2.,aPosition.z,1.);
+  vUv=aUv;vNormal=aNormal;vHeight=aHeight;
+}`;
+const FS_VENUS_HEAD = `#version 300 es
+precision highp float;
+in vec2 vUv; in vec3 vNormal; in float vHeight;
+uniform sampler2D uPortrait;
+uniform float uUnder,uDay,uFaceVisibility;
+uniform vec4 uMoonSheen;
+out vec4 o;
+void main(){
+  if((uUnder<.5 && vHeight<0.) || (uUnder>.5 && vHeight>=0.)) discard;
+  vec4 ink=texture(uPortrait,vUv);
+  if(ink.a<.025) discard;
+  vec3 base=ink.rgb/max(ink.a,.001),n=normalize(vNormal);
+  float diffuse=max((dot(n,normalize(vec3(-.45,.3,.85)))+.30)/1.30,0.);
+  vec3 daylight=base*(.52+.48*diffuse)*vec3(.96,1.,1.04);
+  float rim=pow(1.-abs(dot(n,normalize(vec3(0.,-.65,.76)))),3.);
+  vec3 night=base*.035+vec3(.018,.042,.057)*(.25+.75*rim);
+  vec3 moonL=normalize(uMoonSheen.xyz);
+  float sheen=pow(max(dot(n,normalize(moonL+vec3(0.,-.65,.76))),0.),90.);
+  night+=vec3(.76,.83,.94)*(sheen*.12+pow(max(dot(n,moonL),0.),3.)*rim*.018)*uMoonSheen.w;
+  float alpha=ink.a*mix(1.,uFaceVisibility,smoothstep(.59,.68,vUv.y))*exp(min(0.,vHeight)*.6);
+  if(alpha<.025) discard;
+  o=vec4(mix(night,daylight,uDay)*alpha,alpha);
 }`;
 
 const FS_CLOUD = `#version 300 es
@@ -1037,7 +1060,9 @@ vec3 bspline(sampler2D t, vec2 uv){
 vec4 womanAt(sampler2D tex,vec2 p) {
   vec2 uv=(p-uSwBox.xy)/(uSwBox.zw-uSwBox.xy);
   if(any(lessThan(uv,vec2(0.))) || any(greaterThan(uv,vec2(1.)))) return vec4(0.);
-  return texture(tex,vec2(uv.x,1.-uv.y));
+  vec4 ink=texture(tex,vec2(uv.x,1.-uv.y));
+  // Both the solid mesh and portrait are stored premultiplied for clean hair edges.
+  return vec4(ink.rgb/max(ink.a,.001),ink.a);
 }
 vec3 swimmerColour(float material){
   vec3 skin=vec3(.43,.28,.20), suit=vec3(.055,.13,.17), hair=vec3(.045,.028,.022);
@@ -1242,6 +1267,7 @@ function initGL(){
   P.cloud = program(VS_FULL, FS_CLOUD);
   P.woman = program(VS_SWIMMER, FS_SWIMMER);
   initWomanMesh();
+  initVenusHead();
   P.starHistory = program(VS_FULL, FS_STAR_HISTORY);
   SIM = hasHalf;
   if (SIM){
@@ -1292,6 +1318,9 @@ function currentMoonPosition() {
   const moonOrbit=reduced?0:paqSkyTime*.0025;
   const moonTarget=[cw*(.82+.13*Math.sin(moonOrbit)+(reduced?0:.035*dawnYield)),ch*(.095+.045*(1-Math.cos(moonOrbit))-(reduced?0:.025*dawnYield)),Math.min(cw*.027,24*dpr)];
   const movingMoon=moonAnchor.map((v,i)=>v+(moonTarget[i]-v)*(reduced?0:moonTravel));
+  // A restrained bow above the direct path, retraced naturally on closing.
+  const arcHeight=Math.min(ch*.055,Math.abs(moonTarget[0]-moonAnchor[0])*.28);
+  if(!reduced)movingMoon[1]-=4*moonTravel*(1-moonTravel)*arcHeight;
   // The moon belongs to the PAQ sky header: scrolling carries it out of the
   // reading area, and scrolling back restores the same position immediately.
   movingMoon[0]+=Math.min(PAQ.scrollY*.14,42)*dpr*moonTravel;
@@ -1469,7 +1498,9 @@ function drawWord(){
   wx.setTransform(k, 0, 0, k, 0, 0); wx.clearRect(0, 0, x1 - x0, y1 - y0);
   if (image) {
     const r=rects[0];
+    wx.filter=document.body.classList.contains('ink-dark')?'brightness(0)':'none';
     wx.drawImage(image,r.left-x0,r.top-y0,r.width,r.height);
+    wx.filter='none';
     const dotX=r.left+r.width*.715,dotY=r.top+r.height*.315;
     moonAnchor=[dotX*dpr,dotY*dpr,r.width*.0245*dpr];
     // Keep the original dot in this atlas; wordAt crossfades it with the moon.
@@ -1575,7 +1606,7 @@ function strokeSpeed(ph){
 // The near side of a 1.7m body envelope at 1.35m depth must remain above the footer.
 function refreshSwimBounds(){
   swimFooterTop=footer.getBoundingClientRect().top;
-  const floor=swimFooterTop-18;
+  const floor=swimFooterTop-8;
   let low=shoreCss, high=shoreCss+Hw*.95;
   for(let i=0;i<24;i++) {
     const y=(low+high)/2, z=worldFromScreen(W*.5,y)[1];
@@ -1829,6 +1860,12 @@ function swimmerFrame(dt){
   const ww = toWorld([wl[0], wl[1], 0]), rc = project(ww[0], ww[1], 0);
   const rr = .15*M*rc[2]*dpr;
   ring[0] = rc[0]*dpr; ring[1] = rc[1]*dpr; ring[2] = rr; ring[3] = rr*Math.max(rc[2]*TILT, .2); ringK = rk;
+  if(venusHeadCount){
+    for(let k=0;k<venusHeadGrid.length;k+=HEAD_STRIDE){
+      x0=Math.min(x0,venusHeadGrid[k]);x1=Math.max(x1,venusHeadGrid[k]);
+      y0=Math.min(y0,venusHeadGrid[k+1]);y1=Math.max(y1,venusHeadGrid[k+1]);
+    }
+  }
   const m = 10*dpr; swBox[0] = x0 - m; swBox[1] = y0 - m; swBox[2] = x1 + m;
   swBox[3] = Math.max(y1, 2*ring[1] - y0) + m;
 }
@@ -1837,7 +1874,77 @@ function swimmerFrame(dt){
 let womanVAO, womanBuffer, womanCount=0;
 const womanData=new Float32Array(24000*8);
 let womanRingData=new Float32Array(600*8);
+let venusHeadReady=false,venusHeadTexture,venusHeadVAO,venusHeadBuffer,venusHeadCount=0;
+const HEAD_COLS=12,HEAD_ROWS=32,HEAD_STRIDE=9;
+const venusHeadData=new Float32Array(HEAD_COLS*HEAD_ROWS*6*HEAD_STRIDE);
+const venusHeadGrid=new Float32Array((HEAD_COLS+1)*(HEAD_ROWS+1)*HEAD_STRIDE);
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+function initVenusHead(){
+  venusHeadReady=false;venusHeadCount=0;venusHeadTexture=null;
+  try {
+    P.venusHead=program(VS_VENUS_HEAD,FS_VENUS_HEAD);
+    venusHeadVAO=gl.createVertexArray();gl.bindVertexArray(venusHeadVAO);
+    venusHeadBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,venusHeadBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER,venusHeadData.byteLength,gl.DYNAMIC_DRAW);
+    for(const [i,n,offset] of [[0,3,0],[1,3,3],[2,2,6],[3,1,8]]){
+      gl.enableVertexAttribArray(i);gl.vertexAttribPointer(i,n,gl.FLOAT,false,HEAD_STRIDE*4,offset*4);
+    }
+    venusHeadTexture=tex(1,1,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,gl.LINEAR,new Uint8Array(4));
+    const target=venusHeadTexture,image=new Image();
+    image.onload=()=>{
+      if(gl.isContextLost() || target!==venusHeadTexture) return;
+      try {
+        gl.bindTexture(gl.TEXTURE_2D,target);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,image);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+        venusHeadReady=true;
+      } catch(err){console.warn('Venus portrait unavailable; retaining the sculpted head.',err);}
+      finally {gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);}
+    };
+    image.onerror=()=>{if(target===venusHeadTexture) venusHeadReady=false;};
+    image.src='assets/venus-head-v1.png';
+  } catch(err){console.warn('Venus portrait unavailable; retaining the sculpted head.',err);}
+}
+function buildVenusHead(J){
+  venusHeadCount=0;
+  const c=Math.cos(SW.th),sn=Math.sin(SW.th);
+  for(let row=0;row<=HEAD_ROWS;row++) for(let col=0;col<=HEAD_COLS;col++){
+    const u=col/HEAD_COLS,v=row/HEAD_ROWS,tilt=.35+.65*SW.tread;
+    const side=(u-.5)/.34,curve=Math.max(0,1-side*side);
+    const headSide=.115*Math.tanh((u-.5)*3.8);
+    const faceT=(v-.60)/.30,vertical=.085-.195*faceT;
+    const faceX=.086-vertical*(1-tilt)+.024*Math.sin(Math.PI*clamp(faceT,0,1))-.055*side*side;
+    const faceZ=J.head[2]+vertical*tilt-.024*(1-curve);
+    let local;
+    if(v>=.60){
+      // The actual forehead-to-chin artwork occupies only the bottom 30%.
+      // Wrap that short face around the forward surface of the rounded head.
+      local=[J.head[0]+faceX,J.head[1]+headSide,faceZ];
+    } else {
+      const trail=1-v/.60,lift=smooth(.24,.60,v);
+      const topX=.086-.085*(1-tilt)-.055*side*side;
+      const topZ=J.head[2]+.085*tilt-.024*(1-curve);
+      const sway=(Math.sin(SW.tph*1.15-trail*3.1)*.025-SW.turnV*.04)*trail*trail;
+      // A low rounded crown rolls back into long hair resting on the water;
+      // there is no overlapping interpolation of two opposing surface folds.
+      const width=.39-.13*Math.sin(Math.PI*smooth(.24,.60,v));
+      local=[J.head[0]-.88+(.88+topX)*(v/.60),J.head[1]+(u-.5)*width*(1-lift)+headSide*lift+sway,
+        -.013*(1-lift)+topZ*lift+.043*Math.sin(Math.PI*lift)*curve];
+    }
+    const face=smooth(.50,.65,v);
+    const w=toWorld(local),p=project(...w),normal=norm([face*(.65+.35*SW.tread),(u-.5)*.65,1-face*(.35+.5*SW.tread)]);
+    const k=(row*(HEAD_COLS+1)+col)*HEAD_STRIDE;
+    venusHeadGrid.set([p[0]*dpr,p[1]*dpr,clamp((w[1]-SW.Z)/(M*5)-local[2]*.23,-.95,.95),
+      c*normal[0]+sn*normal[1],sn*normal[0]-c*normal[1],normal[2],u,v,local[2]],k);
+  }
+  const emit=k=>{const dest=venusHeadCount++*HEAD_STRIDE;for(let i=0;i<HEAD_STRIDE;i++)venusHeadData[dest+i]=venusHeadGrid[k+i];};
+  for(let row=0;row<HEAD_ROWS;row++) for(let col=0;col<HEAD_COLS;col++){
+    const a=(row*(HEAD_COLS+1)+col)*HEAD_STRIDE,b=a+HEAD_STRIDE,c=a+(HEAD_COLS+1)*HEAD_STRIDE,d=c+HEAD_STRIDE;
+    emit(a);emit(c);emit(d);emit(a);emit(d);emit(b);
+  }
+}
 function initWomanMesh() {
   womanVAO=gl.createVertexArray(); gl.bindVertexArray(womanVAO);
   womanBuffer=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,womanBuffer);
@@ -1872,7 +1979,7 @@ function meshTube(points,radii,material,sides=12) {
     const up=norm(cross(tangent,side)), [rw,back,front=back]=radii[j];
     for(let i=0;i<sides;i++) {
       const angle=i/sides*Math.PI*2, co=Math.cos(angle), si=Math.sin(angle),rh=si<0?front:back;
-      meshVertex(add(points[j],add(mul(side,co*rw),mul(up,si*rh))),norm(add(mul(side,co/Math.max(rw,.002)),mul(up,si/Math.max(rh,.002)))),material,(j*sides+i)*8,c,sn);
+      meshVertex(add(points[j],add(mul(side,co*rw),mul(up,si*rh))),norm(add(mul(side,co/Math.max(rw,.002)),mul(up,si/Math.max(rh,.002)))),Array.isArray(material)?material[j]:material,(j*sides+i)*8,c,sn);
     }
   }
   // Emit the original triangle order from bit-identical cached ring vertices.
@@ -1905,7 +2012,8 @@ function limbMesh(a,b,r0,r1,rootScale=.65) {
 }
 function buildWomanMesh(J) {
   womanCount=0;
-  // One continuous adult nude form, with a soft chest, waist and rounded pelvis.
+  venusHeadCount=0;
+  // One continuous adult form, with a soft chest, waist and rounded pelvis.
   const upper=add(J.sh,[.035,0,.008]);
   const bodyAxis=norm(sub(J.hip,J.sh));
   const centres=[add(upper,mul(bodyAxis,-.045)),upper,lerp(J.sh,J.hip,.18),lerp(J.sh,J.hip,.40),lerp(J.sh,J.hip,.60),lerp(J.sh,J.hip,.81),J.hip,add(J.hip,mul(bodyAxis,.06)),add(J.hip,mul(bodyAxis,.10))];
@@ -1917,7 +2025,9 @@ function buildWomanMesh(J) {
     torsoRadii.push(profile[j].map((r,i)=>r+(profile[j+1][i]-r)*ease));
   }
   torsoPoints.push(centres.at(-1));torsoRadii.push(profile.at(-1));
-  meshTube(torsoPoints,torsoRadii,0,24);
+  // Opaque sea-green wrap and low-rise brief follow the same animated torso.
+  const torsoMaterials=torsoPoints.map((_,j)=>((j>=3 && j<=8) || j>=18)?1:0);
+  meshTube(torsoPoints,torsoRadii,torsoMaterials,24);
   meshTube([J.arms[0][0],J.sh,J.arms[1][0]],[[.055,.052],[.075,.063],[.055,.052]],0,12);
   meshTube([J.sh,lerp(J.sh,J.head,.65),J.head],[[.055,.052],[.039,.043],[.052,.054]],0,12);
   // A single long oval face: crown, brow, cheek, tapered jaw and small chin.
@@ -1941,6 +2051,11 @@ function buildWomanMesh(J) {
     meshTube([lerp(J.hip,l[0],.60),l[0],lerp(l[0],l[1],.25),lerp(l[0],l[1],.70),l[1],lerp(l[1],l[2],.27),lerp(l[1],l[2],.55),lerp(l[1],l[2],.86),l[2]],
       [[.112,.10],[.105,.097],[.093,.083],[.063,.058],[.049,.045],[.063,.056],[.052,.047],[.034,.031],[.026,.025]],0,18);
     meshTube([l[2],lerp(l[2],l[3],.5),l[3]],[[.033,.028],[.043,.025],[.022,.015]],0);
+  }
+  if(venusHeadReady){
+    // A volumetric crown carries rear and side views when the frontal art fades.
+    meshEllipsoid(add(J.head,[-.045,0,.025]),[.079,.081,.099],2);
+    buildVenusHead(J);return;
   }
   // Long wet copper-gold hair: a coherent swept mass, fine tapered locks and delayed wave motion.
   const crown=add(J.head,[-.045,0,.025]);
@@ -1973,6 +2088,10 @@ function buildWomanMesh(J) {
   meshEllipsoid(add(flower,[0,0,.008]),[.009,.009,.008],4);
 }
 function renderWoman() {
+  if(venusHeadReady && venusHeadCount){
+    gl.bindBuffer(gl.ARRAY_BUFFER,venusHeadBuffer);
+    gl.bufferSubData(gl.ARRAY_BUFFER,0,venusHeadData,0,venusHeadCount*HEAD_STRIDE);
+  }
   gl.bindVertexArray(womanVAO); gl.bindBuffer(gl.ARRAY_BUFFER,womanBuffer);
   gl.bufferSubData(gl.ARRAY_BUFFER,0,womanData.subarray(0,womanCount*8));
   const p=P.woman;gl.useProgram(p.p);
@@ -1984,8 +2103,20 @@ function renderWoman() {
   for(let under=0;under<2;under++) {
     drawTo(under?T.womanUnder:T.woman);
     gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    gl.useProgram(p.p);gl.bindVertexArray(womanVAO);
     gl.uniform1f(p.u.uUnder,under);
     gl.drawArrays(gl.TRIANGLES,0,womanCount);
+    if(venusHeadReady && venusHeadCount){
+      const head=P.venusHead;gl.useProgram(head.p);gl.bindVertexArray(venusHeadVAO);
+      gl.uniform4fv(head.u.uBox,swBox);gl.uniform1f(head.u.uDay,LIGHT.values[0]);
+      gl.uniform1f(head.u.uUnder,under);
+      gl.uniform1f(head.u.uFaceVisibility,smooth(-.22,.55,-Math.sin(SW.th)));
+      gl.uniform4f(head.u.uMoonSheen,(moon[0]/cw-.5)*1.4,.4,.85,moonLight[2]*LIGHT.values[2]*(1-smooth(.08,.72,LIGHT.values[0])));
+      bindTex(0,venusHeadTexture,head.u.uPortrait);
+      gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
+      gl.drawArrays(gl.TRIANGLES,0,venusHeadCount);
+      gl.depthMask(true);gl.disable(gl.BLEND);
+    }
   }
   gl.disable(gl.DEPTH_TEST);gl.bindVertexArray(vao);
 }
@@ -1994,7 +2125,7 @@ function renderWoman() {
 let autoOn = true;
 const activeTouches=new Set();
 function steer(e, force){
-  if (AUTO || document.getElementById('faq-dialog').open || e.target.closest?.('.light-controls, .signal-link, .wordmark-controls, #faq-open')) return false;
+  if (AUTO || document.getElementById('faq-dialog').open || e.target.closest?.('.light-controls, .signal-link, .wordmark-controls, #faq-open, #brand-ink-toggle')) return false;
   if ((window.visualViewport?.scale || 1)>1.01 || activeTouches.size>1 || (e.pointerType==='touch' && !e.isPrimary)) return false;
   if (e.clientY>=swimFooterTop) return false;
   if (!force && e.pointerType === 'mouse' && e.buttons === 0 && e.clientY < shoreCss) return false;
@@ -2165,6 +2296,49 @@ function simStep(dt){
   gl.uniform1f(p.u.uV0, V0); gl.uniform1f(p.u.uTilt, TILT);
   full(); [T.pA, T.pB] = [T.pB, T.pA];
 }
+// Sample the rendered scene, including the reading veil, separately behind each
+// physical header line. Only active while PAQ is visible; one tiny read per 300ms.
+const paqContrast = (() => {
+  const sample=document.createElement('canvas');sample.width=128;sample.height=80;
+  const ctx=sample.getContext('2d',{willReadFrequently:true});
+  const groups=[...document.querySelectorAll('.paq-title-ink,.faq-heading-subtitle,.faq-authorship')].map(el=>{
+    const words=el.textContent.trim().split(/\s+/);el.textContent='';
+    return words.map((word,i)=>{if(i)el.append(' ');const span=document.createElement('span');span.className='paq-contrast-word';span.textContent=word;el.append(span);return span;});
+  });
+  const close=document.getElementById('faq-close');let last=-Infinity;
+  const linear=v=>v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4);
+  return now=>{
+    if(!ctx||PAQ.t<=0||now-last<300)return;last=now;
+    const lines=[];
+    for(const words of groups){let line;for(const el of words){const r=el.getBoundingClientRect();if(r.bottom<=0||r.top>=H)continue;
+      if(!line||Math.abs(line.top-r.top)>2){line={left:r.left,right:r.right,top:r.top,bottom:r.bottom,els:[]};lines.push(line);}
+      line.right=r.right;line.bottom=Math.max(line.bottom,r.bottom);line.els.push(el);
+    }}
+    const r=close.getBoundingClientRect();lines.push({left:r.left+10,right:r.right-10,top:r.top+10,bottom:r.bottom-10,els:[close]});
+    ctx.clearRect(0,0,128,80);ctx.drawImage(cvs,0,0,128,80);
+    // These stops mirror #paq-dim; use its animated opacity, not the target state.
+    ctx.globalAlpha=Number(getComputedStyle(document.getElementById('paq-dim')).opacity);
+    let gradient=ctx.createLinearGradient(0,0,0,80);
+    [[0,16/255],[.18,50/255],[.4,217/255],[.68,245/255],[1,245/255]].forEach(([p,a])=>gradient.addColorStop(p,`rgba(2,8,14,${a})`));
+    ctx.fillStyle=gradient;ctx.fillRect(0,0,128,80);
+    gradient=ctx.createLinearGradient(0,0,128,0);const reading=Math.min(1,PAQ.scrollY/160)*.84;
+    [[0,0],[.12,reading],[.88,reading],[1,0]].forEach(([p,a])=>gradient.addColorStop(p,`rgba(2,8,14,${a})`));
+    ctx.fillStyle=gradient;ctx.fillRect(0,0,128,80);ctx.globalAlpha=1;
+    const pixels=ctx.getImageData(0,0,128,80).data;
+    for(const line of lines){let sum=0,n=0;
+      for(let y=0;y<3;y++)for(let x=0;x<11;x++){
+        const px=clamp(Math.floor((line.left+(line.right-line.left)*(x+.5)/11)/W*128),0,127);
+        const py=clamp(Math.floor((line.top+(line.bottom-line.top)*(y+.5)/3)/H*80),0,79),i=(py*128+px)*4;
+        sum+=.2126*linear(pixels[i]/255)+.7152*linear(pixels[i+1]/255)+.0722*linear(pixels[i+2]/255);n++;
+      }
+      const luminance=sum/n,previous=line.els[0].style.getPropertyValue('--paq-ink');
+      // Equal black/white contrast at sqrt(.0525)-.05; small dead band avoids shimmer.
+      const threshold=Math.sqrt(.0525)-.05;
+      const ink=previous&&Math.abs(luminance-threshold)<.008?previous:luminance>threshold?'#000':'#fff';
+      for(const el of line.els)el.style.setProperty('--paq-ink',ink);
+    }
+  };
+})();
 function render(){
   gl.useProgram(P.cloud.p); drawTo(T.cloud);
   gl.uniform1f(P.cloud.u.uTime,ambT); gl.uniform1f(P.cloud.u.uAspect,W/shoreCss);
@@ -2254,6 +2428,7 @@ function render(){
   gl.uniform4f(p.u.uSwBox, swBox[0], swBox[1], swBox[2], swBox[3]);
   gl.uniform4f(p.u.uRing, ring[0], ring[1], ring[2], ring[3]); gl.uniform1f(p.u.uRingK, ringK);
   full();
+  paqContrast(performance.now());
 }
 function frame(now){
   raf = requestAnimationFrame(frame);
@@ -2279,6 +2454,12 @@ mark.addEventListener('load', () => { if (sized && !gl.isContextLost()) drawWord
 new ResizeObserver(() => { if (sized && !gl.isContextLost()) drawWord(); }).observe(document.querySelector('.brand-lockup'));
 new ResizeObserver(() => { if(sized) refreshSwimBounds(); }).observe(footer);
 document.addEventListener('qualia:wordmark-change', () => { if (sized && !gl.isContextLost()) drawWord(); });
+document.getElementById('brand-ink-toggle').addEventListener('click', e => {
+  const dark=document.body.classList.toggle('ink-dark');
+  e.currentTarget.setAttribute('aria-pressed',String(dark));
+  e.currentTarget.setAttribute('aria-label',dark?'Use white wordmark':'Use black wordmark');
+  if(sized&&!gl.isContextLost())drawWord();
+});
 function boot(){
   try { initGL(); resize(); start(); }
   catch (err) { console.error(err); document.documentElement.classList.add('nogl'); stop(); }
