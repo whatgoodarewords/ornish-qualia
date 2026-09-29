@@ -150,6 +150,13 @@ body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10
 .faq-answer { padding:0 42px 38px 0; max-width:760px; }
 .faq-item p,.faq-catchphrases { font:400 clamp(18px,2vw,23px)/1.62 Georgia,'Times New Roman',serif; color:#d9dddc; }
 @media(max-width:600px) { #faq-dialog { padding-left:24px; padding-right:24px; } .faq-header { padding-top:116px; padding-bottom:44px; } .faq-item summary { padding:22px 0; gap:16px; } .faq-answer { padding-right:8px; padding-bottom:30px; } .faq-heading-subtitle { max-width:250px; } }
+#faq-dialog { --reading-face:"EB Garamond",Georgia,serif; }
+.faq-item h3,.faq-item p,.faq-catchphrases,.faq-guild-heading { font-family:var(--reading-face); font-weight:400; font-synthesis:none; }
+.faq-item p,.faq-catchphrases { font-size:clamp(20px,2.1vw,25px); line-height:1.52; }
+.faq-type-picker { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-top:24px; font:400 12px/1.5 "DM Sans",sans-serif; color:#aab6bc; }
+.faq-type-picker select { max-width:100%; border:0; border-bottom:1px solid #cbd7dc55; border-radius:0; padding:7px 22px 7px 0; background:transparent; color:#e5e8e7; font:inherit; cursor:pointer; }
+.faq-type-picker select:focus-visible { outline:1px solid #c5e9ff; outline-offset:4px; }
+.faq-type-picker option { background:#081016; color:#eef0ec; }
 @media(prefers-reduced-motion:reduce) { #faq-dialog { transform:none; } }
 </style>
 </head>
@@ -190,7 +197,7 @@ body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10
 <button id="faq-open" type="button" aria-label="Questions about Qualia" aria-haspopup="dialog" aria-controls="faq-dialog" aria-expanded="false"><!-- Original LensQuestionarium: Bodoni/Didone ball-terminal glyph from sw-dev/packages/app/src-oversize/components/ui/icons.tsx. --><svg viewBox="-710 -200 3970 4770" fill="currentColor" stroke="none" aria-hidden="true"><g transform="translate(0,4370) scale(1,-1)"><path d="M1033 4354c-178-28-389-106-554-206-109-66-220-166-306-278-57-74-80-119-121-246-44-132-56-223-43-319 25-186 32-203 118-295 70-76 138-120 237-156 74-26 79-26 168-15 150 19 252 84 301 191 66 141 62 264-9 357-30 39-115 103-163 123-53 21-147 18-215-8-55-21-60-22-77-6-54 48 4 247 103 358 45 50 165 146 183 146 3 0 29 11 58 25 68 33 138 53 272 76 179 31 285 21 500-47 201-63 387-269 442-488 39-156 28-392-28-601-20-72-85-208-127-265-57-76-223-239-368-359-192-161-274-250-311-337-17-38-23-78-27-179-11-255-16-841-8-875l8-35 105-1 106 0 2 375c1 348 3 382 22 451 31 108 59 157 130 226 81 76 133 112 234 158 140 65 300 157 422 243 113 80 247 236 355 413 23 38 58 135 84 235 54 205 13 535-89 704-57 97-71 117-111 164-67 82-273 246-389 310-256 143-610 206-904 161zM1119 456c-138-37-225-184-175-299 16-37 74-94 131-127 34-21 53-24 135-25 86 0 99 3 142 27 158 94 164 291 12 388-74 47-159 59-245 36z"/></g></svg></button>
 <div id="paq-dim" aria-hidden="true"></div>
 <dialog id="faq-dialog" aria-labelledby="faq-heading">
-  <header class="faq-header"><h2 id="faq-heading" tabindex="-1">PAQ<span class="faq-heading-subtitle">Pre-emptively Answered Questions</span></h2><p class="faq-authorship">The following words were written by a human</p><button id="faq-close" type="button" aria-label="Close questions" autofocus>×</button></header>
+  <header class="faq-header"><h2 id="faq-heading" tabindex="-1">PAQ<span class="faq-heading-subtitle">Pre-emptively Answered Questions</span></h2><p class="faq-authorship">The following words were written by a human</p><label class="faq-type-picker" for="paq-font">Reading face <select id="paq-font"><option value="garamond">EB Garamond · literary</option><option value="alegreya">Alegreya · warm</option><option value="cormorant">Cormorant Garamond · airy</option><option value="literata">Literata · grounded</option><option value="humanist">Source Sans 3 · clear</option><option value="original">Georgia · original</option></select></label><button id="faq-close" type="button" aria-label="Close questions" autofocus>×</button></header>
   <div class="faq-answers">
     <details class="faq-item" open><summary><h3 id="faq-q1">What is this about?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Effing the ineffible. A space to live new culture! It’s somewhere between a research symposium, the best house party you’ve ever been to, and a curated festival in private nature. Something like this hasn’t happened before, so honestly, we’re not quite sure.<br><br>This is more for doing phenomenological research than talking about research, but there will assuredly be talks.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q2">So it’s a party. What does that mean?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>It means it’s fun. Dancing. Immersive, playful, curious, reverent, irreverent, in on the joke. We believe fun leads to focus, and focus leads to insight.</p></div></details>
@@ -244,7 +251,8 @@ body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10
 const PAQ = (() => {
   const opener=document.getElementById('faq-open'), dialog=document.getElementById('faq-dialog');
   const motion=matchMedia('(prefers-reduced-motion: reduce)');
-  const state={t:0,progress:0,target:0};
+  const state={t:0,progress:0,target:0,scrollY:0};
+  dialog.addEventListener('scroll',()=>{state.scrollY=Math.max(0,dialog.scrollTop);},{passive:true});
   let raf=0,last=0;
   const windowed=(a,b,t)=>Math.min(1,Math.max(0,(t-a)/(b-a)));
   const ease=t=>t*t*(3-2*t);
@@ -273,7 +281,7 @@ const PAQ = (() => {
     dialog.inert=!target;
     opener.setAttribute('aria-expanded',String(!!target));
     if(target && !dialog.open) {
-      dialog.showModal();dialog.scrollTop=0;
+      dialog.showModal();dialog.scrollTop=0;state.scrollY=0;
       document.getElementById('faq-heading').focus({preventScroll:true});
     }
     if(!raf) {last=performance.now();raf=requestAnimationFrame(tick);}
@@ -289,6 +297,30 @@ const PAQ = (() => {
     if(!document.hidden)return;
     cancelAnimationFrame(raf);raf=0;state.t=state.target;paint();finish();
   });
+  const fontPicker=document.getElementById('paq-font');
+  const faces={
+    garamond:['"EB Garamond",Georgia,serif','EB+Garamond:wght@400;600'],
+    alegreya:['Alegreya,Georgia,serif','Alegreya:wght@400;600'],
+    cormorant:['"Cormorant Garamond",Georgia,serif','Cormorant+Garamond:wght@400;600'],
+    literata:['Literata,Georgia,serif','Literata:opsz,wght@18,400;18,600'],
+    humanist:['"Source Sans 3",sans-serif','Source+Sans+3:wght@400;600'],
+    original:['Georgia,"Times New Roman",serif',null]
+  };
+  const loaded=new Set();
+  function selectFace(key) {
+    if(!Object.hasOwn(faces,key))key='garamond';
+    const [family,query]=faces[key];
+    if(query&&!loaded.has(key)) {
+      const link=document.createElement('link');link.rel='stylesheet';
+      link.href=`https://fonts.googleapis.com/css2?family=${query}&display=swap`;
+      document.head.append(link);loaded.add(key);
+    }
+    dialog.style.setProperty('--reading-face',family);fontPicker.value=key;
+    try{localStorage.setItem('qualia-paq-font',key);}catch{}
+  }
+  let savedFace='garamond';try{savedFace=localStorage.getItem('qualia-paq-font')||savedFace;}catch{}
+  selectFace(savedFace);
+  fontPicker.addEventListener('change',()=>selectFace(fontPicker.value));
   paint();return state;
 })();
 </script>
@@ -2135,6 +2167,10 @@ function render(){
   const moonOrbit=reduced?0:paqSkyTime*.0025;
   const moonTarget=[cw*(.82+.13*Math.sin(moonOrbit)+(reduced?0:.035*dawnYield)),ch*(.095+.045*(1-Math.cos(moonOrbit))-(reduced?0:.025*dawnYield)),Math.min(cw*.027,24*dpr)];
   const movingMoon=moonAnchor.map((v,i)=>v+(moonTarget[i]-v)*(reduced?0:moonTravel));
+  // The moon belongs to the PAQ sky header: scrolling carries it out of the
+  // reading area, and scrolling back restores the same position immediately.
+  movingMoon[0]+=Math.min(PAQ.scrollY*.14,42)*dpr*moonTravel;
+  movingMoon[1]-=PAQ.scrollY*dpr*moonTravel;
   movingMoon[1]+=ch*.12*sceneLift; // Compensate camera lift in screen space.
   gl.uniform3fv(p.u.uMoonAnchor,movingMoon);
   gl.uniform3fv(p.u.uLogoDot,moonAnchor);
