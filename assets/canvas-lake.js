@@ -23,7 +23,7 @@ function startCanvasLake(original) {
   let distantRidge=new Path2D();
   const controlImage=new Image(),control=document.querySelector('#faq-open svg');let controlRect=null;
   if(control){const svg=control.cloneNode(true);svg.setAttribute('xmlns','http://www.w3.org/2000/svg');svg.setAttribute('width','22');svg.setAttribute('height','26');svg.style.color='#fff';controlImage.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));}
-  let W=1,H=1,shore=1,scale=1,anchor=[0,0,1],imageRect=null,markRect=null,words=[],last=0,elapsed=0,raf=0;
+  let W=1,H=1,shore=1,scale=1,anchor=[0,0,1],imageRect=null,markRect=null,words=[],last=0,elapsed=0,raf=0,paintTimer=0;
   let portrait=null,moonMinute=-1,painted=false;
   const cycle=createQualiaCycle(()=>({width:W,height:H,shore}));
   const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
@@ -157,10 +157,13 @@ function startCanvasLake(original) {
     if(!painted){painted=true;QUALIA_LOAD.done('graphics');}
     // At most 20 fps; pause entirely in background tabs. Reduced-motion stills
     // repaint at a low rate so UI fades, resizes and lunar updates remain correct.
-    raf=setTimeout(()=>requestAnimationFrame(paint),motion.matches?100:50);
+    paintTimer=setTimeout(()=>{paintTimer=0;raf=requestAnimationFrame(paint);},motion.matches?100:50);
   }
   const observer=new ResizeObserver(layout);observer.observe(document.querySelector('.brand-lockup'));observer.observe(footer);
   addEventListener('resize',layout,{passive:true});mark.addEventListener('load',layout,true);document.fonts?.ready.then(layout);
-  document.addEventListener('visibilitychange',()=>{clearTimeout(raf);if(!document.hidden){last=0;requestAnimationFrame(paint);}});
-  layout();requestAnimationFrame(paint);
+  document.addEventListener('visibilitychange',()=>{
+    clearTimeout(paintTimer);paintTimer=0;cancelAnimationFrame(raf);raf=0;
+    if(!document.hidden){last=0;raf=requestAnimationFrame(paint);}
+  });
+  layout();raf=requestAnimationFrame(paint);
 }

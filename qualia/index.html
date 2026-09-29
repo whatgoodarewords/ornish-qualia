@@ -10,7 +10,7 @@ document.documentElement.classList.add('is-loading');
 window.qualiaLoadEscape=setTimeout(()=>{if(window.qualiaFinishLoading)window.qualiaFinishLoading();else document.documentElement.classList.remove('is-loading');},18000);
 </script>
 <title>Qualia — a phenomenological research party</title>
-<link rel="icon" type="image/png" href="assets/qualia-q.png">
+<link rel="icon" type="image/png" href="assets/qualia-q.png?v=f24103b449c4">
 <meta name="description" content="a phenomenological research party. Summer 2027. The Garden, Portugal.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -204,6 +204,10 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
   transition:text-shadow .45s ease;
 }
 @media(prefers-reduced-motion:reduce) { .faq-header,.faq-answers { transition:none; } }
+.faq-header { padding-top:max(clamp(28px,calc(18vh - 96px),74px),calc(var(--safe-top) + 16px)); }
+@media(max-width:600px) { .faq-header { padding-top:max(44px,calc(var(--safe-top) + 16px)); } }
+.faq-detail-link { display:inline-flex; align-items:center; min-height:44px; color:inherit; text-decoration-thickness:1px; text-underline-offset:.2em; }
+.faq-detail-link:hover { color:#fff; }
 
 </style>
 <style id="signal-water-styles">
@@ -286,7 +290,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
     <details class="faq-item"><summary><h3 id="faq-q2">So it’s a party. What does that mean?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>It means it’s fun. Dancing. Immersive, playful, curious, reverent, irreverent, in on the joke. We believe fun leads to focus, and focus leads to insight.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-research">What happens to the research?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>We invite everyone to get their clipboards out and help establish the practices, norms, and ethics of this research collectively. This is part of making new culture.</p><p>We want to share what we learn. Any data collection will be opt-in, with a clear explanation of what’s being collected and why. We’ll share findings while protecting people’s privacy. Coming to the party doesn’t mean agreeing to be studied.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q9">Is this part of something bigger?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>A party to begin a month of phenomenological research. Afterwards, there’s an optional three-week residency: more time to follow a question, bring something to life, and live some life! Come for the party, or stay for the month.</p></div></details>
-    <details class="faq-item"><summary><h3 id="faq-q3">Can anyone come?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No. It’s curated for character, via application.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q3">Can anyone come?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No. It’s curated for character, via application.</p><p><a class="faq-detail-link" href="https://signal.group/#CjQKIEUrRqSJuQTnvetwsqKrlnMcP75vbt2LGmxpuD9OfnWuEhBmb3S-MWQ2-Tqc63s_XySz" target="_blank" rel="noopener noreferrer">Signal group for details</a></p></div></details>
     <details class="faq-item"><summary><h3 id="faq-suitability">Who is this event not appropriate for?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>This event is not appropriate for children, pregnant people, people with epilepsy or heart conditions, or smokers.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q6">I’m sober. Will that be weird?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No, qualia is a hell of a drug. You’ll fit right in.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q7">Any weird rules?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No alcohol, no ketamine, no smoking, no small talk.</p></div></details>
@@ -323,7 +327,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 </dialog>
 <main class="hero">
   <div class="brand-lockup">
-  <h1 class="mark image-mark" aria-label="Qualia" data-wordmark="16-interpenetrating-contour"><img src="assets/wordmarks/16-interpenetrating-contour.png" alt="" aria-hidden="true"></h1>
+  <h1 class="mark image-mark" aria-label="Qualia" data-wordmark="16-interpenetrating-contour"><img src="assets/wordmarks/16-interpenetrating-contour.png?v=a1a0b0be462b" alt="" aria-hidden="true"></h1>
     <p class="sub"><span>a</span> <span>phenomenological</span> <span>research</span> <span>party</span></p>
   </div>
   <div class="foot">
@@ -331,13 +335,13 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
     <a class="signal-link" href="https://signal.group/#CjQKIEUrRqSJuQTnvetwsqKrlnMcP75vbt2LGmxpuD9OfnWuEhBmb3S-MWQ2-Tqc63s_XySz" target="_blank" rel="noopener noreferrer"><span>Signal group for details</span><svg class="arrow" aria-hidden="true" viewBox="0 0 40 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 26C11 29 25 23 23 14C21 5 11 8 13 16C15 25 30 20 35 5M27 8L35 5L37 13"/></svg></a>
   </div>
 </main>
-<script src="assets/vendor/astronomy-2.1.19.min.js"></script>
+<script src="assets/vendor/astronomy-2.1.19.min.js?v=f41139a87941"></script>
 <script>
 // Readiness milestones, not a pretend download percentage. Failed optional
 // images settle to their procedural fallback; a completed frame gates reveal.
 // Both renderers consume the same lighting clock and artwork sources.
 const QUALIA_SHORE=.44;
-const QUALIA_ART={moon:'assets/lroc-color-2k.jpg',woodland:'assets/woodland-photo.png'};
+const QUALIA_ART={moon:'assets/lroc-color-2k.jpg?v=f7130a182268',woodland:'assets/woodland-photo.png?v=a9b5d8e4e79e'};
 // Update only the open dialog, and only when a visible strength step changes.
 const paqReadabilityDialog=document.getElementById('faq-dialog');
 let paqReadabilityLevel=-1;
@@ -582,7 +586,7 @@ const QUALIA_LOAD = (()=>{
   watchImage('wordmark',document.querySelector('.mark img'));
   watchImage('moon',QUALIA_ART.moon);
   watchImage('woodland',QUALIA_ART.woodland);
-  watchImage('swimmer','assets/venus-head-v1.png');
+  watchImage('swimmer','assets/venus-head-v1.png?v=8030e18898b1');
   const fontsTimeout=setTimeout(()=>done('fonts'),4500);
   Promise.resolve(document.fonts?.ready).then(()=>{clearTimeout(fontsTimeout);done('fonts');},()=>{clearTimeout(fontsTimeout);done('fonts');});
   return {done,setAnchor(value){anchor=value;},get moonReveal(){return moonReveal;},get inkReveal(){return inkReveal;},get captionReveal(){return captionReveal;},get controlsReveal(){return controlsReveal;},get reflectionInk(){return reflectionInk;},get reflectionCaption(){return reflectionCaption;},get portrait(){return portrait;},get active(){return active;},get ready(){return ready;}};
@@ -648,8 +652,8 @@ document.getElementById('brand-ink-toggle').addEventListener('click', e => {
   document.dispatchEvent(new Event('qualia:wordmark-change'));
 });
 </script>
-<script src="assets/wordmarks.js"></script>
-<script src="assets/canvas-lake.js"></script>
+<script src="assets/wordmarks.js?v=e93c2ec03654"></script>
+<script src="assets/canvas-lake.js?v=a3fb0a777e8f"></script>
 <script>
 (() => {
 'use strict';
@@ -2329,7 +2333,7 @@ function initVenusHead(){
       finally {gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);}
     };
     image.onerror=()=>{if(target===venusHeadTexture) venusHeadReady=false;};
-    image.src='assets/venus-head-v1.png';
+    image.src='assets/venus-head-v1.png?v=8030e18898b1';
   } catch(err){console.warn('Venus portrait unavailable; retaining the sculpted head.',err);}
 }
 function buildVenusHead(J){
