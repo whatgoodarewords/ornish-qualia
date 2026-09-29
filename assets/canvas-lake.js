@@ -15,7 +15,7 @@ function startCanvasLake(original) {
   if(control){const svg=control.cloneNode(true);svg.setAttribute('xmlns','http://www.w3.org/2000/svg');svg.setAttribute('width','22');svg.setAttribute('height','26');svg.style.color='#fff';controlImage.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));}
   let W=1,H=1,shore=1,scale=1,anchor=[0,0,1],imageRect=null,markRect=null,words=[],last=0,elapsed=0,raf=0;
   let portrait=null,moonMinute=-1,painted=false;
-  const cycle=createQualiaCycle(()=>({width:W,shore}));
+  const cycle=createQualiaCycle(()=>({width:W,height:H,shore}));
   const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
   const smooth=(a,b,v)=>{v=clamp((v-a)/(b-a));return v*v*(3-2*v);};
   let seed=91217;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
@@ -68,16 +68,19 @@ function startCanvasLake(original) {
     gradient.addColorStop(1,rgb([18,31,41],[170,190,187],[255,171,93],day,twilight));
     s.fillStyle=gradient;s.fillRect(0,0,W,shore);
     if(starlight>.001){s.fillStyle='#dbe6ef';for(const [x,y,r,a] of stars){s.globalAlpha=starlight*(.2+a*.65)*(1-y*.4);s.beginPath();s.arc(x*W,y*shore,r,0,Math.PI*2);s.fill();}s.globalAlpha=1;}
-    const sx=sunX*W,sy=sunY*shore,r=Math.min(W,H)*.017,solar=smooth(1.2,.94,sunY);
+    const sx=sunX*W,sy=sunY*shore,r=cycle.sunRadius(values),solar=smooth(1.2,.94,sunY);
     if(solar>0){const glow=s.createRadialGradient(sx,sy,r*.3,sx,sy,r*8);glow.addColorStop(0,`rgba(255,222,145,${.48*solar})`);glow.addColorStop(.2,`rgba(255,197,100,${.15*solar})`);glow.addColorStop(1,'rgba(255,182,95,0)');s.fillStyle=glow;s.fillRect(sx-r*8,sy-r*8,r*16,r*16);s.fillStyle=twilight>.2?'#ffe0a0':'#fff2c0';s.globalAlpha=solar;s.beginPath();s.ellipse(sx,sy,r,r*(1-.1*twilight),0,0,Math.PI*2);s.fill();s.globalAlpha=1;}
     const tc=tintedCloud.x;tc.clearRect(0,0,512,192);tc.drawImage(cloud.c,0,0);tc.globalCompositeOperation='source-in';tc.fillStyle=rgb([31,42,57],[244,242,226],[235,153,117],day,twilight);tc.fillRect(0,0,512,192);tc.globalCompositeOperation='source-over';
     const drift=motion.matches?0:Math.sin(time*.004)*W*.06;
     s.drawImage(tintedCloud.c,-W*.12+drift,0,W*1.24,shore*.95);
-    const travel=motion.matches?0:smooth(.3,1,PAQ.t),orbit=motion.matches?0:time*.0025;
-    const mx=anchor[0]+(W*(.82+.06*Math.sin(orbit))-anchor[0])*travel+Math.min(PAQ.scrollY*.14,42)*travel;
-    const my=anchor[1]+(H*.095-anchor[1])*travel-4*travel*(1-travel)*H*.045-PAQ.scrollY*travel+H*.12*PAQ.progress;
-    const mr=anchor[2]+(Math.min(W*.027,24)-anchor[2])*travel;
-    drawMoon(mx,my,mr,(1-smooth(.08,.72,day))*QUALIA_LOAD.moonReveal);
+    const travel=smooth(.3,1,PAQ.t),target=cycle.paqMoonAt(motion.matches?0:time);
+    const mx=anchor[0]+(target[0]-anchor[0])*travel+Math.min(PAQ.scrollY*.14,42)*travel;
+    const lift=motion.matches?0:H*.12*PAQ.progress;
+    const arc=motion.matches?0:4*travel*(1-travel)*Math.min(H*.055,Math.abs(target[0]-anchor[0])*.28);
+    const my=anchor[1]+(target[1]-anchor[1])*travel-arc-PAQ.scrollY*travel+lift;
+    const mr=anchor[2]+(target[2]-anchor[2])*travel;
+    const moonVisibility=(1-smooth(.08,.72,day))*(1-PAQ.progress)+PAQ.progress;
+    drawMoon(mx,my,mr,moonVisibility*QUALIA_LOAD.moonReveal);
     mark.style.setProperty('--dot-alpha',smooth(.08,.72,day));
     // The real leaf alpha and source photograph are shared with the GPU renderer.
     if(trees.complete&&trees.naturalWidth){
@@ -112,7 +115,7 @@ function startCanvasLake(original) {
   function paint(now){
     raf=0;if(document.hidden)return;
     const dt=last?Math.min(.1,(now-last)/1000):0;last=now;
-    if(QUALIA_LOAD.ready&&!motion.matches)elapsed+=dt;
+    if(QUALIA_LOAD.active&&!motion.matches)elapsed+=dt;
     phaseMoon();const values=cycle.cycleAt(elapsed).values;
     ctx.setTransform(scale,0,0,scale,0,0);ctx.fillStyle='#02090e';ctx.fillRect(0,0,W,H);
     ctx.save();ctx.translate(0,motion.matches?0:-H*.12*PAQ.progress);

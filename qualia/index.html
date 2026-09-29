@@ -22,6 +22,7 @@ window.qualiaLoadEscape=setTimeout(()=>{if(window.qualiaFinishLoading)window.qua
   #loading-screen { position:fixed; inset:0; z-index:100; display:grid; place-items:center; background:transparent; opacity:1; transition:opacity .65s ease; pointer-events:auto; }
   #loading-screen::before { content:""; position:absolute; inset:0; background:#010308; opacity:var(--loading-veil,1); }
   #loading-screen svg { position:relative; z-index:1; width:30px; height:30px; overflow:visible; filter:drop-shadow(0 0 7px #dcecff18); }
+  html.is-revealing #loading-screen { pointer-events:none; }
   html:not(.is-loading):not(.is-revealing) #loading-screen { opacity:0; pointer-events:none; }
   html.nogl .mark { --dot-alpha:0; }
   html.is-loading #c,html.is-loading .hero,html.is-loading #faq-open,html.is-loading #brand-ink-toggle { visibility:hidden; }
@@ -141,12 +142,13 @@ body.ink-dark .mark,body.ink-dark .sub { color:#080b10; text-shadow:none; }
 </style>
 <style>
 /* The PAQ is another view of the same lake, not a separate opaque panel. */
-body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10px; }
+body { --paq-hero:1; --paq-control:1; --paq-close:0; --paq-text:0; --paq-text-y:10px; }
 .hero { opacity:var(--paq-hero); }
 .mark { opacity:var(--intro-ink,1); }
 .sub { opacity:var(--intro-caption,1); }
 .meta { opacity:var(--intro-meta,1); }
 .signal-link { opacity:var(--intro-controls,1); }
+.signal-link,#faq-open { pointer-events:var(--intro-controls-events,auto); }
 #faq-open { color:#fff; opacity:calc(.96 * var(--paq-control) * var(--intro-controls,1)); transition:none; }
 #faq-open svg { filter:drop-shadow(0 0 calc(var(--question-glint,0) * 5px) rgb(220 239 255 / calc(var(--question-glint,0) * .4))); transition:filter .35s ease,transform .35s ease; }
 @media(hover:hover) {
@@ -154,15 +156,14 @@ body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10
 }
 #faq-open:focus-visible svg { filter:drop-shadow(0 0 5px #dcefff70); }
 @media(prefers-reduced-motion:reduce) { #faq-open svg { transition:none; filter:none; } #faq-open:hover svg { transform:scale(.95,.9); } }
-#paq-dim { position:fixed; inset:0; z-index:5; pointer-events:none; opacity:var(--paq-dim); background:linear-gradient(to right,transparent 0%,rgb(2 8 14 / calc(var(--paq-reading,0) * .68)) 4%,rgb(2 8 14 / calc(var(--paq-reading,0) * .68)) 96%,transparent 100%),linear-gradient(to bottom,#02080e08 0%,#02080e14 18%,#02080e47 40%,#02080e6b 68%); }
-#faq-dialog { inset:0; width:100%; height:100dvh; max-width:none; max-height:none; margin:0; padding:0 max(7vw,calc((100vw - 900px)/2)) calc(var(--safe-bottom) + 64px); background:transparent; color:#eceae4; opacity:var(--paq-text); transition:none; }
-.faq-header,.faq-answers { transform:translateY(var(--paq-text-y)); }
+#faq-dialog { inset:0; width:100%; height:100dvh; max-width:none; max-height:none; margin:0; padding:0 max(7vw,calc((100vw - 900px)/2)) calc(var(--safe-bottom) + 64px); background:transparent; color:#eceae4; opacity:1; transition:none; }
+.faq-header,.faq-answers { opacity:var(--paq-text); transform:translateY(var(--paq-text-y)); }
 #faq-dialog::backdrop { backdrop-filter:none; background:transparent; }
 .faq-header { position:relative; display:block; padding:clamp(28px,calc(18vh - 96px),74px) 0 160px; background:none; }
 #faq-heading { font:400 clamp(48px,6vw,74px)/1 Georgia,'Times New Roman',serif; letter-spacing:-.035em; outline:none; }
 .faq-heading-subtitle,.faq-authorship { font:400 clamp(13px,1.6vw,17px)/1.5 "DM Sans",sans-serif; letter-spacing:.015em; color:#c4cdd3; }
 .faq-heading-subtitle { margin-top:15px; }
-#faq-close { position:fixed; z-index:10; top:calc(var(--safe-top) + 4px); right:calc(var(--safe-right) + 22px); width:72px; height:72px; padding:0; touch-action:manipulation; font-size:36px; font-weight:300; }
+#faq-close { position:fixed; z-index:10; top:calc(var(--safe-top) + 2px); right:var(--edge-right); opacity:var(--paq-close); width:72px; height:72px; padding:0; touch-action:manipulation; font-size:36px; font-weight:300; }
 .faq-answers { padding:0; }
 .faq-guild-heading { margin:28px 0 16px; font:400 22px/1.4 Georgia,serif; color:#eef0f2; }
 .faq-authorship { margin:8px 0 0; }
@@ -189,7 +190,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 .faq-item h3 { font-size:clamp(25px,2.8vw,34px); color:#eef0f2; }
 .faq-item p,.faq-catchphrases { font-size:clamp(19px,1.85vw,22px); line-height:1.6; color:#ccd4d5; }
 #faq-close { font-size:0; }
-#faq-close::before,#faq-close::after { content:''; position:absolute; width:24px; height:1px; background:currentColor; left:50%; top:50%; pointer-events:none; transform:translate(-50%,-50%) rotate(45deg); }
+#faq-close::before,#faq-close::after { content:''; position:absolute; width:24px; height:1px; background:currentColor; left:calc(50% + 14px); top:50%; pointer-events:none; transform:translate(-50%,-50%) rotate(45deg); }
 #faq-close::after { transform:translate(-50%,-50%) rotate(-45deg); }
 #faq-close,#faq-close:hover,.paq-title-ink,.faq-heading-subtitle,.faq-authorship { color:#fff; }
 .faq-guild-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 28px; margin:24px 0 6px; padding:0; list-style:none; }
@@ -237,13 +238,12 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 </nav>
 <button id="faq-open" type="button" aria-label="Questions about Qualia" aria-haspopup="dialog" aria-controls="faq-dialog" aria-expanded="false"><!-- Original LensQuestionarium: Bodoni/Didone ball-terminal glyph from sw-dev/packages/app/src-oversize/components/ui/icons.tsx. --><svg viewBox="-710 -200 3970 4770" fill="currentColor" stroke="none" aria-hidden="true"><g transform="translate(0,4370) scale(1,-1)"><path d="M1033 4354c-178-28-389-106-554-206-109-66-220-166-306-278-57-74-80-119-121-246-44-132-56-223-43-319 25-186 32-203 118-295 70-76 138-120 237-156 74-26 79-26 168-15 150 19 252 84 301 191 66 141 62 264-9 357-30 39-115 103-163 123-53 21-147 18-215-8-55-21-60-22-77-6-54 48 4 247 103 358 45 50 165 146 183 146 3 0 29 11 58 25 68 33 138 53 272 76 179 31 285 21 500-47 201-63 387-269 442-488 39-156 28-392-28-601-20-72-85-208-127-265-57-76-223-239-368-359-192-161-274-250-311-337-17-38-23-78-27-179-11-255-16-841-8-875l8-35 105-1 106 0 2 375c1 348 3 382 22 451 31 108 59 157 130 226 81 76 133 112 234 158 140 65 300 157 422 243 113 80 247 236 355 413 23 38 58 135 84 235 54 205 13 535-89 704-57 97-71 117-111 164-67 82-273 246-389 310-256 143-610 206-904 161zM1119 456c-138-37-225-184-175-299 16-37 74-94 131-127 34-21 53-24 135-25 86 0 99 3 142 27 158 94 164 291 12 388-74 47-159 59-245 36z"/></g></svg></button>
 <button id="brand-ink-toggle" type="button" aria-label="Use black wordmark" aria-pressed="false"></button>
-<div id="paq-dim" aria-hidden="true"></div>
 <dialog id="faq-dialog" aria-labelledby="faq-heading">
   <header class="faq-header"><h2 id="faq-heading" tabindex="-1"><span class="paq-title-ink">PAQ</span><span class="faq-heading-subtitle">Pre-emptively Answered Questions</span></h2><p class="faq-authorship">The following words were written by a human</p></header><button id="faq-close" type="button" aria-label="Close questions" autofocus>×</button>
   <div class="faq-answers">
     <details class="faq-item" open><summary><h3 id="faq-q1">What is this about?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Effing the ineffable. A space to live new culture! It’s somewhere between a research symposium, the best house party you’ve ever been to, and a curated festival in private nature. Something like this hasn’t happened before, so honestly, we’re not quite sure.<br><br>This is a data-driven research event. This is more for doing phenomenological research than talking about research, but there will assuredly be talks.<br><br>This is part of a greater phenomenological research month, continuing for the three weeks following the event.<br><br>This is an advanced event. Side effects may include involuntary personal development, struggle, embodiment, coherence, unexpected tenderness, transcendence, and better questions.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q2">So it’s a party. What does that mean?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Qualia is not theoretical. Qualia is all that we know.<br><br>It means it’s fun. Dancing. Immersive, playful, curious, reverent, irreverent, in on the joke. We believe fun leads to focus, and focus leads to insight.</p></div></details>
-    <details class="faq-item"><summary><h3 id="faq-q9">Is this part of something bigger?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>The party kicks off a month of phenomenological research. Afterwards, there’s an optional three-week residency: more time to follow a question, bring something to life, and live some life! Come for the party, or stay for the month.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q9">Is this part of something bigger?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>A party to begin a month of phenomenological research. Afterwards, there’s an optional three-week residency: more time to follow a question, bring something to life, and live some life! Come for the party, or stay for the month.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q3">Can anyone come?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No. It’s curated for character, via application.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-suitability">Who is this event not appropriate for?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>This event is not appropriate for children, pregnant people, people with epilepsy or heart conditions, or smokers.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q6">I’m sober. Will that be weird?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No, qualia is a hell of a drug. You’ll fit right in.</p></div></details>
@@ -367,7 +367,28 @@ function cycleAt(seconds) {
   values[4]=1-values[4];
   return {mode:'sunset',values};
 }
-return {cycleAt,lightPresets,NIGHT_SECONDS,DAWN_SECONDS,DAY_SECONDS,DUSK_SECONDS,CYCLE_SECONDS,DAWN_SPEED,dawnTime};
+function sunRadius(values){
+  const p=clamp((values[5]-.50)/.54,0,1),air=p*p*(3-2*p);
+  return dimensions().shore*(.033+.007*air);
+}
+function paqMoonAt(seconds){
+  const t=((seconds%CYCLE_SECONDS)+CYCLE_SECONDS)%CYCLE_SECONDS;
+  const ease=p=>{p=clamp(p,0,1);return p*p*(3-2*p);};
+  const nightAndDawn=NIGHT_SECONDS+DAWN_SECONDS;
+  let orbit=1;
+  if(t<nightAndDawn)orbit=Math.pow(ease(t/nightAndDawn),1.3);
+  else if(t>nightAndDawn+DAY_SECONDS){
+    const dusk=(t-nightAndDawn-DAY_SECONDS)/DUSK_SECONDS;
+    orbit=1-ease((dusk-.60)/.40);
+  }
+  const {width,height,shore}=dimensions(),radius=sunRadius(cycleAt(t).values);
+  // Stay beside the header before crossing the open band above the treeline.
+  // At dawn the moon actually sets behind the same landscape, without a fade.
+  const x=width*(.90-.67*ease((orbit-.65)/.35));
+  const y=height*.095+(shore-height*.12+radius*2.5-height*.095)*Math.pow(orbit,1.45);
+  return [x,y,radius];
+}
+return {cycleAt,sunRadius,paqMoonAt,lightPresets,NIGHT_SECONDS,DAWN_SECONDS,DAY_SECONDS,DUSK_SECONDS,CYCLE_SECONDS,DAWN_SPEED,dawnTime};
 }
 // End shared lighting clock.
 let qualiaArtworkTop=null;
@@ -396,7 +417,7 @@ function layoutQualiaFooter(mark,footer,H,shoreCss){
 const QUALIA_LOAD = (()=>{
   const screen=document.getElementById('loading-screen'),moon=document.getElementById('loading-moon');
   const pending=new Set(['graphics','fonts','wordmark','moon','woodland','swimmer']);
-  let ready=false,finishing=false,moonReveal=0,inkReveal=0,captionReveal=0,reflectionInk=0,reflectionCaption=0,portrait=null,controlsReveal=0,anchor=null,introFrame=0;
+  let ready=false,active=false,finishing=false,moonReveal=0,inkReveal=0,captionReveal=0,reflectionInk=0,reflectionCaption=0,portrait=null,controlsReveal=0,anchor=null,introFrame=0;
   let phaseFrame=0,phaseShown=0,phaseFrom=0,phaseTarget=0,phaseStarted=0;
   const globe=screen.querySelector("svg"),root=document.documentElement;
   let lunarFraction=1,lunarWaxing=true;
@@ -404,11 +425,13 @@ const QUALIA_LOAD = (()=>{
   const phaseOrigin=lunarFraction>=.5?0:1;
   moon.setAttribute('transform',lunarWaxing?'':'translate(32 0) scale(-1 1)');
   for(const part of ["ink","caption","meta","controls"])document.body.style.setProperty(`--intro-${part}`,0);
+  document.body.style.setProperty("--intro-controls-events","none");
   function complete(){
-    if(ready)return;ready=true;moonReveal=inkReveal=captionReveal=reflectionInk=reflectionCaption=controlsReveal=1;
+    if(ready)return;ready=true;active=true;moonReveal=inkReveal=captionReveal=reflectionInk=reflectionCaption=controlsReveal=1;
     cancelAnimationFrame(introFrame);cancelAnimationFrame(phaseFrame);clearTimeout(window.qualiaLoadEscape);
     for(const part of ["ink","caption","meta","controls"])document.body.style.setProperty(`--intro-${part}`,1);
     document.body.style.setProperty("--question-glint",0);
+    document.body.style.setProperty("--intro-controls-events","auto");
     root.classList.remove("is-loading","is-revealing");
     document.body.removeAttribute("aria-busy");screen.setAttribute("aria-hidden","true");
     setTimeout(()=>screen.remove(),700);
@@ -427,6 +450,7 @@ const QUALIA_LOAD = (()=>{
   }
   function reveal(){
     if(ready)return;
+    active=true;
     root.classList.add("is-revealing");root.classList.remove("is-loading");
     const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
     const began=performance.now();
@@ -456,6 +480,7 @@ const QUALIA_LOAD = (()=>{
       document.body.style.setProperty("--intro-caption",captionReveal);
       document.body.style.setProperty("--intro-meta",metaReveal);
       document.body.style.setProperty("--intro-controls",controlsReveal);
+      document.body.style.setProperty("--intro-controls-events",controlsReveal>.1?"auto":"none");
       if(elapsed>=(still?200:4480))complete();else introFrame=requestAnimationFrame(step);
     }
     introFrame=requestAnimationFrame(step);
@@ -507,14 +532,14 @@ const QUALIA_LOAD = (()=>{
   watchImage('swimmer','assets/venus-head-v1.png');
   const fontsTimeout=setTimeout(()=>done('fonts'),4500);
   Promise.resolve(document.fonts?.ready).then(()=>{clearTimeout(fontsTimeout);done('fonts');},()=>{clearTimeout(fontsTimeout);done('fonts');});
-  return {done,setAnchor(value){anchor=value;},get moonReveal(){return moonReveal;},get inkReveal(){return inkReveal;},get captionReveal(){return captionReveal;},get controlsReveal(){return controlsReveal;},get reflectionInk(){return reflectionInk;},get reflectionCaption(){return reflectionCaption;},get portrait(){return portrait;},get ready(){return ready;}};
+  return {done,setAnchor(value){anchor=value;},get moonReveal(){return moonReveal;},get inkReveal(){return inkReveal;},get captionReveal(){return captionReveal;},get controlsReveal(){return controlsReveal;},get reflectionInk(){return reflectionInk;},get reflectionCaption(){return reflectionCaption;},get portrait(){return portrait;},get active(){return active;},get ready(){return ready;}};
 })();
 // One reversible clock for the lake, moon, dimming, typography and controls.
 const PAQ = (() => {
   const opener=document.getElementById('faq-open'), dialog=document.getElementById('faq-dialog');
   const motion=matchMedia('(prefers-reduced-motion: reduce)');
   const state={t:0,progress:0,target:0,scrollY:0};
-  function readingScroll(){state.scrollY=Math.max(0,dialog.scrollTop);document.body.style.setProperty('--paq-reading',Math.min(1,state.scrollY/160));}
+  function readingScroll(){state.scrollY=Math.max(0,dialog.scrollTop);}
   dialog.addEventListener('scroll',readingScroll,{passive:true});
   let raf=0,last=0;
   const windowed=(a,b,t)=>Math.min(1,Math.max(0,(t-a)/(b-a)));
@@ -525,7 +550,7 @@ const PAQ = (() => {
     const text=ease(windowed(.38,1,state.t)),style=document.body.style;
     style.setProperty('--paq-hero',1-ease(windowed(0,.3,state.t)));
     style.setProperty('--paq-control',1-ease(windowed(0,.25,state.t)));
-    style.setProperty('--paq-dim',soft(windowed(.1,.85,state.t)));
+    style.setProperty('--paq-close',ease(windowed(0,.25,state.t)));
     style.setProperty('--paq-text',text);
     style.setProperty('--paq-text-y',motion.matches?'0px':`${10*(1-text)}px`);
   }
@@ -1129,6 +1154,7 @@ uniform vec4 uSolar; // atmospheric solar transmission RGB and elevation in radi
 uniform vec3 uCloudSolar;
 uniform float uPaq;
 uniform float uPaqLift;
+uniform float uSunRadius;
 uniform float uIntroMoon, uIntroInk, uIntroCaption, uIntroControls, uIntroCaptionY;
 uniform vec3 uLogoDot;
 uniform vec3 uMoonAnchor;
@@ -1260,7 +1286,7 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   vec2 refractedSun=sunD;
   refractedSun.y+=horizonAir*.00065*(vnoise(vec2(sunD.x*380.,uTime*.38))-.5);
   float sunDiscR=length(refractedSun/vec2(1.,sunFlatten));
-  float sunSize=mix(.033,.040,horizonAir);
+  float sunSize=uSunRadius/uShore;
   float discMu=sqrt(max(0.,1.-pow(sunDiscR/sunSize,2.)));
   float limbSoft=max(fwidth(sunDiscR)*.75,.0007)+horizonAir*.0008;
   float disk = 1. - smoothstep(sunSize-limbSoft,sunSize+limbSoft,sunDiscR);
@@ -1293,7 +1319,7 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   vec3 lunarTone=clamp((albedo-vec3(.42))*1.12+vec3(.46),vec3(.04),vec3(.92));
   float lunarShimmer=1.+uScint*.025*sin(uTime*.53);
   vec3 moonSurface=lunarTone*vec3(1.02,1.025,1.04)*(lunarLight*1.3+earthshine)*lunarShimmer;
-  float moonVisibility=(1.-smoothstep(.08,.72,uLight.x))*uIntroMoon;
+  float moonVisibility=mix(1.-smoothstep(.08,.72,uLight.x),1.,smoothstep(0.,1.,uPaq))*uIntroMoon;
   // Dawn air is in front of the moon: the unlit side must not punch a black hole
   // in a bright sky. Earthshine yields to sky radiance while the lit face remains.
   float lunarDayHaze=smoothstep(.015,.28,uLight.x);
@@ -1632,10 +1658,8 @@ function updateMoonPhase(now=Date.now()) {
 function currentMoonPosition() {
   // Let the logo disappear before its moon leaves; reverse this handoff on close.
   const moonTravel=smooth(.3,1,paqT);
-  const dawnYield=smooth(-.10,.16,(1-LIGHT.values[5])*.60)*smooth(.02,.65,LIGHT.values[0]);
-  const moonOrbit=reduced?0:paqSkyTime*.0025;
-  const moonTarget=[cw*(.82+.13*Math.sin(moonOrbit)+(reduced?0:.035*dawnYield)),ch*(.095+.045*(1-Math.cos(moonOrbit))-(reduced?0:.025*dawnYield)),Math.min(cw*.027,24*dpr)];
-  const movingMoon=moonAnchor.map((v,i)=>v+(moonTarget[i]-v)*(reduced?0:moonTravel));
+  const moonTarget=paqMoonAt(reduced?0:LIGHT.elapsed).map(v=>v*dpr);
+  const movingMoon=moonAnchor.map((v,i)=>v+(moonTarget[i]-v)*moonTravel);
   // A restrained bow above the direct path, retraced naturally on closing.
   const arcHeight=Math.min(ch*.055,Math.abs(moonTarget[0]-moonAnchor[0])*.28);
   if(!reduced)movingMoon[1]-=4*moonTravel*(1-moonTravel)*arcHeight;
@@ -2447,7 +2471,7 @@ function renderWoman() {
 let autoOn = true;
 const cloudBurst={x:0,y:0,time:-100},cloudHit=new Uint8Array(4);
 function burstCloud(e){
-  if(!QUALIA_LOAD.ready||document.getElementById('faq-dialog').open||e.target!==cvs||e.clientY<0||e.clientY>=shoreCss*.86||activeTouches.size>1||(window.visualViewport?.scale||1)>1.01||gl.isContextLost())return false;
+  if(!QUALIA_LOAD.active||document.getElementById('faq-dialog').open||e.target!==cvs||e.clientY<0||e.clientY>=shoreCss*.86||activeTouches.size>1||(window.visualViewport?.scale||1)>1.01||gl.isContextLost())return false;
   const prev=gl.getParameter(gl.FRAMEBUFFER_BINDING);
   gl.bindFramebuffer(gl.FRAMEBUFFER,T.cloud.f);
   gl.readPixels(Math.min(511,Math.max(0,Math.floor(e.clientX/W*512))),Math.min(255,Math.max(0,Math.floor((1-e.clientY/shoreCss)*256))),1,1,gl.RGBA,gl.UNSIGNED_BYTE,cloudHit);
@@ -2458,14 +2482,11 @@ function burstCloud(e){
 }
 const activeTouches=new Set();
 function steer(e, force){
-  if (AUTO || document.getElementById('faq-dialog').open || e.target.closest?.('.light-controls, .signal-link, .wordmark-controls, #faq-open, #brand-ink-toggle')) return false;
+  if (!QUALIA_LOAD.active || AUTO || document.getElementById('faq-dialog').open || e.target.closest?.('.light-controls, .signal-link, .wordmark-controls, #faq-open, #brand-ink-toggle')) return false;
   if ((window.visualViewport?.scale || 1)>1.01 || activeTouches.size>1 || (e.pointerType==='touch' && !e.isPrimary)) return false;
   if (e.clientY>=swimFooterTop) return false;
   if (!force && e.pointerType === 'mouse' && e.buttons === 0 && e.clientY < shoreCss) return false;
-  if (!openingComplete) {
-    if (!force) return false;
-    openingComplete = true;
-  }
+  if (!openingComplete) openingComplete = true;
   autoOn = false;
   setTarget(e.clientX, e.clientY);
   return true;
@@ -2480,7 +2501,7 @@ addEventListener('pointerdown', e => {
 for(const type of ['pointerup','pointercancel']) addEventListener(type,e=>activeTouches.delete(e.pointerId),{passive:true});
 addEventListener('blur',()=>activeTouches.clear());
 /* ---------- a continuous night, slow dawn, daylight and dusk cycle ---------- */
-const {cycleAt,lightPresets,CYCLE_SECONDS}=createQualiaCycle(()=>({width:W,shore:shoreCss}));
+const {cycleAt,sunRadius,paqMoonAt,lightPresets,CYCLE_SECONDS}=createQualiaCycle(()=>({width:W,height:H,shore:shoreCss}));
 const LIGHT = { mode:'night', values:cycleAt(0).values, cycling:!reduced, elapsed:0, dawnQueued:false, dawnRelease:0 };
 let starClock=0;
 let controlMode=LIGHT.mode!=='night'?1:0;
@@ -2622,6 +2643,7 @@ function render(){
   gl.uniform3fv(p.u.uLogoDot,moonAnchor);
   gl.uniform1f(p.u.uPaq,paqProgress);
   gl.uniform1f(p.u.uPaqLift,sceneLift);
+  gl.uniform1f(p.u.uSunRadius,sunRadius(LIGHT.values)*dpr);
   bindTex(0, T.sky.t, p.u.uSky); bindTex(1, T.sky.t1, p.u.uStar);
   bindTex(2, SIM ? T.wavA.t : blackTex, p.u.uWave);
   bindTex(3, SIM ? T.glow.t : blackTex, p.u.uGlow);
@@ -2665,9 +2687,9 @@ function frame(now){
   raf = requestAnimationFrame(frame);
   const el = Math.max(0, (now - last)/1000); last = now;
   if (el <= 0) return;
-  lightStep(QUALIA_LOAD.ready?Math.min(el, 1):0);
+  lightStep(QUALIA_LOAD.active?Math.min(el, 1):0);
   const sub = AUTO ? 3 : 1, dt = Math.min(1/30, el);
-  if(QUALIA_LOAD.ready||frameN===0)for (let k = 0; k < sub; k++) simStep(dt);
+  if(QUALIA_LOAD.active||frameN===0)for (let k = 0; k < sub; k++) simStep(dt);
   render();
   QUALIA_LOAD.done('graphics');
 }
