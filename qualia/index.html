@@ -9,7 +9,6 @@
 <meta name="description" content="a phenomenological research party. Summer 2027. The Garden, Portugal.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400&amp;text=PAQ&amp;display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Libre+Baskerville:wght@400&display=swap">
 <style>
   :root { color-scheme: dark; --safe-top:env(safe-area-inset-top,0px); --safe-right:env(safe-area-inset-right,0px); --safe-bottom:env(safe-area-inset-bottom,0px); --safe-left:env(safe-area-inset-left,0px); --edge-left:calc(var(--safe-left) + 16px); --edge-right:calc(var(--safe-right) + 16px); }
@@ -54,7 +53,7 @@
   #light-toggle[data-mode="day"] .sun-icon, #light-toggle[data-mode="night"] .moon-icon { opacity:0; transform:rotate(-25deg) scale(.65); }
   button:focus-visible, a:focus-visible { outline:2px solid #c5e9ff; outline-offset:4px; }
   .foot { position:absolute; left:var(--edge-left); right:var(--edge-right); bottom:calc(var(--safe-bottom) + 16px); margin-inline:auto; width:auto; max-width:640px; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; }
-  .sub { position:relative; top:-14px; margin:14px auto 0; text-shadow:0 1px 8px #14213780; width:min(640px,calc(var(--wordmark-width) * .78)); max-width:100%; font:400 clamp(18px,1.6vw,22px)/1.35 "Libre Baskerville",Baskerville,Georgia,serif; font-size:clamp(11px,calc(var(--wordmark-width) * .039),22px); letter-spacing:-.025em; color:#e4eaf1; white-space:nowrap; text-wrap:nowrap; }
+  .sub { position:relative; top:-14px; margin:14px auto 0; text-shadow:0 1px 8px #14213780; width:min(640px,calc(var(--wordmark-width) * .78)); max-width:100%; font:400 clamp(18px,1.6vw,22px)/1.35 "Libre Baskerville",Baskerville,Georgia,serif; font-size:clamp(11px,calc(var(--wordmark-width) * .037),22px); letter-spacing:0; color:#e4eaf1; white-space:nowrap; text-wrap:nowrap; }
   .sub span, .sub-secondary span { display:inline-block; }
   .sub-secondary { margin:0 auto 2px; max-width:100%; font:400 clamp(11px,1.05vw,14px)/1.4 "Libre Baskerville",Baskerville,Georgia,serif; letter-spacing:0; color:#bac7d6; text-wrap:balance; text-shadow:0 1px 8px #14213780; }
   .meta { margin:0; display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:8px; font:400 14px/1.5 "DM Sans",sans-serif; color:#edf0f3; }
@@ -72,7 +71,7 @@
   }
   @media(max-width:760px), (max-height:480px) and (pointer:coarse) {
     .meta, .signal-link { font-size:15px; }
-    .sub { font-size:clamp(11px,calc(var(--wordmark-width) * .039),19px); }
+    .sub { font-size:clamp(11px,calc(var(--wordmark-width) * .037),19px); }
   }
   @media(prefers-reduced-motion:reduce) { .mark span { animation:none; } }
 
@@ -128,7 +127,7 @@
 body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10px; }
 .hero { opacity:var(--paq-hero); }
 #faq-open { opacity:calc(.76 * var(--paq-control)); transition:none; }
-#paq-dim { position:fixed; inset:0; z-index:5; pointer-events:none; opacity:var(--paq-dim); background:linear-gradient(to bottom,#02080e10 0%,#02080e32 18%,#02080ed9 40%,#02080ef5 68%); }
+#paq-dim { position:fixed; inset:0; z-index:5; pointer-events:none; opacity:var(--paq-dim); background:linear-gradient(to right,transparent 0%,rgb(2 8 14 / calc(var(--paq-reading,0) * .84)) 12%,rgb(2 8 14 / calc(var(--paq-reading,0) * .84)) 88%,transparent 100%),linear-gradient(to bottom,#02080e10 0%,#02080e32 18%,#02080ed9 40%,#02080ef5 68%); }
 #faq-dialog { inset:0; width:100%; height:100dvh; max-width:none; max-height:none; margin:0; padding:0 max(7vw,calc((100vw - 900px)/2)) calc(var(--safe-bottom) + 64px); background:transparent; color:#eceae4; opacity:var(--paq-text); transform:translateY(var(--paq-text-y)); transition:none; }
 #faq-dialog::backdrop { backdrop-filter:none; background:transparent; }
 .faq-header { position:relative; display:block; padding:clamp(100px,18vh,170px) 0 64px; background:none; }
@@ -158,6 +157,14 @@ body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10
 .faq-type-picker select { max-width:100%; border:0; border-bottom:1px solid #cbd7dc55; border-radius:0; padding:7px 22px 7px 0; background:transparent; color:#e5e8e7; font:inherit; cursor:pointer; }
 .faq-type-picker select:focus-visible { outline:1px solid #c5e9ff; outline-offset:4px; }
 .faq-type-picker option { background:#081016; color:#eef0ec; }
+#faq-heading,.faq-heading-subtitle,.faq-authorship,.meta { font-family:var(--reading-face,Georgia,serif); }
+.faq-heading-subtitle,.faq-authorship { font-size:clamp(16px,1.7vw,19px); letter-spacing:.015em; }
+.faq-item summary { max-width:760px; }
+.faq-item h3 { font-size:clamp(25px,2.8vw,34px); color:#eef0f2; }
+.faq-item p,.faq-catchphrases { font-size:clamp(19px,1.85vw,22px); line-height:1.6; color:#ccd4d5; }
+#faq-close { font-size:0; }
+#faq-close::before,#faq-close::after { content:''; position:absolute; width:24px; height:1px; background:currentColor; left:10px; top:21px; transform:rotate(45deg); }
+#faq-close::after { transform:rotate(-45deg); }
 @media(prefers-reduced-motion:reduce) { #faq-dialog { transform:none; } }
 </style>
 </head>
@@ -200,7 +207,7 @@ body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10
 <dialog id="faq-dialog" aria-labelledby="faq-heading">
   <header class="faq-header"><h2 id="faq-heading" tabindex="-1">PAQ<span class="faq-heading-subtitle">Pre-emptively Answered Questions</span></h2><p class="faq-authorship">The following words were written by a human</p><label class="faq-type-picker" for="paq-font">Reading face <select id="paq-font"><option value="garamond">EB Garamond · literary</option><option value="alegreya">Alegreya · warm</option><option value="cormorant">Cormorant Garamond · airy</option><option value="literata">Literata · grounded</option><option value="humanist">Source Sans 3 · clear</option><option value="original">Georgia · original</option></select></label><button id="faq-close" type="button" aria-label="Close questions" autofocus>×</button></header>
   <div class="faq-answers">
-    <details class="faq-item" open><summary><h3 id="faq-q1">What is this about?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Effing the ineffible. A space to live new culture! It’s somewhere between a research symposium, the best house party you’ve ever been to, and a curated festival in private nature. Something like this hasn’t happened before, so honestly, we’re not quite sure.<br><br>This is more for doing phenomenological research than talking about research, but there will assuredly be talks.</p></div></details>
+    <details class="faq-item" open><summary><h3 id="faq-q1">What is this about?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Effing the ineffable. A space to live new culture! It’s somewhere between a research symposium, the best house party you’ve ever been to, and a curated festival in private nature. Something like this hasn’t happened before, so honestly, we’re not quite sure.<br><br>This is more for doing phenomenological research than talking about research, but there will assuredly be talks.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q2">So it’s a party. What does that mean?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>It means it’s fun. Dancing. Immersive, playful, curious, reverent, irreverent, in on the joke. We believe fun leads to focus, and focus leads to insight.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q3">Can anyone come?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No. It’s curated for character, via application.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-dependents">I want to bring a dependent.</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Children, pets… all sentient beings are welcome to apply. We do not discriminate. Everyone in attendance must apply and will be held to the same standard of curation.</p></div></details>
@@ -254,7 +261,8 @@ const PAQ = (() => {
   const opener=document.getElementById('faq-open'), dialog=document.getElementById('faq-dialog');
   const motion=matchMedia('(prefers-reduced-motion: reduce)');
   const state={t:0,progress:0,target:0,scrollY:0};
-  dialog.addEventListener('scroll',()=>{state.scrollY=Math.max(0,dialog.scrollTop);},{passive:true});
+  function readingScroll(){state.scrollY=Math.max(0,dialog.scrollTop);document.body.style.setProperty('--paq-reading',Math.min(1,state.scrollY/160));}
+  dialog.addEventListener('scroll',readingScroll,{passive:true});
   let raf=0,last=0;
   const windowed=(a,b,t)=>Math.min(1,Math.max(0,(t-a)/(b-a)));
   const ease=t=>t*t*(3-2*t);
@@ -283,7 +291,7 @@ const PAQ = (() => {
     dialog.inert=!target;
     opener.setAttribute('aria-expanded',String(!!target));
     if(target && !dialog.open) {
-      dialog.showModal();dialog.scrollTop=0;state.scrollY=0;
+      dialog.showModal();dialog.scrollTop=0;readingScroll();
       document.getElementById('faq-heading').focus({preventScroll:true});
     }
     if(!raf) {last=performance.now();raf=requestAnimationFrame(tick);}
@@ -317,7 +325,7 @@ const PAQ = (() => {
       link.href=`https://fonts.googleapis.com/css2?family=${query}&display=swap`;
       document.head.append(link);loaded.add(key);
     }
-    dialog.style.setProperty('--reading-face',family);fontPicker.value=key;
+    dialog.style.setProperty('--reading-face',family);document.body.style.setProperty('--reading-face',family);fontPicker.value=key;
     try{localStorage.setItem('qualia-paq-font',key);}catch{}
   }
   let savedFace='garamond';try{savedFace=localStorage.getItem('qualia-paq-font')||savedFace;}catch{}
@@ -644,7 +652,7 @@ void main(){
   vec2 q = gl_PointCoord*2. - 1.; float r2 = dot(q, q);
   if (r2 > 1.) discard;
   float core = exp(-r2*12.), halo = exp(-r2*3.)*.2*(1. - r2);
-  o = vec4((vec3(.34, .95, 1.)*core*1.35 + vec3(0., .50, 1.)*halo)*vE, 1.);
+  o = vec4((vec3(.28, .78, 1.)*core*1.6 + vec3(0., .50, 1.)*halo)*vE, 1.);
 }`;
 
 const FS_BLUR = `#version 300 es
@@ -714,6 +722,7 @@ const FS_SWIMMER = `#version 300 es
 precision highp float;
 in vec3 vNormal; in float vMaterial, vHeight;
 uniform float uUnder, uDay;
+uniform vec4 uMoonSheen;
 out vec4 o;
 void main() {
   if ((uUnder<.5 && vHeight<0.) || (uUnder>.5 && vHeight>=0.)) discard;
@@ -735,6 +744,10 @@ void main() {
   daylight+=vec3(.13,.22,.26)*rim*.22;
   // A small amount of scattered blue light models the wake illuminating wet skin.
   vec3 night=base*.035+vec3(.018,.042,.057)*(.25+.75*rim)*(1.-hair*.65);
+  vec3 moonL=normalize(uMoonSheen.xyz);
+  float moonSpec=pow(max(dot(n,normalize(moonL+vec3(0.,-.65,.76))),0.),mix(90.,125.,hair));
+  float moonRim=pow(max(dot(n,moonL),0.),3.)*rim;
+  night+=vec3(.76,.83,.94)*(moonSpec*(.12+hair*.08)+moonRim*.018)*uMoonSheen.w;
   o=vec4(mix(night,daylight,uDay),exp(min(0.,vHeight)*.6));
 }`;
 
@@ -1151,6 +1164,14 @@ void main(){
     float clusters=smoothstep(.45,.85,vnoise(glintSpace))*smoothstep(.3,.7,vnoise(glintSpace*.37+vec2(7.1,uTime*.1)));
     float broken=max(clusters*.8,clamp(sunGlint*40.,0.,1.))*(.25+.75*smoothstep(.2,.6,vnoise(glintSpace*.21)));
     col+=reflectedSun*solarPath*broken*.34*uLight.y*uLight.x*fade*(1.-mA)*(1.-smoothstep(.98,1.035,uSun.y));
+    // Cool, sparse microfacets under the moon: the same moving light as the sky.
+    float lunarBelow=(pd.y-(2.*uShore-uMoonAnchor.y))/Hw;
+    float lunarNear=clamp(lunarBelow,0.,1.);
+    float lunarCross=(pd.x-uMoonAnchor.x+off.x*1.35)/(uRes.x*(.004+.018*lunarNear));
+    float lunarPath=exp(-lunarCross*lunarCross)*exp(-lunarNear*2.)*smoothstep(-.015,.025,lunarBelow);
+    float lunarGlints=smoothstep(.48,.82,vnoise(glintSpace+vec2(19.,7.)))*smoothstep(.38,.75,vnoise(glintSpace*.43));
+    float lunarStrength=uMoonLight.z*uLight.z*(1.-smoothstep(.08,.72,uLight.x));
+    col+=vec3(.76,.83,.94)*lunarPath*lunarGlints*.075*lunarStrength*fade*(1.-mA);
     col = mix(col,submerged.rgb*vec3(.55,.78,.80),mU*mix(.4,.52,uLight.x));
     if (uGlowOn > .5){
       vec3 trans = gS*(1. - .8*mU) + diff*(1. - .5*mU) + lit*mU;
@@ -1263,6 +1284,20 @@ function updateMoonPhase(now=Date.now()) {
   const date=new Date(now), illumination=Astronomy.Illumination('Moon',date);
   const phase=Astronomy.MoonPhase(date), z=2*illumination.phase_fraction-1;
   moonLight.set([(phase<180?1:-1)*Math.sqrt(Math.max(0,1-z*z)),z,illumination.phase_fraction]);
+}
+function currentMoonPosition() {
+  // Let the logo disappear before its moon leaves; reverse this handoff on close.
+  const moonTravel=smooth(.3,1,paqT);
+  const dawnYield=smooth(-.10,.16,(1-LIGHT.values[5])*.60)*smooth(.02,.65,LIGHT.values[0]);
+  const moonOrbit=reduced?0:paqSkyTime*.0025;
+  const moonTarget=[cw*(.82+.13*Math.sin(moonOrbit)+(reduced?0:.035*dawnYield)),ch*(.095+.045*(1-Math.cos(moonOrbit))-(reduced?0:.025*dawnYield)),Math.min(cw*.027,24*dpr)];
+  const movingMoon=moonAnchor.map((v,i)=>v+(moonTarget[i]-v)*(reduced?0:moonTravel));
+  // The moon belongs to the PAQ sky header: scrolling carries it out of the
+  // reading area, and scrolling back restores the same position immediately.
+  movingMoon[0]+=Math.min(PAQ.scrollY*.14,42)*dpr*moonTravel;
+  movingMoon[1]-=PAQ.scrollY*dpr*moonTravel;
+  movingMoon[1]+=ch*.12*(reduced?0:paqProgress); // Compensate camera lift in screen space.
+  return movingMoon;
 }
 function starMotion(time, still = false) {
   if (still) return { angle: 0, span: 0 };
@@ -1801,6 +1836,7 @@ function swimmerFrame(dt){
 /* ---------- a continuous, softly lit swimmer rather than flat limb silhouettes ---------- */
 let womanVAO, womanBuffer, womanCount=0;
 const womanData=new Float32Array(24000*8);
+let womanRingData=new Float32Array(600*8);
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 function initWomanMesh() {
   womanVAO=gl.createVertexArray(); gl.bindVertexArray(womanVAO);
@@ -1810,14 +1846,22 @@ function initWomanMesh() {
     gl.enableVertexAttribArray(i);gl.vertexAttribPointer(i,n,gl.FLOAT,false,32,offset*4);
   }
 }
-function meshVertex(v,n,material) {
-  const w=toWorld(v), p=project(...w), c=Math.cos(SW.th), sn=Math.sin(SW.th);
-  const k=womanCount++*8;
-  womanData.set([p[0]*dpr,p[1]*dpr,clamp((w[1]-SW.Z)/(M*5)-v[2]*.23,-.95,.95),
-    c*n[0]+sn*n[1],sn*n[0]-c*n[1],n[2],material,v[2]],k);
+function meshVertex(v,n,material,k,c,sn) {
+  const X=SW.X+(c*v[0]+sn*v[1])*M, Z=SW.Z+(sn*v[0]-c*v[1])*M;
+  const p=project(X,Z,v[2]);
+  womanRingData[k]=p[0]*dpr; womanRingData[k+1]=p[1]*dpr;
+  womanRingData[k+2]=clamp((Z-SW.Z)/(M*5)-v[2]*.23,-.95,.95);
+  womanRingData[k+3]=c*n[0]+sn*n[1]; womanRingData[k+4]=sn*n[0]-c*n[1];
+  womanRingData[k+5]=n[2]; womanRingData[k+6]=material; womanRingData[k+7]=v[2];
+}
+function meshEmitVertex(k) {
+  const out=womanCount++*8;
+  for(let i=0;i<8;i++) womanData[out+i]=womanRingData[k+i];
 }
 function meshTube(points,radii,material,sides=12) {
-  const rings=[];
+  const needed=points.length*sides*8;
+  if(womanRingData.length<needed) womanRingData=new Float32Array(needed);
+  const c=Math.cos(SW.th), sn=Math.sin(SW.th);
   let previousSide=null;
   for(let j=0;j<points.length;j++) {
     const tangent=norm(sub(points[Math.min(j+1,points.length-1)],points[Math.max(0,j-1)]));
@@ -1826,16 +1870,17 @@ function meshTube(points,radii,material,sides=12) {
     const side=transported && len(transported)>.001 ? norm(transported) : norm(cross(Math.abs(tangent[2])>.9 ? [1,0,0] : [0,0,1],tangent));
     previousSide=side;
     const up=norm(cross(tangent,side)), [rw,back,front=back]=radii[j];
-    const ring=[];
     for(let i=0;i<sides;i++) {
       const angle=i/sides*Math.PI*2, co=Math.cos(angle), si=Math.sin(angle),rh=si<0?front:back;
-      ring.push([add(points[j],add(mul(side,co*rw),mul(up,si*rh))),norm(add(mul(side,co/Math.max(rw,.002)),mul(up,si/Math.max(rh,.002))))]);
+      meshVertex(add(points[j],add(mul(side,co*rw),mul(up,si*rh))),norm(add(mul(side,co/Math.max(rw,.002)),mul(up,si/Math.max(rh,.002)))),material,(j*sides+i)*8,c,sn);
     }
-    rings.push(ring);
   }
-  for(let j=1;j<rings.length;j++) for(let i=0;i<sides;i++) {
+  // Emit the original triangle order from bit-identical cached ring vertices.
+  for(let j=1;j<points.length;j++) for(let i=0;i<sides;i++) {
     const next=(i+1)%sides;
-    for(const [r,k] of [[j-1,i],[j,i],[j,next],[j-1,i],[j,next],[j-1,next]]) meshVertex(...rings[r][k],material);
+    const a=((j-1)*sides+i)*8, b=(j*sides+i)*8, c=(j*sides+next)*8, d=((j-1)*sides+next)*8;
+    meshEmitVertex(a);meshEmitVertex(b);meshEmitVertex(c);
+    meshEmitVertex(a);meshEmitVertex(c);meshEmitVertex(d);
   }
 }
 function meshEllipsoid(center,radius,material) {
@@ -1932,6 +1977,9 @@ function renderWoman() {
   gl.bufferSubData(gl.ARRAY_BUFFER,0,womanData.subarray(0,womanCount*8));
   const p=P.woman;gl.useProgram(p.p);
   gl.uniform4fv(p.u.uBox,swBox);gl.uniform1f(p.u.uDay,LIGHT.values[0]);
+  updateMoonPhase();
+  const moon=currentMoonPosition();
+  gl.uniform4f(p.u.uMoonSheen,(moon[0]/cw-.5)*1.4,.4,.85,moonLight[2]*LIGHT.values[2]*(1-smooth(.08,.72,LIGHT.values[0])));
   gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
   for(let under=0;under<2;under++) {
     drawTo(under?T.womanUnder:T.woman);
@@ -2163,17 +2211,7 @@ function render(){
   updateMoonPhase();
   gl.uniform3fv(p.u.uMoonLight,moonLight);
   const sceneLift=reduced?0:paqProgress;
-  // Let the logo disappear before its moon leaves; reverse this handoff on close.
-  const moonTravel=smooth(.3,1,paqT);
-  const dawnYield=smooth(-.10,.16,(1-LIGHT.values[5])*.60)*smooth(.02,.65,LIGHT.values[0]);
-  const moonOrbit=reduced?0:paqSkyTime*.0025;
-  const moonTarget=[cw*(.82+.13*Math.sin(moonOrbit)+(reduced?0:.035*dawnYield)),ch*(.095+.045*(1-Math.cos(moonOrbit))-(reduced?0:.025*dawnYield)),Math.min(cw*.027,24*dpr)];
-  const movingMoon=moonAnchor.map((v,i)=>v+(moonTarget[i]-v)*(reduced?0:moonTravel));
-  // The moon belongs to the PAQ sky header: scrolling carries it out of the
-  // reading area, and scrolling back restores the same position immediately.
-  movingMoon[0]+=Math.min(PAQ.scrollY*.14,42)*dpr*moonTravel;
-  movingMoon[1]-=PAQ.scrollY*dpr*moonTravel;
-  movingMoon[1]+=ch*.12*sceneLift; // Compensate camera lift in screen space.
+  const movingMoon=currentMoonPosition();
   gl.uniform3fv(p.u.uMoonAnchor,movingMoon);
   gl.uniform3fv(p.u.uLogoDot,moonAnchor);
   gl.uniform1f(p.u.uPaq,paqProgress);
