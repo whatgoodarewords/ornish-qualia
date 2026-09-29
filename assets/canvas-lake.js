@@ -11,7 +11,6 @@ function startCanvasLake(original) {
   const layer=()=>{const c=document.createElement('canvas');return {c,x:c.getContext('2d')};};
   const sky=layer(),reflection=layer(),cloud=layer(),tintedCloud=layer(),moon=layer();
   const trees=new Image();trees.src=QUALIA_ART.woodland;
-  const nearWood=layer(),farWood=layer();let sourceLeaves=null,woodTop=0;
   // A small static grain tile; soft-light naturally concentrates it in midtones.
   const grain=layer();grain.c.width=256;grain.c.height=256;
   const grainPixels=grain.x.createImageData(256,256);let grainSeed=40139;
@@ -43,61 +42,6 @@ function startCanvasLake(original) {
   }
   cloud.x.putImageData(pixels,0,0);
   function rgb(night,day,warm,d,t){return 'rgb('+night.map((n,i)=>Math.round(n+(day[i]-n)*d+(warm[i]-(n+(day[i]-n)*d))*t*.62)).join(',')+')';}
-  // Recompose the photograph only on load, resize or comparison. Animated
-  // daylight and reflections reuse these two cached banks.
-  function composeWoodland(){
-    const band=Math.min(shore,140),width=Math.max(1,Math.round(W)),height=Math.ceil(band);
-    woodTop=shore-band;
-    for(const l of [nearWood,farWood]){l.c.width=width;l.c.height=height;}
-    const near=nearWood.x.createImageData(width,height),far=farWood.x.createImageData(width,height);
-    if(trees.naturalWidth&&!sourceLeaves){
-      const c=layer();c.c.width=trees.naturalWidth;c.c.height=trees.naturalHeight;c.x.drawImage(trees,0,0);
-      sourceLeaves=c.x.getImageData(0,0,c.c.width,c.c.height);
-    }
-    if(!QUALIA_WOODLAND.improved&&trees.naturalWidth){
-      const th=Math.max(95,H*.22),tw=th*trees.naturalWidth/trees.naturalHeight,n=nearWood.x;
-      for(let i=0,x=-tw*.13;x<W;i++,x+=tw){n.save();n.translate(x+(i%2?tw:0),band-th*.64);n.scale(i%2?-1:1,1);n.drawImage(trees,0,0,tw,th);n.restore();}
-    }else{
-      const u=Math.min(1.3,Math.max(.5,H/900));
-      for(let x=0;x<width;x++){
-        const nx=x/W,world=x/u,fromSun=nx-.807,abs=Math.abs(fromSun);
-        const hollow=1+1.65*Math.exp(-Math.pow(fromSun/(fromSun<0?.070:.095),2)*2)*(1-smooth(.12,.18,abs));
-        const shrubs=1-smooth(.035,.135,abs);
-        const ridgeN=(7+15*noise(world*.006,5)+4*noise(world*.025,8))/hollow;
-        const ridgeF=(8+14*noise(world*.006,1)+5*noise(world*.03,2))/hollow;
-        for(let y=0;y<height;y++){
-          const worldY=(band-y-.5)/u;
-          for(const distant of [true,false]){
-            const ridge=distant?ridgeF:ridgeN,base=distant?ridge*.65:ridge;
-            let colour=distant?[50,69,74]:[32,57,39],coverage=clamp((ridge-worldY)*u+.5);
-            if(sourceLeaves){
-              const tx=distant?.12+.70*nx:.035+.93*nx,photoScale=(W/u)/(3.912*(distant?.70:.93));
-              const ty=clamp((distant?.49-.20*tx:.58-.18*tx)-(worldY-base+(distant?65:90)*Math.pow(shrubs,.9))/photoScale,0,.77);
-              const sx=Math.min(sourceLeaves.width-1,Math.floor(tx*sourceLeaves.width)),sy=Math.min(sourceLeaves.height-1,Math.floor(ty*sourceLeaves.height));
-              const i=(sy*sourceLeaves.width+sx)*4,p=sourceLeaves.data;let r=p[i]/255,g=p[i+1]/255,b=p[i+2]/255;
-              const value=.2126*r+.7152*g+.0722*b,green=g-Math.max(r,b);
-              const alpha=p[i+3]/255*Math.max(smooth(.008,.045,green),1-smooth(.18,.38,value))*(1-smooth(.64,.85,value));
-              coverage=Math.max(coverage,alpha);
-              const fill=(Math.floor(.68*sourceLeaves.height)*sourceLeaves.width+sx)*4,blend=smooth(.05,.75,alpha);
-              r=p[fill]/255*(1-blend)+r*blend;g=p[fill+1]/255*(1-blend)+g*blend;b=p[fill+2]/255*(1-blend)+b*blend;
-              colour=distant?[r*255*.55*.7+51*.3,g*255*.65*.7+69*.3,b*255*.65*.7+74*.3]:[r*255*.64,g*255*.73,b*255*.69];
-              if(!distant){const l=.2126*colour[0]+.7152*colour[1]+.0722*colour[2];colour=colour.map(v=>l+(v-l)*.79);}
-            }
-            // Small, irregular scrub crowns remain low in the sunrise hollow.
-            const scrub=clamp((base+2.2+2.5*noise(world*.21,distant?29:23)-worldY)*u+.5);
-            coverage=Math.max(coverage,scrub);
-            const dest=distant?far.data:near.data,j=(y*width+x)*4;
-            dest[j]=colour[0];dest[j+1]=colour[1];dest[j+2]=colour[2];dest[j+3]=coverage*255;
-          }
-        }
-      }
-      nearWood.x.putImageData(near,0,0);farWood.x.putImageData(far,0,0);
-    }
-    const a=nearWood.x.getImageData(0,0,width,height).data,b=farWood.x.getImageData(0,0,width,height).data;
-    QUALIA_WOODLAND.cover(width,height,woodTop,shore,(x,y)=>Math.max(a[(y*width+x)*4+3],b[(y*width+x)*4+3])/255);
-  }
-  trees.addEventListener('load',composeWoodland);
-  addEventListener('qualia-woodland-change',composeWoodland);
   function layout(){
     W=innerWidth;H=innerHeight;shore=Math.round(H*QUALIA_SHORE);scale=Math.min(devicePixelRatio||1,1.5,1440/W);
     canvas.width=Math.round(W*scale);canvas.height=Math.round(H*scale);
@@ -111,7 +55,6 @@ function startCanvasLake(original) {
     if(imageRect){anchor=[imageRect.left+imageRect.width*.715,imageRect.top+imageRect.height*.315,imageRect.width*.0245];QUALIA_LOAD.setAnchor(anchor);}
     words=[...tagline.querySelectorAll('span')].map(e=>({text:e.textContent,box:e.getBoundingClientRect(),style:getComputedStyle(e.parentElement)}));
     layoutQualiaFooter(mark,footer,H,shore);
-    composeWoodland();
   }
   function phaseMoon(){
     const minute=Math.floor(Date.now()/60000),texture=QUALIA_LOAD.portrait;
@@ -162,12 +105,16 @@ function startCanvasLake(original) {
     mark.style.setProperty('--dot-alpha',smooth(.08,.72,day));
     // A subdued far ridge picks up sky colour; the real near foliage stays crisp.
     s.fillStyle=rgb([4,11,17],[64,90,91],[110,89,88],day,twilight);s.fill(distantRidge);
-    // The same selected banks are drawn once into the sky and reflected below.
-    s.save();
-    s.filter=`brightness(${.07+.93*day}) saturate(.8)`;
-    s.drawImage(farWood.c,0,woodTop,W,shore-woodTop);
-    s.filter=QUALIA_WOODLAND.improved?`brightness(${.055+.945*day}) saturate(.92)`:`brightness(${.055+.59*day}) saturate(.72)`;
-    s.drawImage(nearWood.c,0,woodTop,W,shore-woodTop);s.restore();
+    // The real leaf alpha and source photograph are shared with the GPU renderer.
+    if(trees.complete&&trees.naturalWidth){
+      s.save();s.filter=`brightness(${.055+.59*day}) saturate(.72)`;
+      const th=Math.max(95,H*.22),tw=th*trees.naturalWidth/trees.naturalHeight;
+      for(let i=0,x=-tw*.13;x<W;i++,x+=tw){s.save();s.translate(x+(i%2?tw:0),shore-th*.64);s.scale(i%2?-1:1,1);s.drawImage(trees,0,0,tw,th);s.restore();}
+      s.restore();
+    } else {
+      s.fillStyle=day>.3?'#29443b':'#02090d';s.beginPath();s.moveTo(0,shore);
+      for(let x=0;x<=W;x+=6)s.lineTo(x,shore-H*(.018+.012*noise(x/100,4)));s.lineTo(W,shore);s.fill();
+    }
   }
   function drawLetterReflection(day){
     const x=reflection.x,image=mark.querySelector('img'),hero=1-smooth(0,.5,PAQ.progress);

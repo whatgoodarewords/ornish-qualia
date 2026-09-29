@@ -204,7 +204,16 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 .faq-guild-list li { margin:0; color:#eef0f2; font:400 20px/1.3 Alegreya,Georgia,serif; }
 @media(max-width:420px) { .faq-guild-list { grid-template-columns:1fr; gap:12px; } }
 @media(prefers-reduced-motion:reduce) { .faq-header,.faq-answers { transform:none; } }
-/* Local letter shadows follow daylight; the landscape has no dimming layer. */
+/* A feathered reading scrim appears only in daylight, behind the PAQ text. */
+#faq-dialog::before {
+  content:""; position:fixed; top:0; bottom:0; left:50%; width:calc(100% + 96px); max-width:1140px;
+  transform:translateX(-50%); pointer-events:none; z-index:0;
+  background:linear-gradient(90deg,transparent,rgb(0 9 17 / .22) 12%,rgb(0 9 17 / .22) 88%,transparent);
+  opacity:calc(var(--paq-daylight,0) * var(--paq-text,0)); transition:opacity .45s ease;
+}
+.faq-header,.faq-answers { position:relative; z-index:1; }
+@media(prefers-reduced-motion:reduce) { #faq-dialog::before { transition:none; } }
+/* Local letter shadows also follow daylight. */
 .faq-header,.faq-answers {
   text-shadow:0 1px 2.5px rgb(0 9 17 / calc(var(--paq-daylight,0) * .38)),
               0 3px 12px rgb(0 9 17 / calc(var(--paq-daylight,0) * .24));
@@ -263,14 +272,9 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
  .signal-water { display:none; }
 }
 
-/* The photograph itself is the switch. Its hit area follows the cached canopy. */
-#woodland-toggle { position:fixed; z-index:2; left:0; width:100%; padding:0; border:0; background:transparent; color:transparent; cursor:pointer; touch-action:manipulation; }
-#woodland-toggle:focus-visible { background:rgb(210 234 217 / .15); outline:0; box-shadow:inset 0 -2px #d8ebdd; }
-#woodland-toggle:disabled { pointer-events:none; }
 </style>
 </head>
 <body>
-<button id="woodland-toggle" type="button" aria-label="Use improved trees" aria-pressed="true" title="Click the trees to compare with the original woodland" disabled></button>
 <div id="loading-screen" role="progressbar" aria-label="Loading Qualia" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
   <svg viewBox="0 0 32 32" aria-hidden="true"><defs><clipPath id="loading-phase"><path id="loading-moon" d="M16 2A14 14 0 0 1 16 30A14 14 0 0 0 16 2Z"/></clipPath><image id="loading-texture" x="2" y="2" width="28" height="28"/></defs><circle cx="16" cy="16" r="14" fill="#101721"/><use href="#loading-texture" opacity=".12"/><g clip-path="url(#loading-phase)"><circle cx="16" cy="16" r="14" fill="#e4e2db"/><use href="#loading-texture"/></g></svg>
 </div>
@@ -369,32 +373,6 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 // Both renderers consume the same lighting clock and artwork sources.
 const QUALIA_SHORE=.44;
 const QUALIA_ART={moon:'assets/lroc-color-2k.jpg?v=f7130a182268',woodland:'assets/woodland-photo.png?v=a9b5d8e4e79e'};
-// Shared by WebGL and Canvas, including after context recovery.
-const QUALIA_WOODLAND=(()=>{
-  const button=document.getElementById('woodland-toggle'),dialog=document.getElementById('faq-dialog');
-  let improved=true,geometry=false;
-  const sync=()=>{button.disabled=!geometry||document.documentElement.classList.contains('is-loading')||document.documentElement.classList.contains('is-revealing')||dialog.open;};
-  new MutationObserver(sync).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
-  new MutationObserver(sync).observe(dialog,{attributes:true,attributeFilter:['open']});
-  button.addEventListener('click',()=>{
-    if(button.disabled)return;
-    improved=!improved;button.setAttribute('aria-pressed',String(improved));
-    button.title=improved?'Click the trees to compare with the original woodland':'Click the trees to see the improved woodland';
-    dispatchEvent(new Event('qualia-woodland-change'));
-  });
-  // Both renderers supply static coverage, with row zero at the upper edge.
-  function cover(width,height,top,shore,alpha){
-    const points=[];
-    for(let x=0;x<width;x+=Math.max(1,Math.round(width/700))){
-      let y=0;while(y<height-1&&alpha(x,y)<.55)y++;
-      points.push(`${(x/width*100).toFixed(3)}% ${(y/height*100).toFixed(3)}%`);
-    }
-    points.push('100% 100%','0% 100%');
-    button.style.top=top+'px';button.style.height=(shore-top)+'px';
-    button.style.clipPath='polygon('+points.join(',')+')';geometry=true;sync();
-  }
-  return {get improved(){return improved;},cover};
-})();
 // Update only the open dialog, and only when a visible strength step changes.
 const paqReadabilityDialog=document.getElementById('faq-dialog');
 let paqReadabilityLevel=-1;
@@ -708,7 +686,7 @@ document.getElementById('brand-ink-toggle').addEventListener('click', e => {
 });
 </script>
 <script src="assets/wordmarks.js?v=e93c2ec03654"></script>
-<script src="assets/canvas-lake.js?v=da1a2ee09963"></script>
+<script src="assets/canvas-lake.js?v=4a4970ee40db"></script>
 <script>
 (() => {
 'use strict';
@@ -759,7 +737,7 @@ layout(location = 0) out vec4 oSky;
 layout(location = 1) out vec4 oStar;
 uniform vec2 uRes; uniform float uShore, uU, uDpr, uAtlasRadius;
 uniform sampler2D uWoodland;
-uniform float uWoodlandReady,uWoodlandImproved;
+uniform float uWoodlandReady;
 ${COMMON}
 float crownDome(float x, float centre, float radius, float height){
   float q = (x - centre)/radius;
@@ -894,30 +872,9 @@ void main(){
     float tx=1.-abs(1.-mod(x/560.,2.));
     vec4 nearTrees=woodlandPhoto(vec2(tx,clamp(.60-(y-ridgeN)/140.,0.,.77)));
     vec4 farTrees=woodlandPhoto(vec2(1.-tx,clamp(.56-(y-ridgeF*.65)/100.,0.,.77)));
-    if(uWoodlandImproved>.5){
-      // An uninterrupted photograph at its native aspect ratio. Bury the
-      // lower foliage behind the low ridge and counter the source's rising
-      // skyline with a gentle baseline slope, without stretching the crowns.
-      tx=mix(.035,.965,pd.x/uRes.x);
-      float farTx=mix(.12,.82,pd.x/uRes.x);
-      float nearScale=(uRes.x/uU)/(3.912*.93),farScale=(uRes.x/uU)/(3.912*.70);
-      float nearY=.58-.18*tx-(y-ridgeN+90.*pow(shrubs,.9))/nearScale;
-      float farY=.49-.20*farTx-(y-ridgeF*.65+65.*pow(shrubs,.9))/farScale;
-      nearTrees=woodlandPhoto(vec2(tx,clamp(nearY,0.,.77)));
-      farTrees=woodlandPhoto(vec2(farTx,clamp(farY,0.,.77)));
-      // The solid ridge needs dense foliage colour even where the sampled
-      // crown is transparent; otherwise zero-alpha texels paint black holes.
-      vec4 nearFill=texture(uWoodland,vec2(tx,.68)),farFill=texture(uWoodland,vec2(farTx,.68));
-      nearTrees.rgb=mix(nearFill.rgb/max(nearFill.a,.0001),nearTrees.rgb,smoothstep(.05,.75,nearTrees.a));
-      farTrees.rgb=mix(farFill.rgb/max(farFill.a,.0001),farTrees.rgb,smoothstep(.05,.75,farTrees.a));
-    }
     covN=max(clamp((ridgeN-y)*uU+.5,0.,1.),nearTrees.a);
     covF=max(clamp((ridgeF-y)*uU+.5,0.,1.),farTrees.a);
     nearLeaves=nearTrees.rgb*vec3(.64,.73,.69);
-    if(uWoodlandImproved>.5){
-      float luminance=dot(nearLeaves,vec3(.2126,.7152,.0722));
-      nearLeaves=mix(vec3(luminance),nearLeaves,.79);
-    }
     farLeaves=mix(farTrees.rgb*vec3(.55,.65,.65),vec3(.20,.27,.29),.30);
     // Dense foliage from the lower canopy supplies shrub colour without
     // squeezing full tree crowns into the small foreground rise.
@@ -931,14 +888,11 @@ void main(){
   float shrubF=max(clamp((ridgeF-y)*uU+.5,0.,1.),canopy(x,y-ridgeF*.65,3.5,1.8,4.,29.));
   // Coverage is already antialiased. Thresholding it again turns small leaves
   // into a jagged cutout, especially against the bright dawn sky.
-  if(uWoodlandImproved>.5){
-    // Union opaque leaf edges with scrub instead of cutting a vertical slice
-    // through a large crown at the midpoint of a horizontal opacity fade.
-    covN=max(covN,shrubN);covF=max(covF,shrubF);
-  }else{covN=mix(covN,shrubN,shrubs);covF=mix(covF,shrubF,shrubs);}
+  covN=mix(covN,shrubN,shrubs);
+  covF=mix(covF,shrubF,shrubs);
   // In the narrow tree-to-shrub transition, resolve the mixed silhouettes
   // with a pixel-sized edge rather than leaving translucent ghost crowns.
-  float transition=(1.-uWoodlandImproved)*smoothstep(0.,.08,shrubs)*(1.-smoothstep(.92,1.,shrubs));
+  float transition=smoothstep(0.,.08,shrubs)*(1.-smoothstep(.92,1.,shrubs));
   float edgeN=max(.01,fwidth(covN)*.5),edgeF=max(.01,fwidth(covF)*.5);
   covN=mix(covN,smoothstep(.5-edgeN,.5+edgeN,covN),transition);
   covF=mix(covF,smoothstep(.5-edgeF,.5+edgeF,covF),transition);
@@ -1924,7 +1878,6 @@ function resize(){
   const SF = hasCBF ? gl.RGBA16F : gl.RGBA8, ST = hasCBF ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE;
   T.sky = target(cw, ch, SF, gl.RGBA, ST, gl.LINEAR, null, null, true);
   if (!T.sky.ok){ freeAll(); T.sky = target(cw, ch, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, gl.LINEAR, null, null, true); }
-  T.woodHit=target(cw,Math.min(Math.ceil(140*dpr),Math.round(shoreCss*dpr)),gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,gl.NEAREST);
   T.cloud = target(512,256,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,gl.LINEAR);
   for(const name of ['woman','womanUnder']) {
     T[name]=target(384,384,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,gl.LINEAR);
@@ -1973,21 +1926,10 @@ function resize(){
 function renderSky(){
   const p = P.sky; gl.useProgram(p.p); drawTo(T.sky);
   bindTex(0,woodlandTex,p.u.uWoodland);gl.uniform1f(p.u.uWoodlandReady,woodlandReady?1:0);
-  gl.uniform1f(p.u.uWoodlandImproved,QUALIA_WOODLAND.improved?1:0);
   gl.uniform1f(p.u.uAtlasRadius,0);
   gl.uniform2f(p.u.uRes, cw, ch); gl.uniform1f(p.u.uShore, shoreCss*dpr);
   gl.uniform1f(p.u.uU, dpr*Math.min(1.3, Math.max(.5, H/900))); gl.uniform1f(p.u.uDpr, dpr);
   full();
-  // Read only the canopy strip when the static atlas changes, never per frame.
-  // This same alpha drives the landscape and its water reflection.
-  const band=Math.min(Math.ceil(140*dpr),Math.round(shoreCss*dpr));
-  gl.bindFramebuffer(gl.READ_FRAMEBUFFER,T.sky.f);gl.readBuffer(gl.COLOR_ATTACHMENT0);
-  gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,T.woodHit.f);
-  gl.blitFramebuffer(0,ch-Math.round(shoreCss*dpr),cw,ch-Math.round(shoreCss*dpr)+band,0,0,cw,band,gl.COLOR_BUFFER_BIT,gl.NEAREST);
-  gl.bindFramebuffer(gl.FRAMEBUFFER,T.woodHit.f);
-  const pixels=new Uint8Array(cw*band*4);
-  gl.readPixels(0,0,cw,band,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
-  QUALIA_WOODLAND.cover(cw,band,shoreCss-band/dpr,shoreCss,(x,y)=>pixels[((band-1-y)*cw+x)*4+3]/255);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   for (const t of [T.sky.t, T.sky.t1]){
     gl.bindTexture(gl.TEXTURE_2D, t);
@@ -1995,7 +1937,6 @@ function renderSky(){
     gl.generateMipmap(gl.TEXTURE_2D);
   }
 }
-addEventListener('qualia-woodland-change',()=>{if(!gl.isContextLost()&&T.sky&&!document.documentElement.classList.contains('nogl'))renderSky();});
 /* Rasterize the actual UI glyphs once; the lake samples this atlas through its waves. */
 function positionControlReflections(){
   const box=id=>{const r=document.getElementById(id).getBoundingClientRect();
@@ -2683,7 +2624,7 @@ function burstCloud(e){
 }
 const activeTouches=new Set();
 function steer(e, force){
-  if (!QUALIA_LOAD.swimReady || AUTO || document.getElementById('faq-dialog').open || e.target.closest?.('.light-controls, .signal-link, .wordmark-controls, #faq-open, #brand-ink-toggle, #woodland-toggle')) return false;
+  if (!QUALIA_LOAD.swimReady || AUTO || document.getElementById('faq-dialog').open || e.target.closest?.('.light-controls, .signal-link, .wordmark-controls, #faq-open, #brand-ink-toggle')) return false;
   if ((window.visualViewport?.scale || 1)>1.01 || activeTouches.size>1 || (e.pointerType==='touch' && !e.isPrimary)) return false;
   if (e.clientY>=swimFooterTop) return false;
   if (!force && e.pointerType === 'mouse' && e.buttons === 0 && e.clientY < shoreCss) return false;
