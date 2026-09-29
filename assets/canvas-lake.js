@@ -11,6 +11,16 @@ function startCanvasLake(original) {
   const layer=()=>{const c=document.createElement('canvas');return {c,x:c.getContext('2d')};};
   const sky=layer(),reflection=layer(),cloud=layer(),tintedCloud=layer(),moon=layer();
   const trees=new Image();trees.src=QUALIA_ART.woodland;
+  // A small static grain tile; soft-light naturally concentrates it in midtones.
+  const grain=layer();grain.c.width=256;grain.c.height=256;
+  const grainPixels=grain.x.createImageData(256,256);let grainSeed=40139;
+  for(let i=0;i<grainPixels.data.length;i+=4){
+    grainSeed=(Math.imul(grainSeed,1664525)+1013904223)>>>0;
+    const value=100+(grainSeed>>>24)*.22;
+    grainPixels.data[i]=grainPixels.data[i+1]=grainPixels.data[i+2]=value;grainPixels.data[i+3]=255;
+  }
+  grain.x.putImageData(grainPixels,0,0);const grainPattern=ctx.createPattern(grain.c,'repeat');
+  let distantRidge=new Path2D();
   const controlImage=new Image(),control=document.querySelector('#faq-open svg');let controlRect=null;
   if(control){const svg=control.cloneNode(true);svg.setAttribute('xmlns','http://www.w3.org/2000/svg');svg.setAttribute('width','22');svg.setAttribute('height','26');svg.style.color='#fff';controlImage.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));}
   let W=1,H=1,shore=1,scale=1,anchor=[0,0,1],imageRect=null,markRect=null,words=[],last=0,elapsed=0,raf=0;
@@ -37,6 +47,9 @@ function startCanvasLake(original) {
     canvas.width=Math.round(W*scale);canvas.height=Math.round(H*scale);
     for(const l of [sky,reflection]){l.c.width=Math.ceil(W*scale);l.c.height=Math.ceil(shore*scale);l.x.setTransform(scale,0,0,scale,0,0);}
     ctx.setTransform(scale,0,0,scale,0,0);
+    distantRidge=new Path2D();distantRidge.moveTo(0,shore);
+    for(let x=0;x<=W+8;x+=8)distantRidge.lineTo(x,shore-H*(.033+.020*noise(x/180,8)));
+    distantRidge.lineTo(W,shore);distantRidge.closePath();
     controlRect=control?.getBoundingClientRect();
     const image=mark.querySelector('img');imageRect=image?.getBoundingClientRect();markRect=mark.getBoundingClientRect();
     if(imageRect){anchor=[imageRect.left+imageRect.width*.715,imageRect.top+imageRect.height*.315,imageRect.width*.0245];QUALIA_LOAD.setAnchor(anchor);}
@@ -63,13 +76,19 @@ function startCanvasLake(original) {
   function drawSky(values,time){
     const [day,twilight,starlight,warmth,sunX,sunY]=values,s=sky.x;
     s.globalAlpha=1;const gradient=s.createLinearGradient(0,0,0,shore);
-    gradient.addColorStop(0,rgb([2,6,14],[37,80,120],[52,57,86],day,twilight));
-    gradient.addColorStop(.65,rgb([8,17,29],[91,143,176],[170,102,101],day,twilight));
-    gradient.addColorStop(1,rgb([18,31,41],[170,190,187],[255,171,93],day,twilight));
+    gradient.addColorStop(0,rgb([2,6,14],[39,79,116],[52,57,86],day,twilight));
+    gradient.addColorStop(.65,rgb([8,17,29],[93,140,169],[170,102,101],day,twilight));
+    gradient.addColorStop(1,rgb([18,31,41],[172,187,180],[255,171,93],day,twilight));
     s.fillStyle=gradient;s.fillRect(0,0,W,shore);
     if(starlight>.001){s.fillStyle='#dbe6ef';for(const [x,y,r,a] of stars){s.globalAlpha=starlight*(.2+a*.65)*(1-y*.4);s.beginPath();s.arc(x*W,y*shore,r,0,Math.PI*2);s.fill();}s.globalAlpha=1;}
     const sx=sunX*W,sy=sunY*shore,r=cycle.sunRadius(values),solar=smooth(1.2,.94,sunY);
     if(solar>0){const glow=s.createRadialGradient(sx,sy,r*.3,sx,sy,r*8);glow.addColorStop(0,`rgba(255,222,145,${.48*solar})`);glow.addColorStop(.2,`rgba(255,197,100,${.15*solar})`);glow.addColorStop(1,'rgba(255,182,95,0)');s.fillStyle=glow;s.fillRect(sx-r*8,sy-r*8,r*16,r*16);s.fillStyle=twilight>.2?'#ffe0a0':'#fff2c0';s.globalAlpha=solar;s.beginPath();s.ellipse(sx,sy,r,r*(1-.1*twilight),0,0,Math.PI*2);s.fill();s.globalAlpha=1;}
+    // Tight warm halation around a luminous disc; no full-screen glow filter.
+    if(solar>0){
+      const bleed=s.createRadialGradient(sx,sy,r*.92,sx,sy,r*1.65);
+      bleed.addColorStop(0,'rgba(255,148,68,0)');bleed.addColorStop(.16,'rgba(255,159,82,.10)');bleed.addColorStop(1,'rgba(255,159,82,0)');
+      s.save();s.globalAlpha=solar;s.fillStyle=bleed;s.fillRect(sx-r*1.7,sy-r*1.7,r*3.4,r*3.4);s.restore();
+    }
     const tc=tintedCloud.x;tc.clearRect(0,0,512,192);tc.drawImage(cloud.c,0,0);tc.globalCompositeOperation='source-in';tc.fillStyle=rgb([31,42,57],[244,242,226],[235,153,117],day,twilight);tc.fillRect(0,0,512,192);tc.globalCompositeOperation='source-over';
     const drift=motion.matches?0:Math.sin(time*.004)*W*.06;
     s.drawImage(tintedCloud.c,-W*.12+drift,0,W*1.24,shore*.95);
@@ -82,6 +101,8 @@ function startCanvasLake(original) {
     const moonVisibility=(1-smooth(.08,.72,day))*(1-PAQ.progress)+PAQ.progress;
     drawMoon(mx,my,mr,moonVisibility*QUALIA_LOAD.moonReveal);
     mark.style.setProperty('--dot-alpha',smooth(.08,.72,day));
+    // A subdued far ridge picks up sky colour; the real near foliage stays crisp.
+    s.fillStyle=rgb([4,11,17],[58,82,83],[102,83,82],day,twilight);s.fill(distantRidge);
     // The real leaf alpha and source photograph are shared with the GPU renderer.
     if(trees.complete&&trees.naturalWidth){
       s.save();s.filter=`brightness(${.055+.59*day}) saturate(.72)`;
@@ -109,7 +130,13 @@ function startCanvasLake(original) {
     const transform=ctx.getTransform();ctx.setTransform(1,0,0,-1,transform.e,transform.f+source.height*2);
     // Integer backing-pixel strips avoid seams or bright overlapping scanlines.
     for(let y=0;y<source.height;y+=2){const depth=1-y/source.height,cssY=y/scale,wave=motion.matches?0:Math.sin(cssY*.10+time*.65)*(.25+depth*1.1)+Math.sin(cssY*.037-time*.43)*depth;
-      const height=Math.min(2,source.height-y);ctx.drawImage(source,0,y,source.width,height,wave*scale,y,source.width,height);}
+      const wind=.5+.5*Math.sin(cssY*.023-time*.045);
+      ctx.globalAlpha=alpha*(1-.055*wind*depth);
+      const height=Math.min(2,source.height-y);
+      ctx.drawImage(source,0,y,source.width,height,wave*scale,y,source.width,height);
+      // Two low-opacity neighbouring footprints soften patches without strip seams.
+      if(wind*depth>.32){ctx.globalAlpha=alpha*.018*wind*depth;ctx.drawImage(source,0,y,source.width,height,(wave+.65)*scale,y,source.width,height);}
+    }
     ctx.restore();
   }
   function paint(now){
@@ -122,7 +149,10 @@ function startCanvasLake(original) {
     drawSky(values,elapsed);ctx.drawImage(sky.c,0,0,W,shore);
     reflect(sky.c,.60,elapsed);drawLetterReflection(values[0]);reflect(reflection.c,.29,elapsed);
     const wash=ctx.createLinearGradient(0,shore,0,H);wash.addColorStop(0,'#06131b10');wash.addColorStop(.55,'#03111c4a');wash.addColorStop(1,'#01070de8');ctx.fillStyle=wash;ctx.fillRect(0,shore,W,H-shore+H*.12);
-    ctx.restore();if(!painted){painted=true;QUALIA_LOAD.done('graphics');}
+    ctx.restore();
+    ctx.save();ctx.globalCompositeOperation='soft-light';ctx.globalAlpha=.045;ctx.fillStyle=grainPattern;ctx.fillRect(0,0,W,shore);
+    ctx.globalAlpha=.024;ctx.fillRect(0,shore,W,H-shore);ctx.restore();
+    if(!painted){painted=true;QUALIA_LOAD.done('graphics');}
     // At most 20 fps; pause entirely in background tabs. Reduced-motion stills
     // repaint at a low rate so UI fades, resizes and lunar updates remain correct.
     raf=setTimeout(()=>requestAnimationFrame(paint),motion.matches?100:50);

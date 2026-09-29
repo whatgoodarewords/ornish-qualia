@@ -1290,6 +1290,9 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   woodland*=.70+.30*sunHeight;
   vec3 warmRim=vec3(.20,.10,.035)*dusk*smoothstep(-.12,.04,uSolar.w);
   woodland+=warmRim*(.3+.7*leafShade);
+  // Air lies between the viewer and the far ridge, never over nearby leaf detail.
+  vec3 airTint=mix(daySky,atmosphere,.72);
+  woodland=mix(woodland,airTint*.42,(1.-nearForest)*(.16+.08*dusk)*max(uLight.x,dusk));
   vec3 nightEnvironment=sk.rgb*openSky+mix(vec3(.010,.013,.022),vec3(.0025,.0035,.006),nearForest)*sk.a;
   vec3 col=nightEnvironment*(1.-uLight.x)+atmosphere*max(uLight.x,dusk)*openSky+woodland*sk.a*max(uLight.x,.09*dusk);
   float scint = 1. + uScint*(.025 + .07*t*t)*(vnoise(pd/uDpr/5. + vec2(uTime*.2, uTime*.13))*2. - 1.);
@@ -1409,6 +1412,9 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   col=mix(col,solarFace,disk*pow(transmission,.62)*solarPresence*.97);
   // Gentle light bleed rather than an outlined circle, filtered by cloud thickness.
   col+=glowColour*(.075*exp(-pow(rimDistance/.009,1.3))+.028*exp(-sunR*sunR/.018))*solarAir*solarPresence;
+  // A small exposure-dependent warm bleed, attenuated by the same cloud cover.
+  float halation=exp(-rimDistance/(sunSize*.34))*(1.-disk);
+  col+=vec3(1.,.48,.20)*halation*.045*solarAir*solarPresence;
   return col;
 }
 /* cubic B-spline upsample from 4 bilinear taps (Sigg & Hadwiger 2005), hides the texel grid of coarse glow */
@@ -1463,10 +1469,13 @@ void main(){
     vec2 surfaceSlope=as*.065+sl*.32;
     vec3 normal=normalize(vec3(-surfaceSlope.x,1.,-surfaceSlope.y));
     vec3 viewDirection=normalize(vec3((.5-pd.x/uRes.x)*.5,.035+.74*v,1.));
-    float lod = .35 + 1.45*rough + (1. - fade)*.65;
+    // Broad wind patches vary the optical footprint without inventing extra waves.
+    float windPatch=vnoise(vec2(pd.x/uRes.x*4.6+uTime*.012,v*7.2-uTime*.019));
+    float windTexture=smoothstep(.24,.78,windPatch)*fade;
+    float lod = .35 + 1.45*rough + (1. - fade)*.65 + windTexture*.38;
     vec3 refl = environmentAt(rp, lod, 1.485, true);
     // A small anisotropic footprint keeps lettering in the same optical surface.
-    vec2 blurStep=vec2(0.,(.35+rough*1.6)*uDpr);
+    vec2 blurStep=vec2(0.,(.35+rough*1.6+windTexture*.45)*uDpr);
     vec4 wd=wordAt(rp,lod+.4)*.6;
     wd+=(wordAt(rp-blurStep,lod+.4)+wordAt(rp+blurStep,lod+.4))*.2;
     float wordLight = 1. + .025*sin(uTime*.349 + rp.x/uRes.x*2.);
@@ -1479,7 +1488,7 @@ void main(){
     float grazing = clamp(1.-v+as.y*.025*fade,0.,1.);
     float incidence=clamp(dot(normal,viewDirection),0.,1.);
     float fresnel=.0204+.9796*pow(1.-incidence,5.);
-    float R=mix(.13+.7*pow(grazing,3.2),fresnel,.35);
+    float R=mix(.13+.7*pow(grazing,3.2),fresnel,.35)*(1.-windTexture*.065);
     /* swimmer: underwater limbs (refracted by the ripples), parts above the surface, and their broken reflection */
     float matA = 0., matR = 0., matU = 0.;
     float mU = 0., mA = 0., mR = 0., dAbove = 1e5, dRef = 1e5, outline = 0., ring = 0.;
@@ -1517,11 +1526,11 @@ void main(){
     float humanVisibility=1.-smoothstep(0.,.5,uPaq);
     mA=woman.a*humanVisibility; mU=submerged.a*humanVisibility;
     mR=reflected.a*step(uRing.y,pd.y)*humanVisibility;
-    vec3 lit = vec3(0.), diff = vec3(0.), gS = vec3(0.);
+    vec3 lit = vec3(0.), diff = vec3(0.), gS = vec3(0.), gX = vec3(0.);
     if (uGlowOn > .5){
       vec2 guv = (fc + clamp(vec2(off.x, -off.y)*.08, -3.*uDpr, 3.*uDpr))/uRes;
       gS = bspline(uGlow, guv);
-      vec3 gM = bspline(uB1, guv), gW = bspline(uB2, guv), gX = bspline(uB3, guv);
+      vec3 gM = bspline(uB1, guv), gW = bspline(uB2, guv); gX = bspline(uB3, guv);
       diff = gM*.95 + gW*1.25 + gX*vec3(.25, .8, 1.3)*2.0;             // light scattered up through the water
       lit = (gM*.9 + gW*1.8 + gX*2.6)*vec3(.55, .9, 1.);               // limbs lit from below
       vec3 wakeLight=vec3(.015,.28,.46)*texture(uAgitation,suv).a;
@@ -1567,6 +1576,9 @@ void main(){
       trans += (vec3(.10, .70, 1.)*.12 + diff*1.0 + gS*.5)*outline;
       trans += (vec3(.12, .75, 1.)*.45 + diff*.9)*ring;
       col += tone(trans*1.3)*glowVisibility;
+      // Reuse the existing wide diffusion field: no extra blur pass or light sources.
+      float exposed=smoothstep(.06,.65,max(gS.r,max(gS.g,gS.b)));
+      col+=tone(gX*.32)*vec3(.50,.86,1.)*.075*exposed*glowVisibility;
     }
     if (mA > 0.){
       float rim = 1. - smoothstep(0., 3.*uDpr, -dAbove);
@@ -1575,7 +1587,18 @@ void main(){
   }
   vec2 q = fc/uRes - .5;
   col *= mix(1., .72, smoothstep(.35, 1.05, length(q*vec2(1.15, 1.))));
-  col += (hashI(fc + vec2(mod(uFrame*53., 997.), 0.)) - .5)/255.;
+  // Photographic shoulder, restrained split colour, and a stationary fine grain.
+  // This is scene-only: DOM lettering and controls remain completely untouched.
+  float luminance=dot(col,vec3(.2126,.7152,.0722));
+  float shadow=(1.-smoothstep(.025,.22,luminance))*smoothstep(.001,.025,luminance);
+  col+=vec3(.0005,.0015,.0017)*shadow;
+  col=mix(vec3(luminance),col,.978);
+  col*=mix(vec3(.993,1.004,1.009),vec3(1.007,1.001,.989),smoothstep(.28,.9,luminance));
+  float exposure=max(col.r,max(col.g,col.b));
+  if(exposure>.86)col*=(.86+.14*(1.-exp(-(exposure-.86)/.14)))/exposure;
+  float midtone=smoothstep(.015,.18,luminance)*(1.-smoothstep(.58,.94,luminance));
+  float grain=(hashI(floor(gl_FragCoord.xy/uDpr*1.25))-.5);
+  col+=grain*(.28+1.30*midtone)*mix(.55,1.,1.-step(uShore,pd.y))/255.;
   o = vec4(col, 1.);
 }`;
 
