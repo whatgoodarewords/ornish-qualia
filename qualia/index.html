@@ -142,8 +142,12 @@ body.ink-dark .mark,body.ink-dark .sub { color:#080b10; text-shadow:none; }
 <style>
 /* The PAQ is another view of the same lake, not a separate opaque panel. */
 body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10px; }
-.hero { opacity:calc(var(--paq-hero) * var(--intro-ink,1)); }
-#faq-open { color:#fff; opacity:calc(.96 * var(--paq-control) * var(--intro-ink,1)); transition:none; }
+.hero { opacity:var(--paq-hero); }
+.mark { opacity:var(--intro-ink,1); }
+.sub { opacity:var(--intro-caption,1); }
+.meta { opacity:var(--intro-meta,1); }
+.signal-link { opacity:var(--intro-controls,1); }
+#faq-open { color:#fff; opacity:calc(.96 * var(--paq-control) * var(--intro-controls,1)); transition:none; }
 #faq-open svg { transition:filter .35s ease,transform .35s ease; }
 @media(hover:hover) {
   #faq-open:hover svg { filter:drop-shadow(0 0 5px #dcefff70); transform:translateY(-1px) scale(.99,.94); }
@@ -291,19 +295,29 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 const QUALIA_LOAD = (()=>{
   const screen=document.getElementById('loading-screen'),moon=document.getElementById('loading-moon');
   const pending=new Set(['graphics','fonts','wordmark','moon','woodland','swimmer']);
-  let ready=false,finishing=false,moonReveal=0,inkReveal=0,anchor=null,introFrame=0;
+  let ready=false,finishing=false,moonReveal=0,inkReveal=0,captionReveal=0,controlsReveal=0,anchor=null,introFrame=0;
+  let phaseFrame=0,phaseShown=0,phaseFrom=0,phaseTarget=0,phaseStarted=0;
   const globe=screen.querySelector("svg"),root=document.documentElement;
-  document.body.style.setProperty("--intro-ink",0);
+  for(const part of ["ink","caption","meta","controls"])document.body.style.setProperty(`--intro-${part}`,0);
   function complete(){
-    if(ready)return;ready=true;moonReveal=inkReveal=1;
-    cancelAnimationFrame(introFrame);clearTimeout(window.qualiaLoadEscape);
-    document.body.style.setProperty("--intro-ink",1);
+    if(ready)return;ready=true;moonReveal=inkReveal=captionReveal=controlsReveal=1;
+    cancelAnimationFrame(introFrame);cancelAnimationFrame(phaseFrame);clearTimeout(window.qualiaLoadEscape);
+    for(const part of ["ink","caption","meta","controls"])document.body.style.setProperty(`--intro-${part}`,1);
     root.classList.remove("is-loading","is-revealing");
     document.body.removeAttribute("aria-busy");screen.setAttribute("aria-hidden","true");
     setTimeout(()=>screen.remove(),700);
   }
   window.qualiaFinishLoading=complete;
   const ease=t=>{t=Math.min(1,Math.max(0,t));return t*t*t*(t*(t*6-15)+10);};
+  function paintPhase(now){
+    phaseFrame=0;
+    if(ready)return;
+    const t=Math.min(1,Math.max(0,(now-phaseStarted)/180));
+    phaseShown=phaseFrom+(phaseTarget-phaseFrom)*ease(t);
+    const r=Math.max(.001,14*Math.abs(Math.cos(Math.PI*phaseShown)));
+    moon.setAttribute('d',`M16 2A14 14 0 0 1 16 30A${r} 14 0 0 ${phaseShown<.5?0:1} 16 2Z`);
+    if(t<1)phaseFrame=requestAnimationFrame(paintPhase);
+  }
   function reveal(){
     if(ready)return;
     root.classList.add("is-revealing");root.classList.remove("is-loading");
@@ -311,30 +325,38 @@ const QUALIA_LOAD = (()=>{
     const began=performance.now();
     function step(now){
       if(ready)return;
-      const elapsed=now-began,travel=ease(elapsed/1400);
-      screen.style.setProperty("--loading-veil",1-ease(elapsed/(still?250:900)));
+      const elapsed=now-began,travel=ease(elapsed/850);
+      screen.style.setProperty("--loading-veil",1-ease(elapsed/(still?200:600)));
       if(!still&&anchor){
         const dx=anchor[0]-innerWidth/2,dy=anchor[1]-innerHeight/2;
-        const bow=Math.min(64,Math.abs(dx)*.22);
-        globe.style.transform=`translate(${dx*travel}px,${dy*travel-4*travel*(1-travel)*bow}px) scale(${1+(anchor[2]/13.125-1)*travel})`;
+        const distance=Math.max(1,Math.hypot(dx,dy));
+        const arc=4*travel*(1-travel)*Math.min(56,distance*.17);
+        globe.style.transform=`translate(${dx*travel-dy/distance*arc}px,${dy*travel+dx/distance*arc}px) scale(${1+(anchor[2]/13.125-1)*travel})`;
       }
-      moonReveal=ease((elapsed-(still?0:1250))/(still?250:300));
+      moonReveal=ease((elapsed-(still?0:720))/(still?200:180));
       globe.style.opacity=1-moonReveal;
-      inkReveal=ease((elapsed-(still?100:1500))/(still?250:650));
+      // A quiet, overlapping cascade: mark, caption, details, then controls.
+      inkReveal=ease((elapsed-(still?0:880))/(still?200:350));
+      captionReveal=ease((elapsed-(still?0:970))/(still?200:350));
+      const metaReveal=ease((elapsed-(still?0:1060))/(still?200:350));
+      controlsReveal=ease((elapsed-(still?0:1150))/(still?200:350));
       document.body.style.setProperty("--intro-ink",inkReveal);
-      if(elapsed>=(still?350:2150))complete();else introFrame=requestAnimationFrame(step);
+      document.body.style.setProperty("--intro-caption",captionReveal);
+      document.body.style.setProperty("--intro-meta",metaReveal);
+      document.body.style.setProperty("--intro-controls",controlsReveal);
+      if(elapsed>=(still?200:1500))complete();else introFrame=requestAnimationFrame(step);
     }
     introFrame=requestAnimationFrame(step);
   }
   document.body.setAttribute('aria-busy','true');
   function done(name){
     if(!pending.delete(name))return;
-    const progress=1-pending.size/6,r=Math.max(.001,14*Math.abs(Math.cos(Math.PI*progress)));
-    screen.setAttribute('aria-valuenow',String(Math.round(progress*100)));
-    moon.setAttribute('d',`M16 2A14 14 0 0 1 16 30A${r} 14 0 0 ${progress<.5?0:1} 16 2Z`);
+    phaseFrom=phaseShown;phaseTarget=1-pending.size/6;phaseStarted=performance.now();
+    screen.setAttribute('aria-valuenow',String(Math.round(phaseTarget*100)));
+    if(!phaseFrame)phaseFrame=requestAnimationFrame(paintPhase);
     if(pending.size||finishing)return;finishing=true;
     // Full moon, then a shared destination with the real lunar dot; lettering last.
-    requestAnimationFrame(()=>setTimeout(reveal,160));
+    requestAnimationFrame(reveal);
   }
   // Project the same NASA albedo map used by the lake onto a small lunar sphere.
   function moonPortrait(img){
@@ -372,7 +394,7 @@ const QUALIA_LOAD = (()=>{
   watchImage('swimmer','assets/venus-head-v1.png');
   const fontsTimeout=setTimeout(()=>done('fonts'),4500);
   Promise.resolve(document.fonts?.ready).then(()=>{clearTimeout(fontsTimeout);done('fonts');},()=>{clearTimeout(fontsTimeout);done('fonts');});
-  return {done,setAnchor(value){anchor=value;},get moonReveal(){return moonReveal;},get inkReveal(){return inkReveal;},get ready(){return ready;}};
+  return {done,setAnchor(value){anchor=value;},get moonReveal(){return moonReveal;},get inkReveal(){return inkReveal;},get captionReveal(){return captionReveal;},get controlsReveal(){return controlsReveal;},get ready(){return ready;}};
 })();
 // One reversible clock for the lake, moon, dimming, typography and controls.
 const PAQ = (() => {
@@ -988,7 +1010,7 @@ uniform vec4 uSolar; // atmospheric solar transmission RGB and elevation in radi
 uniform vec3 uCloudSolar;
 uniform float uPaq;
 uniform float uPaqLift;
-uniform float uIntroMoon, uIntroInk;
+uniform float uIntroMoon, uIntroInk, uIntroCaption, uIntroControls, uIntroCaptionY;
 uniform vec3 uLogoDot;
 uniform vec3 uMoonAnchor;
 uniform vec3 uMoonLight; // signed light direction x, z, illuminated fraction
@@ -1029,12 +1051,12 @@ vec4 wordAt(vec2 pd, float lod){
   if (q.x < 0. || q.y < 0. || q.x > 1. || q.y > 1.) return vec4(0.);
   vec4 ink=textureLod(uWord,q,lod);
   float dotRegion=1.-step(uLogoDot.z*1.185,length(pd-uLogoDot.xy));
-  return ink*(1.-dotRegion*(1.-smoothstep(.08,.72,uLight.x)))*(1.-smoothstep(0.,.5,uPaq))*uIntroInk;
+  return ink*(1.-dotRegion*(1.-smoothstep(.08,.72,uLight.x)))*(1.-smoothstep(0.,.5,uPaq))*mix(uIntroInk,uIntroCaption,step(uIntroCaptionY,pd.y));
 }
 vec4 controlAt(vec2 pd,vec4 box,float slot){
   vec2 q=(pd-box.xy)/box.zw;
   if(q.x<0.||q.y<0.||q.x>1.||q.y>1.) return vec4(0.);
-  return texture(uControls,vec2((q.x+slot)/3.,q.y))*uIntroInk;
+  return texture(uControls,vec2((q.x+slot)/3.,q.y))*uIntroControls;
 }
 vec4 controlsAt(vec2 pd){
   return controlAt(pd,uQuestionBox,0.)*.76*(1.-smoothstep(0.,.4,uPaq));
@@ -1543,7 +1565,7 @@ function updateStarTrails(state) {
 
 /* ---------- sizing ---------- */
 let W = 1, H = 1, dpr = 1, cw = 1, ch = 1, shoreCss = 1, Hw = 1, pW = 256, pH = 64, M = 50, unit = 1;
-let wordBox = [0, 0, 1, 1], wordReady = false, sized = false;
+let wordBox = [0, 0, 1, 1], wordReady = false, sized = false, introCaptionY = 0;
 function resize(){
   // keep the swimmer and its target where they are on screen
   let keep = null;
@@ -1658,6 +1680,7 @@ function drawWord(){
   for (const r of rects){ x0 = Math.min(x0, r.left); y0 = Math.min(y0, r.top); x1 = Math.max(x1, r.right); y1 = Math.max(y1, r.bottom); }
   const taglineWords = [...tagline.querySelectorAll('span')];
   const taglineRects = taglineWords.map(word => word.getBoundingClientRect());
+  introCaptionY=Math.min(...taglineRects.map(r=>r.top))*dpr;
   for (const r of taglineRects) { x0=Math.min(x0,r.left); y0=Math.min(y0,r.top); x1=Math.max(x1,r.right); y1=Math.max(y1,r.bottom); }
   const pad = image ? 2 : fs*.2; x0 -= pad; y0 -= pad; x1 += pad; y1 += pad;
   const k = Math.min(dpr, 1.5);
@@ -2513,6 +2536,9 @@ function render(){
   QUALIA_LOAD.setAnchor(movingMoon.map(v=>v/dpr));
   gl.uniform1f(p.u.uIntroMoon,QUALIA_LOAD.moonReveal);
   gl.uniform1f(p.u.uIntroInk,QUALIA_LOAD.inkReveal);
+  gl.uniform1f(p.u.uIntroCaption,QUALIA_LOAD.captionReveal);
+  gl.uniform1f(p.u.uIntroControls,QUALIA_LOAD.controlsReveal);
+  gl.uniform1f(p.u.uIntroCaptionY,introCaptionY);
   gl.uniform3fv(p.u.uMoonAnchor,movingMoon);
   gl.uniform3fv(p.u.uLogoDot,moonAnchor);
   gl.uniform1f(p.u.uPaq,paqProgress);
