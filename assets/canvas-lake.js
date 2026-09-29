@@ -98,7 +98,9 @@ function startCanvasLake(original) {
     const arc=motion.matches?0:4*travel*(1-travel)*Math.min(H*.055,Math.abs(target[0]-anchor[0])*.28);
     const my=anchor[1]+(target[1]-anchor[1])*travel-arc-PAQ.scrollY*travel+lift;
     const mr=anchor[2]+(target[2]-anchor[2])*travel;
-    const moonVisibility=(1-smooth(.08,.72,day))*(1-PAQ.progress)+PAQ.progress;
+    // Match WebGL: entering PAQ cannot restore a moon already hidden by daylight.
+    const skyMoonVisibility=1-smooth(.72,.90,day);
+    const moonVisibility=(1-smooth(.08,.72,day))*(1-PAQ.progress)+skyMoonVisibility*PAQ.progress;
     drawMoon(mx,my,mr,moonVisibility*QUALIA_LOAD.moonReveal);
     mark.style.setProperty('--dot-alpha',smooth(.08,.72,day));
     // A subdued far ridge picks up sky colour; the real near foliage stays crisp.

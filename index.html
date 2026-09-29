@@ -1374,7 +1374,10 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   vec3 lunarTone=clamp((albedo-vec3(.42))*1.12+vec3(.46),vec3(.04),vec3(.92));
   float lunarShimmer=1.+uScint*.025*sin(uTime*.53);
   vec3 moonSurface=lunarTone*vec3(1.02,1.025,1.04)*(lunarLight*1.3+earthshine)*lunarShimmer;
-  float moonVisibility=mix(1.-smoothstep(.08,.72,uLight.x),1.,smoothstep(0.,1.,uPaq))*uIntroMoon;
+  // PAQ must not resurrect a daylight-hidden moon during the curved handoff.
+  // The night orbit still sets behind the hills; its final daylight allowance is zero.
+  float skyMoonVisibility=1.-smoothstep(.72,.90,uLight.x);
+  float moonVisibility=mix(1.-smoothstep(.08,.72,uLight.x),skyMoonVisibility,smoothstep(0.,1.,uPaq))*uIntroMoon;
   // Dawn air is in front of the moon: the unlit side must not punch a black hole
   // in a bright sky. Earthshine yields to sky radiance while the lit face remains.
   float lunarDayHaze=smoothstep(.015,.28,uLight.x);
