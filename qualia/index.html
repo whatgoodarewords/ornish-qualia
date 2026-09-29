@@ -152,11 +152,11 @@ body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10
 #faq-dialog { inset:0; width:100%; height:100dvh; max-width:none; max-height:none; margin:0; padding:0 max(7vw,calc((100vw - 900px)/2)) calc(var(--safe-bottom) + 64px); background:transparent; color:#eceae4; opacity:var(--paq-text); transition:none; }
 .faq-header,.faq-answers { transform:translateY(var(--paq-text-y)); }
 #faq-dialog::backdrop { backdrop-filter:none; background:transparent; }
-.faq-header { position:relative; display:block; padding:clamp(100px,18vh,170px) 0 64px; background:none; }
+.faq-header { position:relative; display:block; padding:clamp(28px,calc(18vh - 96px),74px) 0 160px; background:none; }
 #faq-heading { font:400 clamp(48px,6vw,74px)/1 Georgia,'Times New Roman',serif; letter-spacing:-.035em; outline:none; }
 .faq-heading-subtitle,.faq-authorship { font:400 clamp(13px,1.6vw,17px)/1.5 "DM Sans",sans-serif; letter-spacing:.015em; color:#c4cdd3; }
 .faq-heading-subtitle { margin-top:15px; }
-#faq-close { position:fixed; top:calc(var(--safe-top) + 18px); right:calc(var(--safe-right) + 22px); width:44px; height:44px; font-size:36px; font-weight:300; }
+#faq-close { position:fixed; z-index:10; top:calc(var(--safe-top) + 4px); right:calc(var(--safe-right) + 22px); width:72px; height:72px; padding:0; touch-action:manipulation; font-size:36px; font-weight:300; }
 .faq-answers { padding:0; }
 .faq-guild-heading { margin:28px 0 16px; font:400 22px/1.4 Georgia,serif; color:#eef0f2; }
 .faq-authorship { margin:8px 0 0; }
@@ -171,7 +171,7 @@ body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10
 .faq-item[open] .faq-sign::after { transform:rotate(0); }
 .faq-answer { padding:0 42px 38px 0; max-width:760px; }
 .faq-item p,.faq-catchphrases { font:400 clamp(18px,2vw,23px)/1.62 Georgia,'Times New Roman',serif; color:#d9dddc; }
-@media(max-width:600px) { #faq-dialog { padding-left:24px; padding-right:24px; } .faq-header { padding-top:116px; padding-bottom:44px; } .faq-item summary { padding:22px 0; gap:16px; } .faq-answer { padding-right:8px; padding-bottom:30px; } .faq-heading-subtitle { max-width:250px; } }
+@media(max-width:600px) { #faq-dialog { padding-left:24px; padding-right:24px; } .faq-header { padding-top:44px; padding-bottom:116px; } .faq-item summary { padding:22px 0; gap:16px; } .faq-answer { padding-right:8px; padding-bottom:30px; } .faq-heading-subtitle { max-width:250px; } }
 body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 .faq-item h3,.faq-item p,.faq-catchphrases,.faq-guild-heading { font-family:var(--reading-face); font-weight:400; font-synthesis:none; }
 .faq-item p,.faq-catchphrases { font-size:clamp(20px,2.1vw,25px); line-height:1.52; }
@@ -182,8 +182,8 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 .faq-item h3 { font-size:clamp(25px,2.8vw,34px); color:#eef0f2; }
 .faq-item p,.faq-catchphrases { font-size:clamp(19px,1.85vw,22px); line-height:1.6; color:#ccd4d5; }
 #faq-close { font-size:0; }
-#faq-close::before,#faq-close::after { content:''; position:absolute; width:24px; height:1px; background:currentColor; left:10px; top:21px; transform:rotate(45deg); }
-#faq-close::after { transform:rotate(-45deg); }
+#faq-close::before,#faq-close::after { content:''; position:absolute; width:24px; height:1px; background:currentColor; left:50%; top:50%; pointer-events:none; transform:translate(-50%,-50%) rotate(45deg); }
+#faq-close::after { transform:translate(-50%,-50%) rotate(-45deg); }
 #faq-close,#faq-close:hover,.paq-title-ink,.faq-heading-subtitle,.faq-authorship { color:#fff; }
 .faq-guild-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 28px; margin:24px 0 6px; padding:0; list-style:none; }
 .faq-guild-list li { margin:0; color:#eef0f2; font:400 20px/1.3 Alegreya,Georgia,serif; }
@@ -193,7 +193,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 </head>
 <body>
 <div id="loading-screen" role="progressbar" aria-label="Loading Qualia" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-  <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#101721" stroke="#cbd7e047" stroke-width=".6"/><path id="loading-moon" fill="#f0f1ed" d="M16 2A14 14 0 0 1 16 30A14 14 0 0 0 16 2Z"/></svg>
+  <svg viewBox="0 0 32 32" aria-hidden="true"><defs><clipPath id="loading-phase"><path id="loading-moon" d="M16 2A14 14 0 0 1 16 30A14 14 0 0 0 16 2Z"/></clipPath><image id="loading-texture" x="2" y="2" width="28" height="28"/></defs><circle cx="16" cy="16" r="14" fill="#101721"/><use href="#loading-texture" opacity=".12"/><g clip-path="url(#loading-phase)"><circle cx="16" cy="16" r="14" fill="#e4e2db"/><use href="#loading-texture"/></g></svg>
 </div>
 <canvas id="c" aria-hidden="true"></canvas>
 <nav class="light-controls" aria-label="Lake lighting">
@@ -235,7 +235,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
   <header class="faq-header"><h2 id="faq-heading" tabindex="-1"><span class="paq-title-ink">PAQ</span><span class="faq-heading-subtitle">Pre-emptively Answered Questions</span></h2><p class="faq-authorship">The following words were written by a human</p></header><button id="faq-close" type="button" aria-label="Close questions" autofocus>×</button>
   <div class="faq-answers">
     <details class="faq-item" open><summary><h3 id="faq-q1">What is this about?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Effing the ineffable. A space to live new culture! It’s somewhere between a research symposium, the best house party you’ve ever been to, and a curated festival in private nature. Something like this hasn’t happened before, so honestly, we’re not quite sure.<br><br>This is more for doing phenomenological research than talking about research, but there will assuredly be talks.<br><br>This is part of a greater phenomenological research month, continuing for the three weeks following the event.<br><br>This is an advanced event. Side effects may include involuntary personal development, struggle, embodiment, coherence, unexpected tenderness, transcendence, and better questions.</p></div></details>
-    <details class="faq-item"><summary><h3 id="faq-q2">So it’s a party. What does that mean?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Qualia is not theoretical, qualia is all that we know. Thus, this is an applied research event.<br><br>It means it’s fun. Dancing. Immersive, playful, curious, reverent, irreverent, in on the joke. We believe fun leads to focus, and focus leads to insight.</p></div></details>
+    <details class="faq-item"><summary><h3 id="faq-q2">So it’s a party. What does that mean?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>Qualia is not theoretical. Qualia is all that we know.<br><br>It means it’s fun. Dancing. Immersive, playful, curious, reverent, irreverent, in on the joke. We believe fun leads to focus, and focus leads to insight.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q9">Is this part of something bigger?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>The party kicks off a month of phenomenological research. Afterwards, there’s an optional three-week residency: more time to follow a question, bring something to life, and live some life! Come for the party, or stay for the month.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q3">Can anyone come?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No. It’s curated for character, via application.</p></div></details>
     <details class="faq-item"><summary><h3 id="faq-q6">I’m sober. Will that be weird?</h3><span class="faq-sign" aria-hidden="true"></span></summary><div class="faq-answer"><p>No, qualia is a hell of a drug. You’ll fit right in.</p></div></details>
@@ -304,10 +304,32 @@ const QUALIA_LOAD = (()=>{
       setTimeout(()=>screen.remove(),700);
     },160));
   }
+  // Project the same NASA albedo map used by the lake onto a small lunar sphere.
+  function moonPortrait(img){
+    if(!img.naturalWidth)return;
+    try {
+      const map=document.createElement('canvas');map.width=512;map.height=256;
+      const mc=map.getContext('2d');mc.drawImage(img,0,0,512,256);
+      const pixels=mc.getImageData(0,0,512,256).data;
+      const globe=document.createElement('canvas');globe.width=128;globe.height=128;
+      const gc=globe.getContext('2d'),out=gc.createImageData(128,128);
+      for(let y=0;y<128;y++)for(let x=0;x<128;x++){
+        const nx=(x+.5-64)/64,ny=(y+.5-64)/64,r2=nx*nx+ny*ny;
+        if(r2>=1)continue;
+        const z=Math.sqrt(1-r2),u=.5+Math.atan2(nx,z)/(2*Math.PI),v=.5+Math.asin(ny)/Math.PI;
+        const from=(Math.min(255,Math.floor(v*256))*512+Math.min(511,Math.floor(u*512)))*4,to=(y*128+x)*4;
+        const light=.40+.60*Math.pow(z,.3);
+        for(let c=0;c<3;c++)out.data[to+c]=Math.min(255,pixels[from+c]*light*1.16);
+        out.data[to+3]=Math.min(255,(1-Math.sqrt(r2))*64*255);
+      }
+      gc.putImageData(out,0,0);
+      document.getElementById('loading-texture').setAttribute('href',globe.toDataURL());
+    } catch (_) { /* Keep the phase indicator usable if an optional texture fails. */ }
+  }
   function watchImage(name,source){
     const img=typeof source==='string'?new Image():source;
     const timeout=setTimeout(finish,6500);
-    function finish(){clearTimeout(timeout);done(name);}
+    function finish(){clearTimeout(timeout);if(name==='moon')moonPortrait(img);done(name);}
     img.addEventListener('load',finish,{once:true});img.addEventListener('error',finish,{once:true});
     if(typeof source==='string')img.src=source;
     if(img.complete)finish();
