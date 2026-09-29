@@ -528,23 +528,23 @@ const QUALIA_LOAD = (()=>{
       }
       moonReveal=ease((elapsed-(still?0:720))/(still?200:180));
       globe.style.opacity=1-moonReveal;
-      // One stage per second after landing; downloads and lunar travel stay quick.
+      // Paint for 1.5 seconds, then continue the one-second cascade.
       inkReveal=ease((elapsed-(still?0:880))/(still?200:180));
-      window.qualiaTrace?.setProgress(still?1:Math.max(0,Math.min(1,(elapsed-880)/1000)));
-      captionReveal=ease((elapsed-(still?0:1880))/(still?200:600));
+      window.qualiaTrace?.setProgress(still?1:Math.max(0,Math.min(1,(elapsed-880)/1500)));
+      captionReveal=ease((elapsed-(still?0:2380))/(still?200:600));
       // Reflections share their source's fade; the water supplies attenuation.
       reflectionInk=inkReveal;
       reflectionCaption=captionReveal;
-      const metaReveal=ease((elapsed-(still?0:2880))/(still?200:600));
-      controlsReveal=ease((elapsed-(still?0:3880))/(still?200:600));
-      const glint=still?0:Math.pow(Math.sin(Math.PI*Math.min(1,Math.max(0,(elapsed-3880)/600))),2);
+      const metaReveal=ease((elapsed-(still?0:3380))/(still?200:600));
+      controlsReveal=ease((elapsed-(still?0:4380))/(still?200:600));
+      const glint=still?0:Math.pow(Math.sin(Math.PI*Math.min(1,Math.max(0,(elapsed-4380)/600))),2);
       document.body.style.setProperty("--question-glint",glint);
       document.body.style.setProperty("--intro-ink",inkReveal);
       document.body.style.setProperty("--intro-caption",captionReveal);
       document.body.style.setProperty("--intro-meta",metaReveal);
       document.body.style.setProperty("--intro-controls",controlsReveal);
       document.body.style.setProperty("--intro-controls-events",controlsReveal>.1?"auto":"none");
-      if(elapsed>=(still?200:4480))complete();else introFrame=requestAnimationFrame(step);
+      if(elapsed>=(still?200:4980))complete();else introFrame=requestAnimationFrame(step);
     }
     introFrame=requestAnimationFrame(step);
   }
