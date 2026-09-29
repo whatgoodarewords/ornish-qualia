@@ -6,7 +6,7 @@
 <script>
 document.documentElement.classList.add('is-loading');
 // Never strand the page if scripting or a third-party font fails to finish.
-window.qualiaLoadEscape=setTimeout(()=>{if(window.qualiaFinishLoading)window.qualiaFinishLoading();else document.documentElement.classList.remove('is-loading');},12000);
+window.qualiaLoadEscape=setTimeout(()=>{if(window.qualiaFinishLoading)window.qualiaFinishLoading();else document.documentElement.classList.remove('is-loading');},18000);
 </script>
 <title>Qualia — a phenomenological research party</title>
 <link rel="icon" type="image/png" href="assets/qualia-q.png">
@@ -22,7 +22,7 @@ window.qualiaLoadEscape=setTimeout(()=>{if(window.qualiaFinishLoading)window.qua
   #loading-screen::before { content:""; position:absolute; inset:0; background:#010308; opacity:var(--loading-veil,1); }
   #loading-screen svg { position:relative; z-index:1; width:30px; height:30px; overflow:visible; filter:drop-shadow(0 0 7px #dcecff18); }
   html:not(.is-loading):not(.is-revealing) #loading-screen { opacity:0; pointer-events:none; }
-  html.nogl .mark { --dot-alpha:1; }
+  html.nogl .mark { --dot-alpha:0; }
   html.is-loading #c,html.is-loading .hero,html.is-loading #faq-open,html.is-loading #brand-ink-toggle { visibility:hidden; }
   @media(prefers-reduced-motion:reduce) { #loading-screen { transition:opacity .15s linear; } }
   body {
@@ -175,6 +175,7 @@ body { --paq-hero:1; --paq-control:1; --paq-dim:0; --paq-text:0; --paq-text-y:10
 .faq-sign::after { transform:rotate(90deg); }
 .faq-item[open] .faq-sign::after { transform:rotate(0); }
 .faq-answer { padding:0 42px 38px 0; max-width:760px; }
+.faq-answer p + p { margin-top:1em; }
 .faq-item p,.faq-catchphrases { font:400 clamp(18px,2vw,23px)/1.62 Georgia,'Times New Roman',serif; color:#d9dddc; }
 @media(max-width:600px) { #faq-dialog { padding-left:24px; padding-right:24px; } .faq-header { padding-top:44px; padding-bottom:116px; } .faq-item summary { padding:22px 0; gap:16px; } .faq-answer { padding-right:8px; padding-bottom:30px; } .faq-heading-subtitle { max-width:250px; } }
 body { --reading-face:"Cormorant Garamond",Georgia,serif; }
@@ -293,10 +294,108 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 <script>
 // Readiness milestones, not a pretend download percentage. Failed optional
 // images settle to their procedural fallback; a completed frame gates reveal.
+// Both renderers consume the same lighting clock and artwork sources.
+const QUALIA_SHORE=.44;
+const QUALIA_ART={moon:'assets/lroc-color-2k.jpg',woodland:'assets/woodland-photo.png'};
+function createQualiaCycle(dimensions){
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const lightPresets = { day:[1,0,0,0,.79,.31], night:[0,0,1,0,.79,.31] };
+// daylight, twilight, stars, warmth, sun x, sun y; y=1 is the water horizon.
+const sunriseKeys = [
+  [0,  0,   0,   1,    0,   .82, 1.32],
+  [7,  .025,.24, .42,  .35,  .82, 1.24],
+  [12, .40, .90, .08,  .75,  .812,1.12],
+  [14, .48, 1,   .035, .85,  .81, 1.04],
+  [22, .64, 1,   0,    1,   .80, .84],
+  [26, .80, 1,   0,    .80, .79, .75],
+  [30, 1,   0,   0,    0,   .79, .67]
+];
+// July 1 near central Portugal (39.5 N, solar declination about +23.1 deg).
+// NOAA spherical solar geometry; screen scaling preserves the local rise angle.
+function julySunX(y) {
+  const lat=39.5*Math.PI/180, dec=23.1*Math.PI/180;
+  const elevation=(1-y)*.60;
+  const azimuth=h=>Math.acos(clamp((Math.sin(dec)-Math.sin(lat)*Math.sin(h))/(Math.cos(lat)*Math.cos(h)),-1,1));
+  return .807-(azimuth(elevation)-azimuth(0))/.60*(dimensions().shore/dimensions().width);
+}
+function sunriseAt(seconds) {
+  const t=clamp(seconds,0,30);
+  let k=0;while(k<sunriseKeys.length-2 && t>sunriseKeys[k+1][0]) k++;
+  const a=sunriseKeys[k],b=sunriseKeys[k+1],duration=b[0]-a[0],p=(t-a[0])/duration;
+  // Monotone cubic interpolation: continuous velocity without colour overshoot.
+  const tangent=(index,channel)=>{
+    if(index===0 || index===sunriseKeys.length-1) return 0;
+    const left=sunriseKeys[index-1],mid=sunriseKeys[index],right=sunriseKeys[index+1];
+    const h0=mid[0]-left[0],h1=right[0]-mid[0];
+    const d0=(mid[channel]-left[channel])/h0,d1=(right[channel]-mid[channel])/h1;
+    if(d0*d1<=0) return 0;
+    const w0=2*h1+h0,w1=h1+2*h0;
+    return (w0+w1)/(w0/d0+w1/d1);
+  };
+  const values=a.slice(1).map((value,i)=>{
+    const m0=tangent(k,i+1)*duration,m1=tangent(k+1,i+1)*duration;
+    return (2*p*p*p-3*p*p+1)*value+(p*p*p-2*p*p+p)*m0+(-2*p*p*p+3*p*p)*b[i+1]+(p*p*p-p*p)*m1;
+  });
+  values[4]=julySunX(values[5]);
+  return values;
+}
+// Sunrise runs at 65% of its previous speed; daylight remains 65% faster.
+const NIGHT_SECONDS=20, DAWN_SECONDS=25/.65, DUSK_SECONDS=7+(30-7)*4, DAY_SECONDS=150/1.65;
+const DAWN_SPEED=DUSK_SECONDS/DAWN_SECONDS;
+const CYCLE_SECONDS=NIGHT_SECONDS+DAWN_SECONDS+DAY_SECONDS+DUSK_SECONDS;
+function dawnTime(seconds) { return seconds<=7 ? seconds : 7+(seconds-7)/4; }
+function cycleAt(seconds) {
+  let t=((seconds%CYCLE_SECONDS)+CYCLE_SECONDS)%CYCLE_SECONDS;
+  if(t<NIGHT_SECONDS) {
+    const values=sunriseAt(0);
+    // Reposition below the horizon while the sun is completely invisible.
+    const dawnX=values[4];
+    values[4]=(1-dawnX)+(2*dawnX-1)*(t/NIGHT_SECONDS);
+    return {mode:'night',values};
+  }
+  t-=NIGHT_SECONDS;
+  if(t<DAWN_SECONDS) return {mode:'sunrise',values:sunriseAt(dawnTime(t*DAWN_SPEED))};
+  t-=DAWN_SECONDS;
+  if(t<DAY_SECONDS) {
+    const p=t/DAY_SECONDS, ease=p*p*(3-2*p);
+    const startX=julySunX(.67);
+    return {mode:'day',values:[1,0,0,0,startX+(1-2*startX)*ease,.67-.58*Math.pow(Math.sin(Math.PI*p),2)]};
+  }
+  t-=DAY_SECONDS;
+  const values=sunriseAt(dawnTime(DUSK_SECONDS-t));
+  values[4]=1-values[4];
+  return {mode:'sunset',values};
+}
+return {cycleAt,lightPresets,NIGHT_SECONDS,DAWN_SECONDS,DAY_SECONDS,DUSK_SECONDS,CYCLE_SECONDS,DAWN_SPEED,dawnTime};
+}
+// End shared lighting clock.
+let qualiaArtworkTop=null;
+function layoutQualiaFooter(mark,footer,H,shoreCss){
+  const image=mark.querySelector('img'),box=mark.getBoundingClientRect();
+  let inkTop=box.top;
+  if(image?.naturalWidth){
+    if(qualiaArtworkTop===null){
+      try {
+        const sample=document.createElement('canvas');sample.width=256;sample.height=Math.max(1,Math.round(256*image.naturalHeight/image.naturalWidth));
+        const c=sample.getContext('2d');c.drawImage(image,0,0,sample.width,sample.height);
+        const data=c.getImageData(0,0,sample.width,sample.height).data;
+        qualiaArtworkTop=0;
+        scan:for(let y=0;y<sample.height;y++)for(let x=0;x<sample.width;x++){
+          const i=(y*sample.width+x)*4;
+          if(data[i+3]>40&&Math.max(data[i],data[i+1],data[i+2])>90){qualiaArtworkTop=y/sample.height;break scan;}
+        }
+      }catch(_){qualiaArtworkTop=0;}
+    }
+    const r=image.getBoundingClientRect();inkTop=Math.max(box.top,r.top+r.height*qualiaArtworkTop);
+  }
+  const reflectionBottom=2*shoreCss-inkTop;
+  footer.style.setProperty('--footer-gap',Math.max(0,(H-reflectionBottom-footer.getBoundingClientRect().height)/2)+'px');
+}
+
 const QUALIA_LOAD = (()=>{
   const screen=document.getElementById('loading-screen'),moon=document.getElementById('loading-moon');
   const pending=new Set(['graphics','fonts','wordmark','moon','woodland','swimmer']);
-  let ready=false,finishing=false,moonReveal=0,inkReveal=0,captionReveal=0,controlsReveal=0,anchor=null,introFrame=0;
+  let ready=false,finishing=false,moonReveal=0,inkReveal=0,captionReveal=0,reflectionInk=0,reflectionCaption=0,portrait=null,controlsReveal=0,anchor=null,introFrame=0;
   let phaseFrame=0,phaseShown=0,phaseFrom=0,phaseTarget=0,phaseStarted=0;
   const globe=screen.querySelector("svg"),root=document.documentElement;
   let lunarFraction=1,lunarWaxing=true;
@@ -305,7 +404,7 @@ const QUALIA_LOAD = (()=>{
   moon.setAttribute('transform',lunarWaxing?'':'translate(32 0) scale(-1 1)');
   for(const part of ["ink","caption","meta","controls"])document.body.style.setProperty(`--intro-${part}`,0);
   function complete(){
-    if(ready)return;ready=true;moonReveal=inkReveal=captionReveal=controlsReveal=1;
+    if(ready)return;ready=true;moonReveal=inkReveal=captionReveal=reflectionInk=reflectionCaption=controlsReveal=1;
     cancelAnimationFrame(introFrame);cancelAnimationFrame(phaseFrame);clearTimeout(window.qualiaLoadEscape);
     for(const part of ["ink","caption","meta","controls"])document.body.style.setProperty(`--intro-${part}`,1);
     root.classList.remove("is-loading","is-revealing");
@@ -327,7 +426,7 @@ const QUALIA_LOAD = (()=>{
   function reveal(){
     if(ready)return;
     root.classList.add("is-revealing");root.classList.remove("is-loading");
-    const still=matchMedia("(prefers-reduced-motion: reduce)").matches||root.classList.contains("nogl");
+    const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
     const began=performance.now();
     function step(now){
       if(ready)return;
@@ -344,13 +443,15 @@ const QUALIA_LOAD = (()=>{
       // One stage per second after landing; downloads and lunar travel stay quick.
       inkReveal=ease((elapsed-(still?0:880))/(still?200:600));
       captionReveal=ease((elapsed-(still?0:1880))/(still?200:600));
-      const metaReveal=ease((elapsed-(still?0:2880))/(still?200:600));
-      controlsReveal=ease((elapsed-(still?0:3880))/(still?200:600));
+      reflectionCaption=ease((elapsed-(still?0:2880))/(still?200:600));
+      reflectionInk=ease((elapsed-(still?0:3880))/(still?200:600));
+      const metaReveal=ease((elapsed-(still?0:4880))/(still?200:600));
+      controlsReveal=ease((elapsed-(still?0:5880))/(still?200:600));
       document.body.style.setProperty("--intro-ink",inkReveal);
       document.body.style.setProperty("--intro-caption",captionReveal);
       document.body.style.setProperty("--intro-meta",metaReveal);
       document.body.style.setProperty("--intro-controls",controlsReveal);
-      if(elapsed>=(still?200:4480))complete();else introFrame=requestAnimationFrame(step);
+      if(elapsed>=(still?200:6480))complete();else introFrame=requestAnimationFrame(step);
     }
     introFrame=requestAnimationFrame(step);
   }
@@ -383,7 +484,7 @@ const QUALIA_LOAD = (()=>{
         for(let c=0;c<3;c++)out.data[to+c]=Math.min(255,pixels[from+c]*light*1.16);
         out.data[to+3]=Math.min(255,(1-Math.sqrt(r2))*64*255);
       }
-      gc.putImageData(out,0,0);
+      gc.putImageData(out,0,0);portrait=globe;
       document.getElementById('loading-texture').setAttribute('href',globe.toDataURL());
     } catch (_) { /* Keep the phase indicator usable if an optional texture fails. */ }
   }
@@ -396,12 +497,12 @@ const QUALIA_LOAD = (()=>{
     if(img.complete)finish();
   }
   watchImage('wordmark',document.querySelector('.mark img'));
-  watchImage('moon','assets/lroc-color-2k.jpg');
-  watchImage('woodland','assets/woodland-photo.png');
+  watchImage('moon',QUALIA_ART.moon);
+  watchImage('woodland',QUALIA_ART.woodland);
   watchImage('swimmer','assets/venus-head-v1.png');
   const fontsTimeout=setTimeout(()=>done('fonts'),4500);
   Promise.resolve(document.fonts?.ready).then(()=>{clearTimeout(fontsTimeout);done('fonts');},()=>{clearTimeout(fontsTimeout);done('fonts');});
-  return {done,setAnchor(value){anchor=value;},get moonReveal(){return moonReveal;},get inkReveal(){return inkReveal;},get captionReveal(){return captionReveal;},get controlsReveal(){return controlsReveal;},get ready(){return ready;}};
+  return {done,setAnchor(value){anchor=value;},get moonReveal(){return moonReveal;},get inkReveal(){return inkReveal;},get captionReveal(){return captionReveal;},get controlsReveal(){return controlsReveal;},get reflectionInk(){return reflectionInk;},get reflectionCaption(){return reflectionCaption;},get portrait(){return portrait;},get ready(){return ready;}};
 })();
 // One reversible clock for the lake, moon, dimming, typography and controls.
 const PAQ = (() => {
@@ -465,6 +566,7 @@ document.getElementById('brand-ink-toggle').addEventListener('click', e => {
 });
 </script>
 <script src="assets/wordmarks.js"></script>
+<script src="assets/canvas-lake.js"></script>
 <script>
 (() => {
 'use strict';
@@ -472,7 +574,7 @@ document.getElementById('brand-ink-toggle').addEventListener('click', e => {
 const AUTO = false;   // test copies set this to true: the swimmer steers itself and ignores the pointer
 
 /* ---------- scene constants ---------- */
-const SHORE = 0.44;   // shoreline as a fraction of viewport height
+const SHORE = QUALIA_SHORE;   // shoreline as a fraction of viewport height
 const V0 = 0.18;      // perspective offset: the far shore sits at a finite distance
 const TILT = 0.8;     // foreshortening of the water plane at the bottom edge
 const NSP = 12;       // water disturbance splats per frame
@@ -487,7 +589,7 @@ let reduced = RM.matches;
 if (RM.addEventListener) RM.addEventListener('change', e => { reduced = e.matches; });
 
 const gl = cvs.getContext('webgl2', { antialias: false, alpha: false, depth: false, stencil: false, premultipliedAlpha: false, powerPreference: 'high-performance' });
-if (!gl) { document.documentElement.classList.add('nogl'); QUALIA_LOAD.done('graphics'); return; }
+if (!gl) { startCanvasLake(cvs); return; }
 
 /* ---------- shaders ---------- */
 const COMMON = `
@@ -1494,7 +1596,7 @@ function initGL(){
     gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
   };
-  moonImage.src='assets/lroc-color-2k.jpg';
+  moonImage.src=QUALIA_ART.moon;
   woodlandReady=false;
   woodlandTex=tex(1,1,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,gl.LINEAR,new Uint8Array(4));
   const woodlandTarget=woodlandTex,woodlandImage=new Image();
@@ -1506,7 +1608,7 @@ function initGL(){
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
     woodlandReady=true;if(T.sky)renderSky();
   };
-  woodlandImage.src='assets/woodland-photo.png';
+  woodlandImage.src=QUALIA_ART.woodland;
 }
 
 /* ---------- original star field, slowly rotated with a fading exposure ---------- */
@@ -1807,28 +1909,7 @@ const HAND_K = [[0,.54,.09,-.13],[.13,.50,.27,-.16],[.26,.34,.42,-.25],[.37,.16,
 const FOOT_K = [[0,-1.41,.085,-.27],[.36,-1.41,.085,-.27],[.49,-.99,.19,-.18],[.57,-1.08,.36,-.28],[.66,-1.33,.24,-.30],[.74,-1.41,.085,-.27]];
 let openingComplete = false;
 const footer = document.querySelector('.foot');
-let artworkTop=null;
-function layoutFooter(){
-  const image=mark.querySelector('img'),box=mark.getBoundingClientRect();
-  let inkTop=box.top;
-  if(image?.naturalWidth){
-    if(artworkTop===null){
-      try {
-        const sample=document.createElement('canvas');sample.width=256;sample.height=Math.max(1,Math.round(256*image.naturalHeight/image.naturalWidth));
-        const c=sample.getContext('2d');c.drawImage(image,0,0,sample.width,sample.height);
-        const data=c.getImageData(0,0,sample.width,sample.height).data;
-        artworkTop=0;
-        scan:for(let y=0;y<sample.height;y++)for(let x=0;x<sample.width;x++){
-          const i=(y*sample.width+x)*4;
-          if(data[i+3]>40&&Math.max(data[i],data[i+1],data[i+2])>90){artworkTop=y/sample.height;break scan;}
-        }
-      }catch(_){artworkTop=0;}
-    }
-    const r=image.getBoundingClientRect();inkTop=Math.max(box.top,r.top+r.height*artworkTop);
-  }
-  const reflectionBottom=2*shoreCss-inkTop;
-  footer.style.setProperty('--footer-gap',Math.max(0,(H-reflectionBottom-footer.getBoundingClientRect().height)/2)+'px');
-}
+function layoutFooter(){layoutQualiaFooter(mark,footer,H,shoreCss);}
 let swimMaxY=Infinity, swimMinZ=0, swimFooterTop=Infinity;
 const SW = { X: 0, Z: 0, th: 0, turnV: 0, phase: .62, cadence: 1/2.7, burstLeft: 0, effort: 0, tread: 0, tph: 0, go: true, tx: 0, tz: 0, v: 0, arrivedAt: 0 };
 function sprintSwimmer(){
@@ -2394,73 +2475,7 @@ addEventListener('pointerdown', e => {
 for(const type of ['pointerup','pointercancel']) addEventListener(type,e=>activeTouches.delete(e.pointerId),{passive:true});
 addEventListener('blur',()=>activeTouches.clear());
 /* ---------- a continuous night, slow dawn, daylight and dusk cycle ---------- */
-const lightPresets = { day:[1,0,0,0,.79,.31], night:[0,0,1,0,.79,.31] };
-// daylight, twilight, stars, warmth, sun x, sun y; y=1 is the water horizon.
-const sunriseKeys = [
-  [0,  0,   0,   1,    0,   .82, 1.32],
-  [7,  .025,.24, .42,  .35,  .82, 1.24],
-  [12, .40, .90, .08,  .75,  .812,1.12],
-  [14, .48, 1,   .035, .85,  .81, 1.04],
-  [22, .64, 1,   0,    1,   .80, .84],
-  [26, .80, 1,   0,    .80, .79, .75],
-  [30, 1,   0,   0,    0,   .79, .67]
-];
-// July 1 near central Portugal (39.5 N, solar declination about +23.1 deg).
-// NOAA spherical solar geometry; screen scaling preserves the local rise angle.
-function julySunX(y) {
-  const lat=39.5*Math.PI/180, dec=23.1*Math.PI/180;
-  const elevation=(1-y)*.60;
-  const azimuth=h=>Math.acos(clamp((Math.sin(dec)-Math.sin(lat)*Math.sin(h))/(Math.cos(lat)*Math.cos(h)),-1,1));
-  return .807-(azimuth(elevation)-azimuth(0))/.60*(shoreCss/W);
-}
-function sunriseAt(seconds) {
-  const t=clamp(seconds,0,30);
-  let k=0;while(k<sunriseKeys.length-2 && t>sunriseKeys[k+1][0]) k++;
-  const a=sunriseKeys[k],b=sunriseKeys[k+1],duration=b[0]-a[0],p=(t-a[0])/duration;
-  // Monotone cubic interpolation: continuous velocity without colour overshoot.
-  const tangent=(index,channel)=>{
-    if(index===0 || index===sunriseKeys.length-1) return 0;
-    const left=sunriseKeys[index-1],mid=sunriseKeys[index],right=sunriseKeys[index+1];
-    const h0=mid[0]-left[0],h1=right[0]-mid[0];
-    const d0=(mid[channel]-left[channel])/h0,d1=(right[channel]-mid[channel])/h1;
-    if(d0*d1<=0) return 0;
-    const w0=2*h1+h0,w1=h1+2*h0;
-    return (w0+w1)/(w0/d0+w1/d1);
-  };
-  const values=a.slice(1).map((value,i)=>{
-    const m0=tangent(k,i+1)*duration,m1=tangent(k+1,i+1)*duration;
-    return (2*p*p*p-3*p*p+1)*value+(p*p*p-2*p*p+p)*m0+(-2*p*p*p+3*p*p)*b[i+1]+(p*p*p-p*p)*m1;
-  });
-  values[4]=julySunX(values[5]);
-  return values;
-}
-// Sunrise runs at 65% of its previous speed; daylight remains 65% faster.
-const NIGHT_SECONDS=20, DAWN_SECONDS=25/.65, DUSK_SECONDS=7+(30-7)*4, DAY_SECONDS=150/1.65;
-const DAWN_SPEED=DUSK_SECONDS/DAWN_SECONDS;
-const CYCLE_SECONDS=NIGHT_SECONDS+DAWN_SECONDS+DAY_SECONDS+DUSK_SECONDS;
-function dawnTime(seconds) { return seconds<=7 ? seconds : 7+(seconds-7)/4; }
-function cycleAt(seconds) {
-  let t=((seconds%CYCLE_SECONDS)+CYCLE_SECONDS)%CYCLE_SECONDS;
-  if(t<NIGHT_SECONDS) {
-    const values=sunriseAt(0);
-    // Reposition below the horizon while the sun is completely invisible.
-    const dawnX=values[4];
-    values[4]=(1-dawnX)+(2*dawnX-1)*(t/NIGHT_SECONDS);
-    return {mode:'night',values};
-  }
-  t-=NIGHT_SECONDS;
-  if(t<DAWN_SECONDS) return {mode:'sunrise',values:sunriseAt(dawnTime(t*DAWN_SPEED))};
-  t-=DAWN_SECONDS;
-  if(t<DAY_SECONDS) {
-    const p=t/DAY_SECONDS, ease=p*p*(3-2*p);
-    const startX=julySunX(.67);
-    return {mode:'day',values:[1,0,0,0,startX+(1-2*startX)*ease,.67-.58*Math.pow(Math.sin(Math.PI*p),2)]};
-  }
-  t-=DAY_SECONDS;
-  const values=sunriseAt(dawnTime(DUSK_SECONDS-t));
-  values[4]=1-values[4];
-  return {mode:'sunset',values};
-}
+const {cycleAt,lightPresets,CYCLE_SECONDS}=createQualiaCycle(()=>({width:W,shore:shoreCss}));
 const LIGHT = { mode:'night', values:cycleAt(0).values, cycling:!reduced, elapsed:0, dawnQueued:false, dawnRelease:0 };
 let starClock=0;
 let controlMode=LIGHT.mode!=='night'?1:0;
@@ -2594,8 +2609,8 @@ function render(){
   const movingMoon=currentMoonPosition();
   QUALIA_LOAD.setAnchor(movingMoon.map(v=>v/dpr));
   gl.uniform1f(p.u.uIntroMoon,QUALIA_LOAD.moonReveal);
-  gl.uniform1f(p.u.uIntroInk,QUALIA_LOAD.inkReveal);
-  gl.uniform1f(p.u.uIntroCaption,QUALIA_LOAD.captionReveal);
+  gl.uniform1f(p.u.uIntroInk,QUALIA_LOAD.reflectionInk);
+  gl.uniform1f(p.u.uIntroCaption,QUALIA_LOAD.reflectionCaption);
   gl.uniform1f(p.u.uIntroControls,QUALIA_LOAD.controlsReveal);
   gl.uniform1f(p.u.uIntroCaptionY,introCaptionY);
   gl.uniform3fv(p.u.uMoonAnchor,movingMoon);
@@ -2668,7 +2683,7 @@ new ResizeObserver(() => { if(sized){layoutFooter();refreshSwimBounds();} }).obs
 document.addEventListener('qualia:wordmark-change', () => { if (sized && !gl.isContextLost()) drawWord(); });
 function boot(){
   try { initGL(); resize(); start(); }
-  catch (err) { console.error(err); document.documentElement.classList.add('nogl'); stop(); QUALIA_LOAD.done('graphics'); }
+  catch (err) { console.error(err); stop(); startCanvasLake(cvs); }
 }
 boot();
 })();
