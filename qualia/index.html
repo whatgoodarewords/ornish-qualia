@@ -2164,12 +2164,12 @@ function updateSwimmer(dt){
   if(SW.Z<swimMinZ) { SW.Z=swimMinZ; SW.v=0; }
 }
 function openingSwimEffort(){
-  const startY=shoreCss+Hw*.16, endY=project(SW.tx,SW.tz,0)[1];
+  const startY=shoreCss+Hw*.12, endY=project(SW.tx,SW.tz,0)[1];
   const progress=clamp((project(SW.X,SW.Z,0)[1]-startY)/Math.max(1,endY-startY),0,1);
   const ease=clamp((progress-.52)/(2/3-.52),0,1);
   return .5*(1-ease*ease*(3-2*ease));
 }
-// A deliberate opening route: emerge at the distant centre, then settle above the caption.
+// Already in the distant water during the lettering, then swim toward the foreground.
 function targetOpeningSwim(){
   const captionTop = swimFooterTop;
   const gap = clamp(M*.8 + 14, 74, 102);
@@ -2177,13 +2177,13 @@ function targetOpeningSwim(){
 }
 function startOpeningSwim(){
   openingComplete=false;autoOn=true;
-  [SW.X, SW.Z] = worldFromScreen(W*.5, shoreCss+Hw*.16);
+  [SW.X, SW.Z] = worldFromScreen(W*.5, shoreCss+Hw*.12);
   SW.v=0;SW.turnV=0;SW.burstLeft=0;SW.effort=0;
   if (reduced){
     targetOpeningSwim();SW.X=SW.tx;SW.Z=SW.tz;
     SW.go=false;SW.tread=1;SW.th=-Math.PI/2;openingComplete=true;autoOn=false;
   } else {
-    targetOpeningSwim();SW.go=true;SW.tread=0;
+    targetOpeningSwim();SW.go=true;SW.tread=QUALIA_LOAD.swimReady?0:1;
     SW.th=Math.atan2(SW.tz-SW.Z,SW.tx-SW.X);
   }
 }
@@ -2693,7 +2693,11 @@ let raf = 0, last = 0, simT = 0, ambT = 0, frameN = 0, waveAcc = 0;
 function simStep(dt){
   frameN++; simT += dt;
   if (!reduced) ambT += dt;
-  if(paqT===0&&QUALIA_LOAD.swimReady) {updateSwimmer(dt); updateDrops(dt); swimmerFrame(dt);}
+  if(paqT===0) {
+    if(QUALIA_LOAD.swimReady) updateSwimmer(dt);
+    else SW.tph+=dt*(reduced?.5:1); // Gentle treading at the distant starting point.
+    updateDrops(dt); swimmerFrame(dt);
+  }
   meteorStep(dt);
   if (!SIM) return;
   let p = P.vel; gl.useProgram(p.p); drawTo(T.velB);
