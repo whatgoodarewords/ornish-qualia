@@ -37,6 +37,20 @@ const chats = [
     { id: 'r5', sender: 'Rui', text: 'I can get there by eight.', time: '17:50' }
   ], links: [], media: null }
 ];
+const CONTACTS = [
+  { id: 'contact-ines', name: 'Inês', initials: 'I' },
+  { id: 'contact-sofia', name: 'Sofia', initials: 'S' },
+  { id: 'contact-tomas', name: 'Tomás', initials: 'T' }
+];
+const ATTACHMENTS = [
+  { id: 'dinner', name: 'Friday dinner.txt', summary: 'Dinner plan · Friday, eight o’clock', body: 'Friday dinner\n\nMeet at eight. A table for six by the window.\nAna: table reservation\nYou: bring wine\nRui: arriving after work\n\nA synthetic note for this device-local demo.' },
+  { id: 'walk', name: 'Saturday walk.txt', summary: 'Coast walk · Saturday, ten o’clock', body: 'Saturday walk\n\nMeet at the little station at ten.\nFollow the coast path, then stop for coffee.\nBring a layer, water and something for a picnic.\n\nA synthetic note for this device-local demo.' },
+  { id: 'recipe', name: 'Sofia’s lemon cake.txt', summary: 'Lemon cake · a recipe to keep', body: 'Lemon cake\n\n200 g flour · 150 g sugar · 100 g butter\n2 eggs · 1 lemon · 1 tsp baking powder\n\nCream butter and sugar. Beat in eggs and lemon zest.\nFold in flour and baking powder. Bake at 175°C for about 30 minutes.\n\nA sample recipe note for this device-local demo.' }
+];
+function chatCatalog(ids = state.customChats) {
+  return [...chats, ...CONTACTS.filter(contact => ids.includes(contact.id)).map(contact => ({ ...contact, subtitle: '', group: false, members: ['You',contact.name], messages: [], links: [], media: null, preview: 'Start a conversation', time: '' }))];
+}
+function rawMessages(chat, snapshot = state) { return [...chat.messages, ...(snapshot.messages[chat.id] || [])]; }
 const $ = (id) => document.getElementById(id);
 const app = $('app');
 const dialog = $('dialog');
@@ -50,10 +64,11 @@ let memoryTab = 'saved';
 let currentId = 'friday';
 let selectedMessageId = null;
 let focusedMessageId = null;
+let deletedForUndo = null;
 let state = loadState();
 
 function defaultState() {
-  return { theme: 'light', texture: 'richer', drafts: {}, replies: {}, messages: {}, saved: ['f4', 'f5', 'w4'], read: [] };
+  return { mode: 'simple', customChats: [], order: chats.map(chat => chat.id), pinned: [], muted: [], edits: {}, deleted: [], reactions: {}, theme: 'light', texture: 'richer', drafts: {}, replies: {}, messages: {}, saved: ['f4', 'f5', 'w4'], read: [] };
 }
 function loadState() {
   const fallback = defaultState();
@@ -62,17 +77,31 @@ function loadState() {
     if (!raw || typeof raw !== 'object') return fallback;
     fallback.theme = raw.theme === 'dark' ? 'dark' : 'light';
     fallback.texture = raw.texture === 'original' ? 'original' : 'richer';
-    for (const chat of chats) {
+    fallback.mode = raw.mode === 'full' ? 'full' : 'simple';
+    if (Array.isArray(raw.customChats)) fallback.customChats = CONTACTS.filter(contact => raw.customChats.includes(contact.id)).map(contact => contact.id);
+    const catalog = chatCatalog(fallback.customChats);
+    const chatIds = catalog.map(chat => chat.id);
+    fallback.order = [...new Set([...(Array.isArray(raw.order) ? raw.order.filter(id => chatIds.includes(id)) : []),...chatIds])];
+    for (const preference of ['pinned','muted']) if (Array.isArray(raw[preference])) fallback[preference] = [...new Set(raw[preference].filter(id => chatIds.includes(id)))];
+    const retainedIds = new Set(catalog.flatMap(chat => chat.messages.map(message => message.id)));
+    for (const chat of catalog) {
       const reply = cleanQuote(raw.replies?.[chat.id]);
       if (reply) fallback.replies[chat.id] = reply;
       if (typeof raw.drafts?.[chat.id] === 'string') fallback.drafts[chat.id] = raw.drafts[chat.id].slice(0, MAX_TEXT);
       if (Array.isArray(raw.messages?.[chat.id])) {
-        fallback.messages[chat.id] = raw.messages[chat.id].filter(m => m && typeof m.id === 'string' && m.id.startsWith('local-') && typeof m.text === 'string' && m.text.trim() && typeof m.time === 'string').slice(-MAX_LOCAL_MESSAGES).map(m => ({ id: m.id.slice(0,100), sender: 'You', text: m.text.slice(0,MAX_TEXT), time: m.time.slice(0,10), mine: true, local: true, attachment: m.attachment === true, quote: cleanQuote(m.quote) }));
+        fallback.messages[chat.id] = raw.messages[chat.id].filter(m => m && typeof m.id === 'string' && m.id.length <= 100 && m.id.startsWith('local-') && typeof m.text === 'string' && m.text.trim() && typeof m.time === 'string').slice(-MAX_LOCAL_MESSAGES).filter(m => { if (retainedIds.has(m.id)) return false; retainedIds.add(m.id); return true; }).map(m => ({ id: m.id.slice(0,100), sender: 'You', text: m.text.slice(0,MAX_TEXT), time: m.time.slice(0,10), mine: true, local: true, attachment: m.attachment === true, quote: cleanQuote(m.quote), attachmentId: ATTACHMENTS.some(item => item.id === m.attachmentId) ? m.attachmentId : null }));
       }
     }
-    const knownIds = new Set(chats.flatMap(c => [...c.messages, ...(fallback.messages[c.id] || [])].map(m => m.id)));
-    if (Array.isArray(raw.saved)) fallback.saved = [...new Set(raw.saved.filter(id => knownIds.has(id)))];
-    if (Array.isArray(raw.read)) fallback.read = raw.read.filter(id => chats.some(c => c.id === id));
+    const known = catalog.flatMap(chat => rawMessages(chat,fallback));
+    const knownIds = new Set(known.map(message => message.id));
+    const ownIds = new Set(known.filter(message => message.mine).map(message => message.id));
+    for (const id of ownIds) {
+      if (typeof raw.edits?.[id] === 'string' && raw.edits[id].trim()) fallback.edits[id] = raw.edits[id].trim().slice(0,MAX_TEXT);
+    }
+    if (Array.isArray(raw.deleted)) fallback.deleted = [...new Set(raw.deleted.filter(id => ownIds.has(id)))];
+    for (const id of knownIds) if (raw.reactions?.[id] === true) fallback.reactions[id] = true;
+    if (Array.isArray(raw.saved)) fallback.saved = [...new Set(raw.saved.filter(id => knownIds.has(id) && !fallback.deleted.includes(id)))];
+    if (Array.isArray(raw.read)) fallback.read = [...new Set(raw.read.filter(id => chatIds.includes(id)))];
   } catch (_) { storageAvailable = false; }
   return fallback;
 }
@@ -102,8 +131,23 @@ function icon(name) {
   svg.append(use);
   return svg;
 }
-function currentChat() { return chats.find(c => c.id === currentId); }
-function allMessages(chat = currentChat()) { return [...chat.messages, ...(state.messages[chat.id] || [])]; }
+function currentChat() { return chatCatalog().find(chat => chat.id === currentId); }
+function chatDay() { return ['friday','ana'].includes(currentId) || currentId.startsWith('contact-') ? 'Today' : 'Thursday'; }
+function resolveQuote(quote) {
+  if (!quote) return null;
+  if (state.deleted.includes(quote.id)) return { ...quote, text: 'Message deleted on this device' };
+  return state.edits[quote.id] ? { ...quote, text: state.edits[quote.id] } : quote;
+}
+function allMessages(chat = currentChat()) {
+  return rawMessages(chat).filter(message => !state.deleted.includes(message.id)).map(message => ({ ...message, text: state.edits[message.id] || message.text, edited: !!state.edits[message.id], delivered: message.delivered && !state.edits[message.id], quote: resolveQuote(message.quote) }));
+}
+function pruneActions() {
+  const known = new Set(chatCatalog().flatMap(chat => rawMessages(chat).map(message => message.id)));
+  state.saved = state.saved.filter(id => known.has(id) && !state.deleted.includes(id));
+  state.deleted = state.deleted.filter(id => known.has(id));
+  for (const field of ['edits','reactions']) for (const id of Object.keys(state[field])) if (!known.has(id)) delete state[field][id];
+}
+
 function announce(text) {
   clearTimeout(statusTimer);
   $('status').textContent = text;
@@ -124,10 +168,13 @@ function renderChatList() {
   const query = $('chat-search').value.trim().toLocaleLowerCase();
   const list = $('chat-list');
   list.replaceChildren();
-  for (const chat of chats) {
+  const catalog = chatCatalog().sort((a,b) => Number(state.pinned.includes(b.id)) - Number(state.pinned.includes(a.id)) || state.order.indexOf(a.id) - state.order.indexOf(b.id));
+  for (const chat of catalog) {
     const messages = allMessages(chat);
     if (query && ![chat.name, ...messages.map(m => m.text)].join(' ').toLocaleLowerCase().includes(query)) continue;
-    const local = state.messages[chat.id]?.at(-1);
+    const latest = messages.at(-1);
+    const changed = rawMessages(chat).some(message => state.edits[message.id] || state.deleted.includes(message.id));
+    const local = latest?.local ? latest : null;
     const button = el('button', 'chat-row');
     button.type = 'button';
     button.setAttribute('aria-current', String(currentId === chat.id));
@@ -136,11 +183,12 @@ function renderChatList() {
     avatar.setAttribute('aria-hidden', 'true');
     const details = el('span', 'chat-details');
     const line = el('span', 'chat-line');
-    line.append(el('span', 'chat-name', chat.name), el('span', 'chat-time', local?.time || chat.time));
+    line.append(el('span', 'chat-name', chat.name), el('span', 'chat-time', local?.time || (changed ? latest?.time || '' : chat.time)));
+    if (state.pinned.includes(chat.id)) { const mark = icon('bookmark'); mark.classList.add('chat-pin'); mark.setAttribute('aria-label','Pinned'); mark.removeAttribute('aria-hidden'); line.append(mark); }
     const preview = el('span', 'chat-preview');
     const draft = state.drafts[chat.id];
-    preview.append(el('span', 'preview-text', draft?.trim() ? 'Draft: ' + draft.trim() : local ? 'Me: ' + local.text : chat.preview));
-    if (chat.unread && !state.read.includes(chat.id)) {
+    preview.append(el('span', 'preview-text', draft?.trim() ? 'Draft: ' + draft.trim() : local ? 'Me: ' + local.text : changed ? (latest ? (latest.mine ? 'Me: ' : '') + latest.text : 'No messages yet') : chat.preview));
+    if (chat.unread && !state.read.includes(chat.id) && !state.muted.includes(chat.id)) {
       const dot = el('span', 'unread-dot');
       dot.setAttribute('aria-label', 'Unread');
       preview.append(dot);
@@ -179,9 +227,10 @@ function renderConversation() {
 function renderMessages(scrollToEnd = false) {
   const container = $('messages');
   const oldTop = container.scrollTop;
-  container.replaceChildren(el('div','day-label', ['friday','ana'].includes(currentId) ? 'Today' : 'Thursday'));
+  container.replaceChildren(el('div','day-label', chatDay()));
   const messages = allMessages();
   if (!messages.some(message => message.id === focusedMessageId)) focusedMessageId = messages[0]?.id || null;
+  if (!messages.length) container.append(el('p','conversation-empty','A little space for your words. Messages here stay on this device.'));
   let previous;
   for (const message of messages) {
     const continuation = previous && previous.sender === message.sender;
@@ -228,7 +277,19 @@ function renderMessages(scrollToEnd = false) {
     wrap.append(bubble,action);
     row.append(wrap);
     if (message.delivered) row.append(el('div','delivery','Delivered'));
-    if (message.local) row.append(el('div','delivery','On this device'));
+    if (message.edited) row.append(el('div','delivery','Edited on this device'));
+    else if (message.local) row.append(el('div','delivery','On this device'));
+    if (state.reactions[message.id]) {
+      const reaction = el('button','reaction-marker');
+      reaction.type = 'button'; reaction.title = 'Your reaction'; reaction.setAttribute('aria-label','Your heart reaction'); reaction.setAttribute('aria-pressed','true');
+      reaction.append(icon('i-heart'),el('span','','1'));
+      reaction.addEventListener('click', () => { if (state.mode === 'full') toggleReaction(message.id); else announce('Switch to Full demo to change reactions'); });
+      row.append(reaction);
+    }
+    if (message.attachmentId) {
+      const open = el('button','attachment-open','Open attachment'); open.type = 'button';
+      open.addEventListener('click', () => showAttachmentContent(message.attachmentId)); row.append(open);
+    }
     container.append(row);
     previous = message;
   }
@@ -281,7 +342,7 @@ function clearMessageSelection(restoreFocus = false) {
   if (previousId) $('selection-status').textContent = 'Message selection cleared';
 }
 function renderReplyDraft() {
-  const quote = state.replies[currentId];
+  const quote = resolveQuote(state.replies[currentId]);
   $('reply-draft').hidden = !quote;
   $('reply-author').textContent = quote ? 'Replying to ' + quote.sender : '';
   $('reply-excerpt').textContent = quote?.text || '';
@@ -320,14 +381,14 @@ function updateComposer() {
   $('send-button').hidden = !hasText;
   $('mic-button').hidden = hasText;
 }
-function addLocalMessage(text, attachment = false, quote = null) {
+function addLocalMessage(text, attachment = false, quote = null, attachmentId = null) {
   clearMessageSelection();
   const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: false });
   const random = globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
-  const message = { id: 'local-' + random, sender: 'You', text: text.slice(0,MAX_TEXT), time, mine: true, local: true, attachment, quote: cleanQuote(quote) };
+  const message = { id: 'local-' + random, sender: 'You', text: text.slice(0,MAX_TEXT), time, mine: true, local: true, attachment, quote: cleanQuote(quote), attachmentId };
   state.messages[currentId] = [...(state.messages[currentId] || []),message].slice(-MAX_LOCAL_MESSAGES);
-  const known = new Set(chats.flatMap(c => allMessages(c).map(m => m.id)));
-  state.saved = state.saved.filter(id => known.has(id));
+  pruneActions();
+  if (state.mode === 'full') state.order = [currentId,...state.order.filter(id => id !== currentId)];
   persist();
   renderMessages(true);
   renderChatList();
@@ -362,7 +423,7 @@ function renderMemory() {
     for (const message of saved) {
       const item = el('button','saved-item');
       item.type = 'button';
-      item.append(el('span','saved-title',message.id === 'f5' ? 'Friday, 8 pm' : message.text),el('span','saved-meta',message.sender + '  ·  ' + (message.local ? 'On this device' : ['friday','ana'].includes(currentId) ? 'Today' : 'Thursday') + ', ' + message.time));
+      item.append(el('span','saved-title',message.id === 'f5' ? 'Friday, 8 pm' : message.text),el('span','saved-meta',message.sender + '  ·  ' + (message.local ? 'On this device' : chatDay()) + ', ' + message.time));
       item.addEventListener('click', () => jumpToMessage(message.id));
       content.append(item);
     }
@@ -402,7 +463,7 @@ function renderMemory() {
       const item = el('button','saved-item');
       item.type = 'button';
       item.append(icon('image'),el('span','saved-title',message.text),el('span','saved-meta','You · On this device'));
-      item.addEventListener('click', () => jumpToMessage(message.id));
+      item.addEventListener('click', () => message.attachmentId ? showAttachmentContent(message.attachmentId) : jumpToMessage(message.id));
       content.append(item);
     }
   }
@@ -454,7 +515,7 @@ function setMemory(open, returnFocus = false) {
   if (!open && returnFocus) $('memory-toggle').focus();
 }
 function openDialog(title,text) {
-  dialogTrigger = document.activeElement;
+  if (!dialog.open) dialogTrigger = document.activeElement;
   $('dialog-title').textContent = title;
   $('dialog-body').replaceChildren();
   if (text) $('dialog-body').append(el('p','',text));
@@ -477,8 +538,18 @@ function showInfo() {
   memory.append(icon('bookmark'),document.createTextNode('Open Memory'));
   memory.addEventListener('click', () => { closeDialog(); setMemory(true); });
   $('dialog-body').append(memory);
+  if (state.mode === 'full') {
+    for (const [field,label] of [['pinned','Pin conversation'],['muted','Mute unread indicator']]) {
+      const button = el('button','dialog-option',label); button.type = 'button';
+      button.setAttribute('aria-pressed',String(state[field].includes(chat.id)));
+      button.addEventListener('click', () => { state[field] = state[field].includes(chat.id) ? state[field].filter(id => id !== chat.id) : [...state[field],chat.id]; button.setAttribute('aria-pressed',String(state[field].includes(chat.id))); persist(); renderChatList(); });
+      $('dialog-body').append(button);
+    }
+    $('dialog-body').append(el('p','','These preferences apply only to this demo on this device.'));
+  }
 }
 function showAttachment() {
+  if (state.mode === 'full') return showFullAttachments();
   openDialog('Add something','Try a sample attachment. It stays in this preview on your device.');
   const options = [
     { label: 'A little dinner note', text: 'Dinner note · Friday, eight o’clock' },
@@ -493,6 +564,103 @@ function showAttachment() {
   }
 }
 
+function applyMode(mode) {
+  state.mode = mode === 'full' ? 'full' : 'simple';
+  document.documentElement.dataset.mode = state.mode;
+  document.querySelectorAll('[data-mode-choice]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.modeChoice === state.mode)));
+}
+function fullButton(label, action, className = 'dialog-option') {
+  const button = el('button',className,label); button.type = 'button'; button.addEventListener('click',action); return button;
+}
+function refreshChangedMessages() { pruneActions(); persist(); renderMessages(); renderMemory(); renderChatList(); renderReplyDraft(); }
+function showNewConversation() {
+  openDialog('New conversation','Choose a sample contact. Messages stay on this device; nobody is notified.');
+  for (const contact of CONTACTS) {
+    const exists = state.customChats.includes(contact.id);
+    $('dialog-body').append(fullButton(contact.name + (exists ? ' · open conversation' : ''), () => {
+      if (!state.customChats.includes(contact.id)) state.customChats.push(contact.id);
+      state.order = [contact.id,...state.order.filter(id => id !== contact.id)]; persist();
+      $('chat-search').value = ''; dialogTrigger = null; closeDialog(); selectChat(contact.id);
+      if (!mobileScreen.matches) input.focus();
+    }));
+  }
+}
+function showConversationSearch() {
+  openDialog('Search ' + currentChat().name);
+  const search = el('input','dialog-search'); search.type = 'search'; search.placeholder = 'Find a word or phrase'; search.setAttribute('aria-label','Search messages');
+  const results = el('div','conversation-results'); const count = el('p','search-count'); count.setAttribute('role','status');
+  const update = () => {
+    const query = search.value.trim().toLocaleLowerCase(); results.replaceChildren();
+    const matches = query ? allMessages().filter(message => message.text.toLocaleLowerCase().includes(query)) : [];
+    count.textContent = query ? matches.length + (matches.length === 1 ? ' message found' : ' messages found') : 'Search the words in this conversation.';
+    for (const message of matches) {
+      const result = fullButton('',() => { dialogTrigger = null; closeDialog(); jumpToMessage(message.id); },'search-result');
+      result.append(el('span','saved-meta',message.sender + ' · ' + message.time),el('span','search-result-text',message.text)); results.append(result);
+    }
+  };
+  search.addEventListener('input',update); $('dialog-body').append(search,count,results); update(); search.focus();
+}
+function toggleReaction(id) {
+  if (state.reactions[id]) delete state.reactions[id]; else state.reactions[id] = true;
+  persist(); renderMessages(); $('selection-status').textContent = state.reactions[id] ? 'Your heart reaction added' : 'Your reaction removed';
+}
+function showMessageMore() {
+  const message = selectedMessage(); if (!message) return;
+  openDialog('Message actions');
+  $('dialog-body').append(fullButton(state.reactions[message.id] ? 'Remove your heart reaction' : 'React with a heart', () => { closeDialog(); toggleReaction(message.id); }));
+  if (message.mine) {
+    $('dialog-body').append(fullButton('Edit message', () => showEditMessage(message)),fullButton('Delete from this device', () => confirmDeleteMessage(message)));
+  }
+  if (message.attachmentId) $('dialog-body').append(fullButton('Open attachment', () => showAttachmentContent(message.attachmentId)));
+}
+function showEditMessage(message) {
+  openDialog('Edit message','This changes the message only in your demo.');
+  const field = el('textarea','edit-message'); field.value = message.text; field.maxLength = MAX_TEXT; field.setAttribute('aria-label','Edit message text');
+  const save = fullButton('Save changes', () => {
+    if (!field.value.trim()) return;
+    state.edits[message.id] = field.value.trim().slice(0,MAX_TEXT); dialogTrigger = null; closeDialog(); refreshChangedMessages(); setRovingMessage(message.id,true);
+  },'dialog-primary');
+  const update = () => { save.disabled = !field.value.trim(); }; field.addEventListener('input',update);
+  const actions = el('div','dialog-actions'); actions.append(save,fullButton('Cancel',closeDialog)); $('dialog-body').append(field,actions); update(); field.focus();
+}
+function confirmDeleteMessage(message) {
+  openDialog('Delete this message?','It will be hidden from this demo, including Saved and search. You can undo the most recent deletion.');
+  $('dialog-body').append(el('blockquote','delete-excerpt',message.text));
+  const actions = el('div','dialog-actions');
+  actions.append(fullButton('Delete message', () => {
+    deletedForUndo = { id: message.id, chatId: currentId, saved: state.saved.includes(message.id) };
+    state.deleted = [...new Set([...state.deleted,message.id])]; selectedMessageId = null; dialogTrigger = null; closeDialog();
+    $('delete-undo').hidden = false; refreshChangedMessages(); input.focus();
+  },'dialog-primary'),fullButton('Keep message',closeDialog)); $('dialog-body').append(actions);
+}
+function undoDelete() {
+  if (!deletedForUndo) return;
+  const restored = deletedForUndo; state.deleted = state.deleted.filter(id => id !== restored.id);
+  if (restored.saved && !state.saved.includes(restored.id)) state.saved.push(restored.id);
+  deletedForUndo = null; $('delete-undo').hidden = true; persist();
+  if (currentId !== restored.chatId) selectChat(restored.chatId); else refreshChangedMessages();
+  jumpToMessage(restored.id); announce('Message restored');
+}
+function showFullAttachments() {
+  openDialog('Add an attachment','Choose a ready-made note, under 1 KB each. Notes are saved with your messages on this device; file uploads are not included.');
+  for (const item of ATTACHMENTS) $('dialog-body').append(fullButton(item.name, () => {
+    closeDialog(); addLocalMessage(item.summary,true,null,item.id);
+  }));
+}
+function showAttachmentContent(id) {
+  const item = ATTACHMENTS.find(attachment => attachment.id === id); if (!item) return;
+  openDialog(item.name);
+  $('dialog-body').append(el('pre','attachment-content',item.body),fullButton('Download note', () => {
+    const url = URL.createObjectURL(new Blob([item.body],{type:'text/plain;charset=utf-8'}));
+    const link = el('a'); link.href = url; link.download = item.name; document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url),1000);
+  },'dialog-primary'));
+}
+document.querySelectorAll('[data-mode-choice]').forEach(button => button.addEventListener('click', () => { applyMode(button.dataset.modeChoice); persist(); clearMessageSelection(); }));
+$('new-chat').addEventListener('click',showNewConversation);
+$('conversation-search').addEventListener('click',showConversationSearch);
+$('selection-more').addEventListener('click',showMessageMore);
+$('undo-delete').addEventListener('click',undoDelete);
+$('dismiss-undo').addEventListener('click', () => { deletedForUndo = null; $('delete-undo').hidden = true; });
 document.querySelectorAll('[data-theme-choice]').forEach(button => button.addEventListener('click', () => { applyTheme(button.dataset.themeChoice); persist(); }));
 document.querySelectorAll('[data-texture-choice]').forEach(button => button.addEventListener('click', () => { applyTexture(button.dataset.textureChoice); persist(); }));
 $('selection-reply').addEventListener('click',replyToSelection);
@@ -560,8 +728,13 @@ document.addEventListener('keydown',event => {
 smallScreen.addEventListener('change', () => setMemory(!smallScreen.matches));
 applyTheme(state.theme);
 applyTexture(state.texture);
+applyMode(state.mode);
 renderChatList();
 renderConversation();
 renderMemory();
 setMemory(!smallScreen.matches);
 if (!storageAvailable) announce('Storage is unavailable. Your changes will last for this visit.');
+
+const measureToolbar = () => document.documentElement.style.setProperty('--toolbar-height',document.querySelector('.prototype-bar').getBoundingClientRect().height + 'px');
+new ResizeObserver(measureToolbar).observe(document.querySelector('.prototype-bar'));
+measureToolbar();
