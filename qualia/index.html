@@ -1919,7 +1919,7 @@ function resize(){
   drawWord();
   positionControlReflections();
   refreshSwimBounds();
-  if (keep){ [SW.X, SW.Z] = worldFromScreen(keep[0]*W, shoreCss + keep[1]*Hw); SW.Z=Math.max(SW.Z,swimMinZ); setTarget(keep[2]*W,shoreCss+keep[3]*Hw); }
+  if (keep){ [SW.X, SW.Z] = worldFromScreen(keep[0]*W, shoreCss + keep[1]*Hw); [SW.X,SW.Z]=worldFromScreen(...nearestSwimPoint(...project(SW.X,SW.Z,0))); setTarget(keep[2]*W,shoreCss+keep[3]*Hw); }
   else startOpeningSwim();
   if (autoOn && !reduced) targetOpeningSwim();
   prevSlots.fill(null); drops.length = 0; landings.length = 0;
@@ -2083,7 +2083,7 @@ const FOOT_K = [[0,-1.41,.085,-.27],[.36,-1.41,.085,-.27],[.49,-.99,.19,-.18],[.
 let openingComplete = false;
 const footer = document.querySelector('.foot');
 function layoutFooter(){layoutQualiaFooter(mark,footer,H,shoreCss);}
-let swimMaxY=Infinity, swimMinZ=0, swimFooterTop=Infinity;
+let swimMaxY=Infinity, swimMinZ=0, swimFooterTop=Infinity, swimRects=[], swimRoute=[], swimRows=[];
 const SW = { X: 0, Z: 0, th: 0, turnV: 0, phase: .62, cadence: 1/2.7, burstLeft: 0, effort: 0, tread: 0, tph: 0, go: true, tx: 0, tz: 0, v: 0, arrivedAt: 0 };
 function sprintSwimmer(){
   // Refresh a short burst without resetting the pose or building an endless click queue.
@@ -2092,27 +2092,92 @@ function sprintSwimmer(){
 function strokeSpeed(ph){
   return .56 + .88*cb(ph,.72,.14) + .48*cb(ph,.32,.12);
 }
-// Reserve enough foreground for the complete swimmer in any stroke or heading.
-// The near side of a 1.7m body envelope at 1.35m depth must remain above the footer.
-function refreshSwimBounds(){
-  swimFooterTop=footer.getBoundingClientRect().top;
-  const floor=swimFooterTop-8;
-  let low=shoreCss, high=shoreCss+Hw*.95;
-  for(let i=0;i<24;i++) {
-    const y=(low+high)/2, z=worldFromScreen(W*.5,y)[1];
-    if(project(0,z-M*1.7,-1.35)[1] > floor) high=y; else low=y;
+// Project the complete 1.7m body envelope, including its refracted 1.35m depth.
+// Each screen row contains free intervals rather than one full-width footer cutoff.
+function swimRowExact(y,rects=swimRects){
+  const z=worldFromScreen(W/2,y)[1],r=M*1.7;
+  const near=project(0,z-r,-1.35),far=project(0,z+r,.4),scale=sOfV((y-shoreCss)/Hw);
+  if(near[1]>H-2 || far[1]<shoreCss)return [];
+  const scales=[near[2],far[2]];
+  const left=Math.max(...scales.map(s=>W/2+(2-W/2+r*s)*scale/s));
+  const right=Math.min(...scales.map(s=>W/2+(W-2-W/2-r*s)*scale/s));
+  let spans=left<=right?[[left,right]]:[];
+  for(const rect of rects){
+    if(near[1]<=rect.top-8 || far[1]>=rect.bottom+8)continue;
+    const lo=Math.min(...scales.map(s=>W/2+(rect.left-8-W/2-r*s)*scale/s));
+    const hi=Math.max(...scales.map(s=>W/2+(rect.right+8-W/2+r*s)*scale/s));
+    spans=spans.flatMap(([a,b])=>hi<=a||lo>=b?[[a,b]]:[...(lo>a?[[a,lo]]:[]),...(hi<b?[[hi,b]]:[])]);
   }
-  swimMaxY=low;
-  swimMinZ=worldFromScreen(W*.5,swimMaxY)[1];
-  if(sized) {
-    SW.Z=Math.max(SW.Z,swimMinZ);
-    const target=project(SW.tx,SW.tz,0);
-    setTarget(target[0],target[1]);
+  return spans;
+}
+function swimRow(y){return swimRows[Math.floor(y)]||[];}
+function swimClear(x,y){return y>=shoreCss+Hw*.04 && y<=swimMaxY+.001 && swimRow(y).some(([a,b])=>x>=a-.0001&&x<=b+.0001);}
+function nearestSwimPoint(x,y){
+  y=clamp(y,shoreCss+Hw*.1,swimMaxY);
+  const viewport=swimRowExact(y,[]);if(viewport.length)x=clamp(x,viewport[0][0],viewport[0][1]);
+  let best=null,score=Infinity;
+  const visit=cy=>{for(const [a,b] of swimRow(cy)){const cx=clamp(x,a,b),d=(cx-x)**2+(cy-y)**2;if(d<score){score=d;best=[cx,cy];}}};
+  visit(y);
+  // Search above and below actual content, including gaps below a raised footer.
+  for(let d=2;d*d<score && (y-d>=shoreCss+Hw*.1||y+d<=swimMaxY);d+=2){
+    if(y-d>=shoreCss+Hw*.1)visit(y-d);if(y+d<=swimMaxY)visit(y+d);
+  }
+  return best||[W/2,shoreCss+Hw*.1];
+}
+function swimSegmentClear(a,b){
+  const steps=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/2));
+  for(let i=1;i<=steps;i++)if(!swimClear(a[0]+(b[0]-a[0])*i/steps,a[1]+(b[1]-a[1])*i/steps))return false;
+  return true;
+}
+function planSwimRoute(target){
+  const from=project(SW.X,SW.Z,0);swimRoute=[];
+  if(swimSegmentClear(from,target))return;
+  // A horizontal passage above or below the content lets side-to-side trips go around it.
+  let best=Infinity;
+  for(let y=shoreCss+Hw*.1;y<=swimMaxY;y+=6){
+    const a=[from[0],y],b=[target[0],y];
+    const cost=Math.abs(y-from[1])+Math.abs(target[0]-from[0])+Math.abs(target[1]-y);
+    if(cost>=best||!swimClear(...a)||!swimClear(...b))continue;
+    if(swimSegmentClear(from,a)&&swimSegmentClear(a,b)&&swimSegmentClear(b,target)){best=cost;swimRoute=[a,b];}
   }
 }
-function setTarget(x, y){
-  const cx=clamp(x,W*.06,W*.94), cy=clamp(y,Math.min(shoreCss+Hw*.1,swimMaxY),swimMaxY);
-  [SW.tx,SW.tz]=worldFromScreen(cx,cy);
+function refreshSwimBounds(){
+  swimFooterTop=footer.getBoundingClientRect().top;
+  swimRects=[];
+  const walker=document.createTreeWalker(footer,NodeFilter.SHOW_TEXT);
+  while(walker.nextNode())if(walker.currentNode.textContent.trim()){
+    const range=document.createRange();range.selectNodeContents(walker.currentNode);
+    for(const rect of range.getClientRects())if(rect.width&&rect.height)swimRects.push({left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom});
+  }
+  for(const control of footer.querySelectorAll('a,button')){const r=control.getBoundingClientRect();swimRects.push({left:r.left,right:r.right,top:r.top,bottom:r.bottom});}
+  let low=shoreCss,high=H;
+  for(let i=0;i<24;i++){const y=(low+high)/2,z=worldFromScreen(W/2,y)[1];if(project(0,z-M*1.7,-1.35)[1]>H-2)high=y;else low=y;}
+  swimMaxY=Math.floor(low)-1;swimMinZ=worldFromScreen(W/2,swimMaxY)[1];
+  // Cache conservative one-pixel cells; pointer and frame updates never read layout.
+  swimRows=[];
+  for(let y=Math.floor(shoreCss);y<=swimMaxY;y++){
+    const a=swimRowExact(y),b=swimRowExact(y+1);
+    swimRows[y]=a.flatMap(([left,right])=>b.map(([l,r])=>[Math.max(left,l),Math.min(right,r)]).filter(([l,r])=>l<=r));
+  }
+  if(sized){
+    const position=nearestSwimPoint(...project(SW.X,SW.Z,0));[SW.X,SW.Z]=worldFromScreen(...position);
+    setTarget(...project(SW.tx,SW.tz,0));
+  }
+}
+function setTarget(x,y){
+  const target=nearestSwimPoint(x,y);[SW.tx,SW.tz]=worldFromScreen(...target);planSwimRoute(target);
+}
+function moveSwimmerBounded(x,z){
+  const from=project(SW.X,SW.Z,0),to=project(x,z,0);
+  const steps=Math.max(1,Math.ceil(Math.hypot(to[0]-from[0],to[1]-from[1])/2));
+  const dx=(to[0]-from[0])/steps,dy=(to[1]-from[1])/steps;
+  let px=from[0],py=from[1];
+  for(let i=0;i<steps;i++){
+    if(swimClear(px+dx,py+dy)){px+=dx;py+=dy;}
+    else if(swimClear(px+dx,py))px+=dx;
+    else if(swimClear(px,py+dy))py+=dy;
+  }
+  [SW.X,SW.Z]=worldFromScreen(px,py);
 }
 function skeleton(){
   const w = SW.tread, ph = SW.phase, tt = SW.tph;
@@ -2147,9 +2212,12 @@ function toWorld(p){
 function updateSwimmer(dt){
   // Speed up the opening journey and its strokes together; normal steering keeps its pace.
   if (!openingComplete) dt *= 1.25;
-  const dx = SW.tx - SW.X, dz = SW.tz - SW.Z, dist = Math.hypot(dx, dz)/M;
-  if (SW.go && dist < .6){ SW.go = false; SW.arrivedAt = simT; if (!openingComplete) { openingComplete = true; autoOn = false; } }
-  else if (!SW.go && dist > 1.2) SW.go = true;
+  const position=project(SW.X,SW.Z,0);
+  while(swimRoute.length && Math.hypot(position[0]-swimRoute[0][0],position[1]-swimRoute[0][1])<2)swimRoute.shift();
+  const aim=swimRoute.length?worldFromScreen(...swimRoute[0]):[SW.tx,SW.tz];
+  const dx = aim[0] - SW.X, dz = aim[1] - SW.Z, dist = Math.hypot(dx, dz)/M;
+  if (SW.go && !swimRoute.length && dist < .6){ SW.go = false; SW.arrivedAt = simT; if (!openingComplete) { openingComplete = true; autoOn = false; } }
+  else if (!SW.go && (swimRoute.length || dist > 1.2)) SW.go = true;
   const bursting = SW.burstLeft > 0;
   const openingBoost = openingComplete ? 0 : openingSwimEffort();
   SW.effort += ((bursting ? 1 : openingBoost) - SW.effort)*(1 - Math.exp(-dt*7));
@@ -2170,8 +2238,7 @@ function updateSwimmer(dt){
   // Carry momentum through the glide and ease into each catch and kick.
   SW.v += (desiredV - SW.v)*(1 - Math.exp(-dt*(bursting && !reduced ? 6 : 2.7)));
   SW.v = Math.min(SW.v, dist/Math.max(dt, 1e-3));
-  SW.X += Math.cos(SW.th)*SW.v*M*dt; SW.Z += Math.sin(SW.th)*SW.v*M*dt;
-  if(SW.Z<swimMinZ) { SW.Z=swimMinZ; SW.v=0; }
+  moveSwimmerBounded(SW.X+Math.cos(SW.th)*SW.v*M*dt,SW.Z+Math.sin(SW.th)*SW.v*M*dt);
 }
 function openingSwimEffort(){
   const startY=shoreCss+Hw*.12, endY=project(SW.tx,SW.tz,0)[1];
@@ -2628,7 +2695,7 @@ const activeTouches=new Set();
 function steer(e, force){
   if (!QUALIA_LOAD.swimReady || AUTO || document.getElementById('faq-dialog').open || e.target.closest?.('.light-controls, .signal-link, .wordmark-controls, #faq-open, #faq-reflection-open, #brand-ink-toggle')) return false;
   if ((window.visualViewport?.scale || 1)>1.01 || activeTouches.size>1 || (e.pointerType==='touch' && !e.isPrimary)) return false;
-  if (e.clientY>=swimFooterTop) return false;
+  if (e.target.closest?.('.foot') && swimRects.some(r=>e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom)) return false;
   if (!force && e.pointerType === 'mouse' && e.buttons === 0 && e.clientY < shoreCss) return false;
   if (!openingComplete) openingComplete = true;
   autoOn = false;
@@ -2851,12 +2918,13 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) stop(
 cvs.addEventListener('webglcontextlost', e => { e.preventDefault(); stop(); });
 cvs.addEventListener('webglcontextrestored', () => { T = {}; P = {}; sized = false; boot(); });
 if (document.fonts){
-  document.fonts.ready.then(() => { if (!gl.isContextLost()) { drawWord(); if (sized && autoOn && !reduced) targetOpeningSwim(); } });
+  document.fonts.ready.then(() => { if (!gl.isContextLost()) { drawWord(); if(sized)refreshSwimBounds(); if (sized && autoOn && !reduced) targetOpeningSwim(); } });
 }
 mark.addEventListener('load', () => { if (sized && !gl.isContextLost()) drawWord(); }, true);
 document.addEventListener('qualia:wordmark-trace',()=>{if(sized&&!gl.isContextLost())drawWord();});
 new ResizeObserver(() => { if (sized && !gl.isContextLost()) drawWord(); }).observe(document.querySelector('.brand-lockup'));
-new ResizeObserver(() => { if(sized){layoutFooter();refreshSwimBounds();} }).observe(footer);
+const swimLayoutObserver=new ResizeObserver(() => { if(sized){layoutFooter();refreshSwimBounds();} });
+for(const element of [footer,...footer.children])swimLayoutObserver.observe(element);
 document.addEventListener('qualia:wordmark-change', () => { if (sized && !gl.isContextLost()) drawWord(); });
 function boot(){
   try { initGL(); resize(); start(); }
