@@ -183,7 +183,7 @@ function renderMessages(scrollToEnd = false) {
   if (!messages.some(message => message.id === focusedMessageId)) focusedMessageId = messages[0]?.id || null;
   let previous;
   for (const message of messages) {
-    const continuation = previous && previous.sender === message.sender && !message.mine;
+    const continuation = previous && previous.sender === message.sender;
     const row = el('article','message-row' + (message.mine ? ' mine' : '') + (continuation ? ' continuation' : ''));
     row.id = 'message-' + message.id;
     row.dataset.message = message.id;
