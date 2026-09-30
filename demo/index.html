@@ -1,39 +1,15 @@
 <!doctype html>
-<html lang="en" data-theme="light" data-texture="richer" data-mode="simple" data-ink="clean">
+<html lang="en" data-theme="light" data-texture="richer" data-mode="simple">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>small words · interactive paper</title>
-  <link rel="stylesheet" href="styles.css?v=20260930-pressed-2">
-  <script src="app.js?v=20260930-pressed-2" defer></script>
+  <link rel="stylesheet" href="styles.css?v=20260930-clean-final">
+  <script src="app.js?v=20260930-clean-final" defer></script>
 </head>
 <body>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
-    <filter id="press-paper" x="-5%" y="-20%" width="110%" height="140%" color-interpolation-filters="sRGB">
-      <!-- Shade the paper surrounding the letters. Paint original ink last. -->
-      <feOffset in="SourceAlpha" dy="1.5" result="lower"/>
-      <feComposite in="lower" in2="SourceAlpha" operator="out" result="lip"/>
-      <feFlood flood-color="#ffffff" flood-opacity="1" result="light"/>
-      <feComposite in="light" in2="lip" operator="in" result="paper-edge"/>
-      <feOffset in="SourceAlpha" dy="-.8" result="upper"/>
-      <feComposite in="upper" in2="SourceAlpha" operator="out" result="groove"/>
-      <feFlood flood-color="#55452e" flood-opacity=".68" result="shade"/>
-      <feComposite in="shade" in2="groove" operator="in" result="recess"/>
-      <feMerge><feMergeNode in="paper-edge"/><feMergeNode in="recess"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <filter id="press-dark" x="-5%" y="-20%" width="110%" height="140%" color-interpolation-filters="sRGB">
-      <!-- Shade the paper surrounding the letters. Paint original ink last. -->
-      <feOffset in="SourceAlpha" dy="1.5" result="lower"/>
-      <feComposite in="lower" in2="SourceAlpha" operator="out" result="lip"/>
-      <feFlood flood-color="#c4dbf4" flood-opacity=".38" result="light"/>
-      <feComposite in="light" in2="lip" operator="in" result="paper-edge"/>
-      <feOffset in="SourceAlpha" dy="-.8" result="upper"/>
-      <feComposite in="upper" in2="SourceAlpha" operator="out" result="groove"/>
-      <feFlood flood-color="#020710" flood-opacity=".95" result="shade"/>
-      <feComposite in="shade" in2="groove" operator="in" result="recess"/>
-      <feMerge><feMergeNode in="paper-edge"/><feMergeNode in="recess"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
     <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></symbol>
     <symbol id="i-phone" viewBox="0 0 24 24"><path d="M7 3 4 4C1 8 8 21 15 21l4-2c1-1 0-2-1-3l-2-2-3 2c-3-2-5-4-6-7l2-2Z"/></symbol>
     <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
@@ -60,10 +36,6 @@
       <div class="theme-switch" role="group" aria-label="Appearance">
         <button type="button" data-theme-choice="light" aria-pressed="true"><svg class="icon"><use href="#i-sun"/></svg>Light</button>
         <button type="button" data-theme-choice="dark" aria-pressed="false"><svg class="icon"><use href="#i-moon"/></svg>Dark</button>
-      </div>
-      <div class="theme-switch ink-switch" role="group" aria-label="Text finish">
-        <button type="button" data-ink-choice="clean" aria-pressed="true">Clean</button>
-        <button type="button" data-ink-choice="typewritten" aria-pressed="false">Pressed</button>
       </div>
       <div class="texture-control">
         <span id="texture-label">Texture:</span>

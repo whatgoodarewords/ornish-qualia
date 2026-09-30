@@ -323,16 +323,6 @@ h2 { font-size: 23px; font-weight: 550; letter-spacing: -.025em; margin: 0; }
 
 .prototype-controls > .theme-switch, .texture-switch { flex-shrink: 0; }
 
-/* Concave lighting is clipped to native letter shapes; the paper and all
-   text metrics stay untouched. Small button labels need a paintable run. */
-.press-label { display: inline-block; max-width: 100%; vertical-align: baseline; pointer-events: none; }
-:root[data-ink='typewritten'] :is(.press-source, .press-label, input, textarea) { filter: url(#press-paper); }
-:root[data-theme='dark'][data-ink='typewritten'] :is(.press-source, .press-label, input, textarea),
-:root[data-ink='typewritten'] :is(.mine .bubble, .avatar.friday) :is(.press-source, .press-label) { filter: url(#press-dark); }
-@media (forced-colors: active), (prefers-contrast: more) {
-  :root[data-ink='typewritten'] :is(.press-source, .press-label, input, textarea) { filter: none !important; }
-}
-
 /* One selected slip, with a small action row beside the writing area. */
 .bubble { cursor: pointer; }
 .message-row:focus-visible { outline: none; }
