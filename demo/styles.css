@@ -382,3 +382,5 @@ h2 { font-size: 23px; font-weight: 550; letter-spacing: -.025em; margin: 0; }
 /* Messages select as whole slips; editable fields keep native text editing. */
 .app, .prototype-bar, .paper-dialog { -webkit-user-select: none; user-select: none; }
 input, textarea, [contenteditable]:not([contenteditable='false']) { -webkit-user-select: text; user-select: text; }
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }

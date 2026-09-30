@@ -258,7 +258,7 @@ function selectMessage(id) {
   selectedMessageId = selectedMessageId === id ? null : id;
   renderMessageSelection();
   const message = selectedMessage();
-  announce(message ? 'Selected message from ' + message.sender : 'Message selection cleared');
+  $('selection-status').textContent = message ? 'Selected message from ' + message.sender : 'Message selection cleared';
 }
 function renderMessageSelection() {
   const message = selectedMessage();
@@ -277,7 +277,7 @@ function clearMessageSelection(restoreFocus = false) {
   selectedMessageId = null;
   renderMessageSelection();
   if (restoreFocus && previousId) setRovingMessage(previousId,true);
-  if (previousId) announce('Message selection cleared');
+  if (previousId) $('selection-status').textContent = 'Message selection cleared';
 }
 function renderReplyDraft() {
   const quote = state.replies[currentId];
