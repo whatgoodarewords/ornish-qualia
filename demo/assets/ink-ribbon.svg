@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="64" viewBox="0 0 128 64">
+  <filter id="ribbon" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="3" seed="8"/>
+    <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 4.5 0 0 0 -.9"/>
+  </filter>
+  <path d="M0 0h128v64H0z" fill="white" filter="url(#ribbon)"/>
+</svg>
