@@ -1,0 +1,14 @@
+Shoreline photograph and derivative
+
+Original: 2015-08-20 15 55 43 Panorama east from the west shore of Spring Lake in Berlin, New York.jpg
+Photographer: Famartin
+Source: https://commons.wikimedia.org/wiki/File:2015-08-20_15_55_43_Panorama_east_from_the_west_shore_of_Spring_Lake_in_Berlin,_New_York.jpg
+License: Creative Commons Attribution-ShareAlike 4.0 International
+License URL: https://creativecommons.org/licenses/by-sa/4.0/
+
+This is a photograph of Spring Lake, New York, not the Portuguese event site.
+Changes: central bank cropped from source rectangle (1250,1300)-(6100,1740); connected foliage mask removes sky; reduced to 3880x352 at native aspect ratio; horizontally mirrored to place the lower bank beneath the sunrise. The website applies changing illumination and a softened water reflection.
+Derivative asset shoreline-spring-lake.png is also licensed CC BY-SA 4.0. No endorsement by the photographer is implied.
+Original preserved locally in reports/spring-lake-source.jpg. Reproducible extraction: scripts/extract-real-shoreline.py.
+Source SHA-256: abe4e48e0eff583bd2c79091e2d330608a3e72b11983ab1a5a56c67afa7a7f5e
+Derivative SHA-256: 0b9a7741ef3beb803af14f323212a94d5080f3c40bfc94c003b3c943d98ebd6e

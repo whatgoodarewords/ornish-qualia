@@ -104,12 +104,15 @@ function startCanvasLake(original) {
     drawMoon(mx,my,mr,moonVisibility*QUALIA_LOAD.moonReveal);
     mark.style.setProperty('--dot-alpha',smooth(.08,.72,day));
     // A subdued far ridge picks up sky colour; the real near foliage stays crisp.
-    s.fillStyle=rgb([4,11,17],[64,90,91],[110,89,88],day,twilight);s.fill(distantRidge);
+    if(!trees.complete||!trees.naturalWidth){s.fillStyle=rgb([4,11,17],[64,90,91],[110,89,88],day,twilight);s.fill(distantRidge);}
     // The real leaf alpha and source photograph are shared with the GPU renderer.
     if(trees.complete&&trees.naturalWidth){
-      s.save();s.filter=`brightness(${.055+.59*day}) saturate(.72)`;
-      const th=Math.max(95,H*.22),tw=th*trees.naturalWidth/trees.naturalHeight;
-      for(let i=0,x=-tw*.13;x<W;i++,x+=tw){s.save();s.translate(x+(i%2?tw:0),shore-th*.64);s.scale(i%2?-1:1,1);s.drawImage(trees,0,0,tw,th);s.restore();}
+      s.save();s.filter=`brightness(${.055+.69*day}) saturate(.72)`;
+      // Match the GPU panorama's native proportions and shoreline crop.
+      const th=W*trees.naturalHeight/trees.naturalWidth;
+      const bank=3*Math.min(1.3,Math.max(.5,H/900));
+      s.fillStyle='#425035';s.fillRect(0,shore-bank,W,bank);
+      s.drawImage(trees,0,shore-th,W,th);
       s.restore();
     } else {
       s.fillStyle=day>.3?'#29443b':'#02090d';s.beginPath();s.moveTo(0,shore);
@@ -133,7 +136,7 @@ function startCanvasLake(original) {
     // Integer backing-pixel strips avoid seams or bright overlapping scanlines.
     for(let y=0;y<source.height;y+=2){const depth=1-y/source.height,cssY=y/scale,wave=motion.matches?0:Math.sin(cssY*.10+time*.65)*(.25+depth*1.1)+Math.sin(cssY*.037-time*.43)*depth;
       const wind=noise(cssY*.02,time*.03);
-      ctx.globalAlpha=alpha*(1-.085*wind*depth);
+      ctx.globalAlpha=alpha*(1-.085*wind*depth)*(source===sky.c?1-.12*smooth(shore-W/(3880/352),shore,cssY):1);
       const height=Math.min(2,source.height-y);
       ctx.drawImage(source,0,y,source.width,height,wave*scale,y,source.width,height);
     }

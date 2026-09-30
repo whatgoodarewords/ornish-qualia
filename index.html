@@ -228,6 +228,8 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 @media(max-width:600px) { .faq-header { padding-top:max(44px,calc(var(--safe-top) + 16px)); } }
 .faq-detail-link { display:inline-flex; align-items:center; min-height:44px; color:inherit; text-decoration-thickness:1px; text-underline-offset:.2em; }
 .faq-detail-link:hover { color:#fff; }
+.scene-credit { position:relative; z-index:1; max-width:760px; margin:36px 0 0; color:#aebbc3; font:400 12px/1.5 "DM Sans",sans-serif; opacity:var(--paq-text); }
+.scene-credit a { color:inherit; }
 
 </style>
 <style id="signal-water-styles">
@@ -358,6 +360,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
       <li>first-person data collection in the forest</li>
     </ul></div></details>
   </div>
+<p class="scene-credit">Shoreline photograph: <a href="https://commons.wikimedia.org/wiki/File:2015-08-20_15_55_43_Panorama_east_from_the_west_shore_of_Spring_Lake_in_Berlin,_New_York.jpg" target="_blank" rel="noopener noreferrer">Famartin, Spring Lake, New York</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>. Cropped and sky removed; <a href="assets/shoreline-spring-lake-CREDITS.txt?v=4182e16a530e" target="_blank" rel="noopener noreferrer">image credits</a>.</p>
 </dialog>
 <main class="hero">
   <div class="brand-lockup">
@@ -376,7 +379,7 @@ body { --reading-face:"Cormorant Garamond",Georgia,serif; }
 // images settle to their procedural fallback; a completed frame gates reveal.
 // Both renderers consume the same lighting clock and artwork sources.
 const QUALIA_SHORE=.44;
-const QUALIA_ART={moon:'assets/lroc-color-2k.jpg?v=f7130a182268',woodland:'assets/woodland-photo.png?v=a9b5d8e4e79e'};
+const QUALIA_ART={moon:'assets/lroc-color-2k.jpg?v=f7130a182268',woodland:'assets/shoreline-spring-lake.png?v=0b9a7741ef3b'};
 // The water mirrors this control around the same shoreline in both renderers.
 const QUALIA_QUESTION_REFLECTION=(()=>{
   const button=document.getElementById('faq-reflection-open'),source=document.getElementById('faq-open'),dialog=document.getElementById('faq-dialog');
@@ -481,20 +484,12 @@ function sunRadius(values){
   return dimensions().shore*(.033+.007*air);
 }
 function paqMoonAt(seconds){
-  const t=((seconds%CYCLE_SECONDS)+CYCLE_SECONDS)%CYCLE_SECONDS;
-  const ease=p=>{p=clamp(p,0,1);return p*p*(3-2*p);};
-  const nightAndDawn=NIGHT_SECONDS+DAWN_SECONDS;
-  let orbit=1;
-  if(t<nightAndDawn)orbit=Math.pow(ease(t/nightAndDawn),1.3);
-  else if(t>nightAndDawn+DAY_SECONDS){
-    const dusk=(t-nightAndDawn-DAY_SECONDS)/DUSK_SECONDS;
-    orbit=1-ease((dusk-.60)/.40);
-  }
-  const {width,height,shore}=dimensions(),radius=sunRadius(cycleAt(t).values);
-  // Keep one quiet setting path beside the header, with only a slight lateral drift.
-  // No late-dawn sweep across the sky: descend behind the nearby treeline.
-  const x=width*(.90-.025*orbit);
-  const y=height*.095+(shore-height*.12+radius*2.5-height*.095)*Math.pow(orbit,1.45);
+  const {width,height}=dimensions(),radius=sunRadius(cycleAt(seconds).values);
+  // A tiny celestial arc uses elapsed time, independent of sunrise or cycle wraps.
+  // Keep the moon beside the header; atmospheric contrast controls its visibility.
+  const angle=seconds/120;
+  const x=width*.90-6*Math.sin(angle);
+  const y=height*.095+3*(Math.cos(angle)-1);
   return [x,y,radius];
 }
 return {cycleAt,sunRadius,paqMoonAt,lightPresets,NIGHT_SECONDS,DAWN_SECONDS,DAY_SECONDS,DUSK_SECONDS,CYCLE_SECONDS,DAWN_SPEED,dawnTime};
@@ -709,7 +704,7 @@ document.getElementById('brand-ink-toggle').addEventListener('click', e => {
 });
 </script>
 <script src="assets/wordmarks.js?v=e93c2ec03654"></script>
-<script src="assets/canvas-lake.js?v=4a4970ee40db"></script>
+<script src="assets/canvas-lake.js?v=2d063ec71a90"></script>
 <script>
 (() => {
 'use strict';
@@ -787,17 +782,10 @@ float canopy(float x, float y, float cw, float hmin, float hmax, float seed){
   skyline += .35*(vnoise(vec2(x*1.91, seed + 31.)) - .5);
   return clamp((skyline - y)*uU + .5, 0., 1.);
 }
-// Photographic source has a pale sky fringe; discard sky by colour in the
-// material so the original foliage pixels remain unpainted and unwarped.
+// The continuous panorama already has transparent sky and clean foliage alpha.
+// Keep its pale leaves and branches; colour-keying would erase real detail.
 vec4 woodlandSample(vec2 uv,vec2 dx,vec2 dy){
-  vec4 leaf=textureGrad(uWoodland,uv,dx,dy);
-  leaf.rgb/=max(leaf.a,.0001);
-  float green=leaf.g-max(leaf.r,leaf.b);
-  float value=dot(leaf.rgb,vec3(.2126,.7152,.0722));
-  // Keep dark twigs as well as green leaves; remove only the pale sky fringe.
-  float foliage=max(smoothstep(.008,.045,green),1.-smoothstep(.18,.38,value));
-  leaf.a*=foliage*(1.-smoothstep(.64,.85,value));
-  return vec4(leaf.rgb*leaf.a,leaf.a);
+  return textureGrad(uWoodland,uv,dx,dy);
 }
 vec4 woodlandPhoto(vec2 uv){
   // Integrate coverage over the pixel footprint before storing this static
@@ -890,35 +878,23 @@ void main(){
   covN = max(covN, canopy(x, y - ridgeN, 19., 16., 35., 11.));
   vec3 farLeaves=vec3(.19,.265,.27),nearLeaves=vec3(.085,.165,.105);
   if(uWoodlandReady>.5){
-    // Preserve the low rolling ridges and sun hollow; real leaf alpha supplies
-    // the smaller crown irregularities, replacing the repeated dome outlines.
-    float tx=1.-abs(1.-mod(x/560.,2.));
-    vec4 nearTrees=woodlandPhoto(vec2(tx,clamp(.60-(y-ridgeN)/140.,0.,.77)));
-    vec4 farTrees=woodlandPhoto(vec2(1.-tx,clamp(.56-(y-ridgeF*.65)/100.,0.,.77)));
-    covN=max(clamp((ridgeN-y)*uU+.5,0.,1.),nearTrees.a);
-    covF=max(clamp((ridgeF-y)*uU+.5,0.,1.),farTrees.a);
-    nearLeaves=nearTrees.rgb*vec3(.64,.73,.69);
-    farLeaves=mix(farTrees.rgb*vec3(.55,.65,.65),vec3(.20,.27,.29),.30);
-    // Dense foliage from the lower canopy supplies shrub colour without
-    // squeezing full tree crowns into the small foreground rise.
-    vec2 undergrowthUV=vec2(tx,.61+.11*vnoise(vec2(x*.13,y*.23)));
-    vec4 undergrowthSample=texture(uWoodland,undergrowthUV);
-    vec3 undergrowth=undergrowthSample.rgb/max(undergrowthSample.a,.0001);
-    nearLeaves=mix(nearLeaves,undergrowth*vec3(.64,.73,.69),shrubs);
-    farLeaves=mix(farLeaves,undergrowth*vec3(.55,.65,.65),shrubs);
+    // One real 3880:352 shoreline photograph: no tiles, flips or stretched crowns.
+    // Lower foliage sits below the waterline; the existing low terrain supports
+    // the source's natural hollow without cutting through individual crowns.
+    float tx=pd.x/uRes.x,photoHeight=(uRes.x/uU)/(3880./352.);
+    vec4 nearTrees=woodlandPhoto(vec2(tx,clamp(1.-y/photoHeight,0.,1.)));
+    // The photograph supplies every crown, including its low central shrubs.
+    // A tiny flat bank closes only the waterline, never stretching a column of
+    // leaf pixels into a false ridge or exposing the procedural fallback crowns.
+    covF=0.;
+    covN=max(clamp((3.-y)*uU+.5,0.,1.),nearTrees.a);
+    nearLeaves=mix(vec3(.26,.31,.21),nearTrees.rgb,smoothstep(.05,.75,nearTrees.a))*vec3(.80,.84,.80);
+  }else{
+    // Keep the low sunrise scrub when optional artwork has not loaded.
+    float shrubN=max(clamp((ridgeN-y)*uU+.5,0.,1.),canopy(x,y-ridgeN,4.5,2.5,5.5,23.));
+    float shrubF=max(clamp((ridgeF-y)*uU+.5,0.,1.),canopy(x,y-ridgeF*.65,3.5,1.8,4.,29.));
+    covN=mix(covN,shrubN,shrubs);covF=mix(covF,shrubF,shrubs);
   }
-  float shrubN=max(clamp((ridgeN-y)*uU+.5,0.,1.),canopy(x,y-ridgeN,4.5,2.5,5.5,23.));
-  float shrubF=max(clamp((ridgeF-y)*uU+.5,0.,1.),canopy(x,y-ridgeF*.65,3.5,1.8,4.,29.));
-  // Coverage is already antialiased. Thresholding it again turns small leaves
-  // into a jagged cutout, especially against the bright dawn sky.
-  covN=mix(covN,shrubN,shrubs);
-  covF=mix(covF,shrubF,shrubs);
-  // In the narrow tree-to-shrub transition, resolve the mixed silhouettes
-  // with a pixel-sized edge rather than leaving translucent ghost crowns.
-  float transition=smoothstep(0.,.08,shrubs)*(1.-smoothstep(.92,1.,shrubs));
-  float edgeN=max(.01,fwidth(covN)*.5),edgeF=max(.01,fwidth(covF)*.5);
-  covN=mix(covN,smoothstep(.5-edgeN,.5+edgeN,covN),transition);
-  covF=mix(covF,smoothstep(.5-edgeF,.5+edgeF,covF),transition);
   col = mix(col, farLeaves, covF);
   col = mix(col, nearLeaves, covN);
   float cov = max(covF, covN);
@@ -1371,7 +1347,9 @@ vec3 meteor(vec2 p){
 // The same environment lights the sky and its rippled water reflection.
 vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   vec2 uv = vec2(pd.x/uRes.x, 1. - pd.y/uRes.y);
-  vec4 sk = textureLod(uSky, uv, lod);
+  // Distant foliage has a softer reflected footprint, using existing mipmaps.
+  float bankSoftness=reflected?smoothstep(uShore-uRes.x/(3880./352.),uShore,pd.y)*1.25:0.;
+  vec4 sk = textureLod(uSky, uv, lod+bankSoftness);
   float starLod = reflected ? lod*.2 : lod*.75;
   vec4 stars = textureLod(uStar, uv, starLod);
   float t = clamp(pd.y/uShore, 0., 1.);
@@ -1390,7 +1368,7 @@ vec3 environmentAt(vec2 pd, float lod, float starGain, bool reflected){
   float leafShade=clamp((stars.a-.55)/.45,0.,1.);
   vec3 woodland=sk.rgb;
   float sunHeight=smoothstep(-.04,.40,uSolar.w);
-  woodland*=.70+.30*sunHeight;
+  woodland*=(.70+.30*sunHeight)*(reflected?.88:1.);
   vec3 warmRim=vec3(.20,.10,.035)*dusk*smoothstep(-.12,.04,uSolar.w);
   woodland+=warmRim*(.3+.7*leafShade);
   // Air lies between the viewer and the far ridge, never over nearby leaf detail.
