@@ -13,7 +13,7 @@ const chats = [
     { id: 'f5', sender: 'Ana', text: 'Table for six at 8?', time: '9:41' },
     { id: 'f6', sender: 'You', text: '8 works. I’ll bring wine.', time: '9:43', mine: true, delivered: true }
   ], links: [{ title: 'A table near the river', domain: 'Dinner notes', description: 'Friday · 8 pm · a table for six', message: 'f5' }], media: { title: 'Friday’s little plan', kicker: 'A night together', main: 'Dinner,\nby the river.', detail: 'Friday · eight o’clock', sender: 'Ana', time: '9:39' } },
-  { id: 'ana', name: 'Ana', initials: 'A', subtitle: 'Ana', group: false, members: ['You', 'Ana'], preview: 'Table for six at 8?', time: '9:41', messages: [
+  { id: 'ana', name: 'Ana', initials: 'A', subtitle: '', group: false, members: ['You', 'Ana'], preview: 'Table for six at 8?', time: '9:41', messages: [
     { id: 'a1', sender: 'Ana', text: 'Found a lovely little place for Friday.', time: '9:32' },
     { id: 'a2', sender: 'You', text: 'The one you told me about?', time: '9:34', mine: true },
     { id: 'a3', sender: 'Ana', text: 'Yes! Blue door, very good bread.', time: '9:35' },
@@ -29,7 +29,7 @@ const chats = [
     { id: 'w5', sender: 'You', text: 'I’ll pack something for a picnic.', time: '18:18', mine: true, delivered: true },
     { id: 'w6', sender: 'Rui', text: 'Sounds good!', time: '18:21' }
   ], links: [{ title: 'Saturday’s meeting point', domain: 'Walk notes', description: 'The little station · 10 am', message: 'w4' }], media: { title: 'A Saturday outside', kicker: 'Take the slow way', main: 'Sea air.\nGood company.', detail: 'Saturday · ten o’clock', sender: 'Sofia', time: '18:09' } },
-  { id: 'rui', name: 'Rui', initials: 'R', subtitle: 'Rui', group: false, members: ['You', 'Rui'], preview: 'I can get there by eight.', time: 'Thu', messages: [
+  { id: 'rui', name: 'Rui', initials: 'R', subtitle: '', group: false, members: ['You', 'Rui'], preview: 'I can get there by eight.', time: 'Thu', messages: [
     { id: 'r1', sender: 'Rui', text: 'Still up for dinner tomorrow?', time: '17:42' },
     { id: 'r2', sender: 'You', text: 'Absolutely. Ana’s finding us a table.', time: '17:45', mine: true },
     { id: 'r3', sender: 'Rui', text: 'Lovely. I’m finishing a little later.', time: '17:46' },
@@ -167,6 +167,7 @@ function renderConversation() {
   const chat = currentChat();
   $('conversation-title').textContent = chat.name;
   $('conversation-subtitle').textContent = chat.subtitle;
+  $('conversation-subtitle').hidden = !chat.subtitle;
   $('header-avatar').className = 'avatar header-avatar ' + chat.id;
   $('header-avatar').textContent = chat.initials;
   $('call-button').setAttribute('aria-label', 'Call ' + chat.name);
