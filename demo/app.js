@@ -165,67 +165,11 @@ function applyTexture(texture) {
   document.documentElement.dataset.texture = state.texture;
   document.querySelectorAll('[data-texture-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.textureChoice === state.texture)));
 }
-// Mechanical type has separate strikes, not fuzzy or eroded letterforms.
-// Keep one accessible text run and use decorative graphemes for the ink.
-const inkSegmenter = typeof Intl.Segmenter === 'function' ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
-function prepareInk(root) {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const nodes = [];
-  while (walker.nextNode()) {
-    const node = walker.currentNode;
-    if (node.textContent.trim() && !node.parentElement.closest('.ink-text, svg, script, style, textarea, input, [contenteditable], .sr-only')) nodes.push(node);
-  }
-  for (const node of nodes) {
-    const span = document.createElement('span');
-    span.className = 'ink-text';
-    const accessible = document.createElement('span');
-    accessible.className = 'sr-only';
-    accessible.textContent = node.textContent;
-    const print = document.createElement('span');
-    print.className = 'ink-print';
-    print.setAttribute('aria-hidden', 'true');
-    let index = 0;
-    for (const part of node.textContent.split(/(\s+)/u)) {
-      if (!part) continue;
-      if (/^\s+$/u.test(part)) { print.append(document.createTextNode(part)); continue; }
-      const word = document.createElement('span');
-      word.className = 'ink-word';
-      // Preserve joining/shaping for scripts that cannot be split into letter boxes.
-      const segments = inkSegmenter && /^[\p{Script=Latin}\p{Number}\p{Punctuation}\p{Symbol}\p{Mark}]+$/u.test(part) ? inkSegmenter.segment(part) : [{ segment: part }];
-      for (const { segment } of segments) {
-        const glyph = document.createElement('span');
-        glyph.className = 'ink-glyph';
-        glyph.textContent = segment;
-        // Fixed, low-amplitude registration: never random on a render or theme change.
-        const strike = (segment.codePointAt(0) * 7 + index++ * 13) % 11;
-        glyph.style.setProperty('--strike-y', ((strike - 5) * .12) + 'px');
-        glyph.style.setProperty('--strike-angle', ((strike % 5 - 2) * .22) + 'deg');
-        glyph.style.setProperty('--strike-ink', String(.91 + strike * .009));
-        glyph.style.setProperty('--strike-weight', (.05 + (strike % 4) * .065) + 'px');
-        word.append(glyph);
-      }
-      print.append(word);
-    }
-    span.append(accessible, print);
-    node.replaceWith(span);
-  }
-}
-const inkObserver = new MutationObserver(() => {
-  inkObserver.disconnect();
-  prepareInk(document.body);
-  inkObserver.observe(document.body, { childList: true, subtree: true });
-});
+// The saved key stays compatible; the finish only adds paper depth in CSS.
 function applyInk(ink) {
   state.ink = ink === 'typewritten' ? 'typewritten' : 'clean';
-  inkObserver.disconnect();
-  // Restore native text before either mode: no duplicate wrappers or hidden stale copies.
-  document.querySelectorAll('.ink-text').forEach(span => span.replaceWith(document.createTextNode(span.querySelector('.sr-only').textContent)));
   document.documentElement.dataset.ink = state.ink;
   document.querySelectorAll('[data-ink-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.inkChoice === state.ink)));
-  if (state.ink === 'typewritten') {
-    prepareInk(document.body);
-    inkObserver.observe(document.body, { childList: true, subtree: true });
-  }
 }
 function renderChatList() {
   const query = $('chat-search').value.trim().toLocaleLowerCase();

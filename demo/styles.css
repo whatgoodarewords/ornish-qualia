@@ -323,29 +323,18 @@ h2 { font-size: 23px; font-weight: 550; letter-spacing: -.025em; margin: 0; }
 
 .prototype-controls > .theme-switch, .texture-switch { flex-shrink: 0; }
 
-/* Each glyph is a sharp, separate strike of the same font. The paper's
-   hairline highlight supplies depth; no blur, displacement or animated noise. */
-.ink-text { pointer-events: none; }
-.ink-text > .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.ink-word { display: inline-block; max-width: 100%; white-space: inherit; mask-image: url("assets/ink-ribbon.svg"); mask-size: 128px 64px; }
-.ink-glyph {
-  display: inline-block;
-  transform: translateY(var(--strike-y)) rotate(var(--strike-angle));
-  opacity: var(--strike-ink);
-  -webkit-text-stroke: var(--strike-weight) currentColor;
-  text-shadow: 0 .7px 0 #fffb;
+/* A shallow impression in paper. Native text stays intact: no changes to
+   font, shaping, kerning, baseline, opacity or glyph edges. */
+:root[data-ink='typewritten'] body {
+  text-shadow: 0 .75px 0 #ffffffc2;
 }
-:root[data-theme='dark'] .ink-glyph,
-:is(.mine .bubble, .avatar.friday) .ink-glyph { text-shadow: 0 .7px 0 #000a; }
-:root[data-ink='typewritten'] :is(input, textarea) {
-  -webkit-text-stroke: .09px currentColor;
-  text-shadow: 0 .7px 0 #fffb;
+:root[data-theme='dark'][data-ink='typewritten'] body,
+:root[data-ink='typewritten'] :is(.mine .bubble, .avatar.friday) {
+  text-shadow: 0 -.65px 0 #0008, 0 .65px 0 #ffffff12;
 }
-:root[data-theme='dark'][data-ink='typewritten'] :is(input, textarea) { text-shadow: 0 .7px 0 #000a; }
+:root[data-ink='typewritten'] :is(button, input, textarea) { text-shadow: inherit; }
 @media (forced-colors: active), (prefers-contrast: more) {
-  .ink-word { mask-image: none; }
-  .ink-glyph { transform: none; opacity: 1; text-shadow: none !important; -webkit-text-stroke: 0; }
-  :root[data-ink='typewritten'] :is(input, textarea) { text-shadow: none !important; -webkit-text-stroke: 0; }
+  :root[data-ink='typewritten'] * { text-shadow: none !important; }
 }
 
 /* One selected slip, with a small action row beside the writing area. */
