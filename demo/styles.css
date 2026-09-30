@@ -323,6 +323,19 @@ h2 { font-size: 23px; font-weight: 550; letter-spacing: -.025em; margin: 0; }
 
 .prototype-controls > .theme-switch, .texture-switch { flex-shrink: 0; }
 
+/* Ink ribbon impression, retaining every existing font and text metric.
+   Filter only writing, never a whole card or scroll surface. */
+:root[data-ink='typewritten'] .ink-text,
+:root[data-ink='typewritten'] :is(input, textarea) {
+  filter: url(#typewritten-ink);
+  text-shadow: .2px .15px .15px currentColor;
+}
+.ink-text { pointer-events: none; }
+@media (forced-colors: active), (prefers-contrast: more) {
+  :root[data-ink='typewritten'] .ink-text,
+  :root[data-ink='typewritten'] :is(input, textarea) { filter: none; text-shadow: none; }
+}
+
 /* One selected slip, with a small action row beside the writing area. */
 .bubble { cursor: pointer; }
 .message-row:focus-visible { outline: none; }
