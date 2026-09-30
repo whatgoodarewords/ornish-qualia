@@ -68,13 +68,14 @@ let deletedForUndo = null;
 let state = loadState();
 
 function defaultState() {
-  return { mode: 'simple', customChats: [], order: chats.map(chat => chat.id), pinned: [], muted: [], edits: {}, deleted: [], reactions: {}, theme: 'light', texture: 'richer', drafts: {}, replies: {}, messages: {}, saved: ['f4', 'f5', 'w4'], read: [] };
+  return { ink: 'clean', mode: 'simple', customChats: [], order: chats.map(chat => chat.id), pinned: [], muted: [], edits: {}, deleted: [], reactions: {}, theme: 'light', texture: 'richer', drafts: {}, replies: {}, messages: {}, saved: ['f4', 'f5', 'w4'], read: [] };
 }
 function loadState() {
   const fallback = defaultState();
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
     if (!raw || typeof raw !== 'object') return fallback;
+    fallback.ink = raw.ink === 'typewritten' ? 'typewritten' : 'clean';
     fallback.theme = raw.theme === 'dark' ? 'dark' : 'light';
     fallback.texture = raw.texture === 'original' ? 'original' : 'richer';
     fallback.mode = raw.mode === 'full' ? 'full' : 'simple';
@@ -163,6 +164,37 @@ function applyTexture(texture) {
   state.texture = texture === 'original' ? 'original' : 'richer';
   document.documentElement.dataset.texture = state.texture;
   document.querySelectorAll('[data-texture-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.textureChoice === state.texture)));
+}
+// Wrap text only: the paper, shadows, icons and hit areas stay untouched.
+// No per-letter spans or animation; new messages receive the same static ink.
+function prepareInk(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (node.textContent.trim() && !node.parentElement.closest('.ink-text, svg, script, style, textarea, input, [contenteditable], .sr-only')) nodes.push(node);
+  }
+  for (const node of nodes) {
+    const span = document.createElement('span');
+    span.className = 'ink-text';
+    node.replaceWith(span);
+    span.append(node);
+  }
+}
+const inkObserver = new MutationObserver(() => {
+  inkObserver.disconnect();
+  prepareInk(document.body);
+  inkObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+});
+function applyInk(ink) {
+  state.ink = ink === 'typewritten' ? 'typewritten' : 'clean';
+  document.documentElement.dataset.ink = state.ink;
+  document.querySelectorAll('[data-ink-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.inkChoice === state.ink)));
+  inkObserver.disconnect();
+  if (state.ink === 'typewritten') {
+    prepareInk(document.body);
+    inkObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
 }
 function renderChatList() {
   const query = $('chat-search').value.trim().toLocaleLowerCase();
@@ -663,6 +695,7 @@ $('undo-delete').addEventListener('click',undoDelete);
 $('dismiss-undo').addEventListener('click', () => { deletedForUndo = null; $('delete-undo').hidden = true; });
 document.querySelectorAll('[data-theme-choice]').forEach(button => button.addEventListener('click', () => { applyTheme(button.dataset.themeChoice); persist(); }));
 document.querySelectorAll('[data-texture-choice]').forEach(button => button.addEventListener('click', () => { applyTexture(button.dataset.textureChoice); persist(); }));
+document.querySelectorAll('[data-ink-choice]').forEach(button => button.addEventListener('click', () => { applyInk(button.dataset.inkChoice); persist(); }));
 $('selection-reply').addEventListener('click',replyToSelection);
 $('selection-copy').addEventListener('click',copySelection);
 $('selection-save').addEventListener('click', () => { if (selectedMessageId) toggleSaved(selectedMessageId); });
@@ -733,6 +766,7 @@ renderChatList();
 renderConversation();
 renderMemory();
 setMemory(!smallScreen.matches);
+applyInk(state.ink);
 if (!storageAvailable) announce('Storage is unavailable. Your changes will last for this visit.');
 
 const measureToolbar = () => document.documentElement.style.setProperty('--toolbar-height',document.querySelector('.prototype-bar').getBoundingClientRect().height + 'px');
