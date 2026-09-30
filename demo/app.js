@@ -165,11 +165,46 @@ function applyTexture(texture) {
   document.documentElement.dataset.texture = state.texture;
   document.querySelectorAll('[data-texture-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.textureChoice === state.texture)));
 }
-// The saved key stays compatible; the finish only adds paper depth in CSS.
+// Shade whole native text runs. Never split letters or change their typography.
+function preparePress() {
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (node.textContent.trim() && !node.parentElement.closest('.press-source, .press-label, svg, script, style, input, textarea, [contenteditable], [aria-hidden="true"]')) nodes.push(node);
+  }
+  for (const node of nodes) {
+    const parent = node.parentElement;
+    if (parent.closest('.press-source, .press-label')) continue;
+    const style = getComputedStyle(parent);
+    const textOnly = [...parent.childNodes].every(child => child.nodeType === Node.TEXT_NODE);
+    if (textOnly && style.display !== 'inline' && style.backgroundColor === 'rgba(0, 0, 0, 0)' && style.backgroundImage === 'none' && style.boxShadow === 'none') {
+      parent.classList.add('press-source');
+    } else {
+      const label = document.createElement('span');
+      label.className = 'press-label';
+      node.replaceWith(label);
+      label.append(node);
+    }
+  }
+}
+const pressObserver = new MutationObserver(() => {
+  pressObserver.disconnect();
+  preparePress();
+  pressObserver.observe(document.body, { childList: true, subtree: true });
+});
 function applyInk(ink) {
+  pressObserver.disconnect();
   state.ink = ink === 'typewritten' ? 'typewritten' : 'clean';
   document.documentElement.dataset.ink = state.ink;
   document.querySelectorAll('[data-ink-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.inkChoice === state.ink)));
+  if (state.ink === 'typewritten') {
+    preparePress();
+    pressObserver.observe(document.body, { childList: true, subtree: true });
+  } else {
+    document.querySelectorAll('.press-source').forEach(node => node.classList.remove('press-source'));
+    document.querySelectorAll('.press-label').forEach(node => node.replaceWith(...node.childNodes));
+  }
 }
 function renderChatList() {
   const query = $('chat-search').value.trim().toLocaleLowerCase();

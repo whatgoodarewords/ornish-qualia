@@ -323,18 +323,14 @@ h2 { font-size: 23px; font-weight: 550; letter-spacing: -.025em; margin: 0; }
 
 .prototype-controls > .theme-switch, .texture-switch { flex-shrink: 0; }
 
-/* A shallow impression in paper. Native text stays intact: no changes to
-   font, shaping, kerning, baseline, opacity or glyph edges. */
-:root[data-ink='typewritten'] body {
-  text-shadow: 0 .75px 0 #ffffffc2;
-}
-:root[data-theme='dark'][data-ink='typewritten'] body,
-:root[data-ink='typewritten'] :is(.mine .bubble, .avatar.friday) {
-  text-shadow: 0 -.65px 0 #0008, 0 .65px 0 #ffffff12;
-}
-:root[data-ink='typewritten'] :is(button, input, textarea) { text-shadow: inherit; }
+/* Concave lighting is clipped to native letter shapes; the paper and all
+   text metrics stay untouched. Small button labels need a paintable run. */
+.press-label { display: inline-block; max-width: 100%; vertical-align: baseline; pointer-events: none; }
+:root[data-ink='typewritten'] :is(.press-source, .press-label, input, textarea) { filter: url(#press-paper); }
+:root[data-theme='dark'][data-ink='typewritten'] :is(.press-source, .press-label, input, textarea),
+:root[data-ink='typewritten'] :is(.mine .bubble, .avatar.friday) :is(.press-source, .press-label) { filter: url(#press-dark); }
 @media (forced-colors: active), (prefers-contrast: more) {
-  :root[data-ink='typewritten'] * { text-shadow: none !important; }
+  :root[data-ink='typewritten'] :is(.press-source, .press-label, input, textarea) { filter: none !important; }
 }
 
 /* One selected slip, with a small action row beside the writing area. */
