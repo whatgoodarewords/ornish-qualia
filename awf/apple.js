@@ -99,13 +99,19 @@
       caption: p < .10 ? 'An idea, before an image.' : p < .225 ? 'A word, and what it holds.' : p < .407 ? 'Meaning finds a shape.' : p < .54 ? 'More than a shape.' : p < .62 ? 'Only an outline.' : p < .72 ? 'The outline takes colour.' : p < .855 ? 'A shape holds its colour.' : p < .97 ? 'Details come into view.' : 'An apple, imagined.'
     };
   }
-  const sliderSample=progress=>sample(playbackProgress(clamp(progress/.9)*DURATION));
+  // The neutral outline occupies the exact middle of the manual survey.
+  const OUTLINE_TIME=playbackTime(.59);
+  const sliderSample=progress=>{
+    const p=clamp(progress,0,.9);
+    const time=p<=.5?p/.5*OUTLINE_TIME:OUTLINE_TIME+(p-.5)/.4*(DURATION-OUTLINE_TIME);
+    return sample(playbackProgress(time));
+  };
   if (typeof module === 'object' && module.exports) module.exports = Object.freeze({ sample, sliderSample, clamp, smooth, illustrationColor, makeMotion, wordPose, DURATION, PLAYBACK_KNOTS, playbackProgress, playbackTime, advancePlayback, EDGE_WORDS, SEMANTIC_NODES, SEMANTIC_LINKS });
   if (!root || !root.document) return;
 
   const $ = id => document.getElementById(id);
   const canvas = $('apple');
-  const BUILD = 'apple-survey-20261001-12';
+  const BUILD = 'apple-survey-20261001-17';
   canvas.setAttribute('data-build',BUILD);
   const ctx = canvas.getContext('2d', { alpha: true });
   const slider = $('imagination');
@@ -125,7 +131,7 @@
   const GLYPH_SIZE = 192;
   const reducedQuery = matchMedia('(prefers-reduced-motion: reduce)');
   const stats = { frames: 0, pixelPasses: 0, cachedLayers: 0, contourPoints: 0, words: 0 };
-  const state = { progress: 0, playing: false, ready: false, hidden: document.hidden, inView: false, reducedMotion: reducedQuery.matches, error: null };
+  const state = { progress: .5, playing: false, ready: false, hidden: document.hidden, inView: false, reducedMotion: reducedQuery.matches, error: null };
   let raf = 0;
   let lastTime = null;
   let dirty = false;
@@ -533,6 +539,7 @@
   root.appleExperience=Object.freeze({
     get ready(){return state.ready;},get playing(){return false;},
     get value(){return Math.round(state.progress*1000);},
+    get hasSelection(){return userInteracted;},
     get resultsVisible(){return resultsVisible;},
     setResultsVisible(value){if(resultsVisible===Boolean(value))return;resultsVisible=Boolean(value);playbackListeners.forEach(listener=>listener());},
     arrive(){}, toggle(){},
@@ -560,7 +567,7 @@
       slider.disabled=false;play.disabled=false;replay.disabled=false;
       const query=new URLSearchParams(location.search);const requested=query.get('stage');
       const fixed=requested!==null&&requested.trim()!==''&&Number.isFinite(Number(requested));
-      state.progress=fixed?clamp(Number(requested)):0;
+      state.progress=fixed?clamp(Number(requested)):.5;
       render();setPlaying(false);attemptArrival();
       playbackListeners.forEach(listener=>listener());
     } catch(error) {fail(error);}

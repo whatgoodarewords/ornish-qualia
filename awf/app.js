@@ -1,25 +1,68 @@
 (function () {
   'use strict';
+  function landingPose(g,artwork,{first,second,y,viewportHeight,appleHandle}){
+    const mix=(a,b,p)=>a+(b-a)*p;
+    const size=appleHandle?mix(g.scale,.7,second):g.scale;
+    const x=(appleHandle?mix(g.faceX,g.targetX,second):g.faceX)-artwork.fruitX*size;
+    const edge=viewportHeight-(artwork.height-artwork.fruitY)*size-12;
+    const from=mix(g.faceY,g.groinY,first);
+    const top=appleHandle?Math.min(edge,mix(from,Math.min(g.targetY-y,edge),second))-artwork.fruitY*size:
+      mix(from-artwork.fruitY*size,viewportHeight+24,second);
+    return {size,x,top};
+  }
+  if(typeof module==='object'&&module.exports)module.exports={landingPose};
+  if(typeof document==='undefined')return;
   const root=document.documentElement;
   const runway=document.querySelector('.hero-runway');
   const hero=document.querySelector('.hero');
   const art=document.querySelector('.hero-art');
+  const title=document.querySelector('.hero-title');
   const apple=document.querySelector('.scroll-apple');
   const nav=document.querySelector('.navigation');
   const section=document.getElementById('imagine');
-  const dock=document.getElementById('apple-dock');
+  const dock=document.getElementById('imagination-handle');
+  const options=document.getElementById('site-options');
+  const handleToggle=document.getElementById('apple-handle-toggle');
   if(!runway||!hero||!art||!apple||!section||!dock)return;
   const scene=apple.querySelector('svg'),bounds=scene.viewBox.baseVal;
   const artwork={width:66,height:74,fruitX:(Number(scene.dataset.fruitX)-bounds.x)/bounds.width*66,fruitY:(Number(scene.dataset.fruitY)-bounds.y)/bounds.height*74};
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const clamp=n=>Math.max(0,Math.min(1,n)),mix=(a,b,p)=>a+(b-a)*p;
   const ease=p=>p*p*(3-2*p);
+  let appleHandle=true;
+  const handleScale=.7;
+  function readPreference(key,fallback){try{return localStorage.getItem(key)||fallback;}catch{return fallback;}}
+  function savePreference(key,value){try{localStorage.setItem(key,value);}catch{}}
+  const handleArt=scene.cloneNode(true);
+  handleArt.classList.add('handle-apple');
+  handleArt.querySelector('clipPath').id='magritte-handle-clip';
+  handleArt.querySelector('image').setAttribute('clip-path','url(#magritte-handle-clip)');
+  handleArt.style.width=`${artwork.width*handleScale}px`;
+  handleArt.style.height=`${artwork.height*handleScale}px`;
+  handleArt.style.left=`${18-artwork.fruitX*handleScale}px`;
+  handleArt.style.top=`${18-artwork.fruitY*handleScale}px`;
+  dock.appendChild(handleArt);
+  appleHandle=readPreference('awf-apple-handle','true')!=='false';
+  handleToggle.checked=appleHandle;
+  root.classList.toggle('apple-handle-mode',appleHandle);
+  const logos=Array.from(document.querySelectorAll('[data-logo]'));
+  const logoChoices=Array.from(document.querySelectorAll('input[name="logo"]'));
+  function chooseLogo(value){
+    if(!['original','centered','right'].includes(value))value='original';
+    for(const logo of logos)logo.toggleAttribute('hidden',logo.dataset.logo!==value);
+    for(const choice of logoChoices)choice.checked=choice.value===value;
+  }
+  chooseLogo(readPreference('awf-logo','original'));
+  for(const choice of logoChoices)choice.addEventListener('change',()=>{if(choice.checked){chooseLogo(choice.value);savePreference('awf-logo',choice.value);}});
+  options.hidden=false;
+  options.addEventListener('keydown',event=>{if(event.key==='Escape'){options.open=false;options.querySelector('summary').focus();}});
+  document.addEventListener('pointerdown',event=>{if(options.open&&!options.contains(event.target))options.open=false;});
   let layout,frame=0,needsMeasure=true,inspectHash=true,previousY=window.scrollY;
   let forceDock=Boolean(location.hash&&location.hash!=='#top'),journey=false,docked=false,connected=false,arrived=false;
   const written=new WeakMap();
   function style(node,key,value){let cache=written.get(node);if(!cache){cache={};written.set(node,cache);}if(cache[key]!==value){node.style[key]=value;cache[key]=value;}}
   function attribute(node,key,value){if(node.getAttribute(key)!==String(value))node.setAttribute(key,String(value));}
-  function connect(){if(!connected&&window.appleExperience){connected=true;if(arrived)window.appleExperience.arrive();}}
+  function connect(){if(!connected&&window.appleExperience){connected=true;window.appleExperience.subscribe(()=>{needsMeasure=true;schedule();});window.appleExperience.onSelection(()=>{if(!docked){needsMeasure=true;schedule();}});if(arrived)window.appleExperience.arrive();}}
   function configure(){root.classList.add('site-enhanced');root.classList.toggle('hero-scroll-active',!reduced.matches);needsMeasure=true;schedule();}
   function measure(){
     const navHeight=nav.getBoundingClientRect().height;
@@ -29,9 +72,16 @@
     const scale=Math.max(box.width/1561,box.height/1008);
     const faceX=box.left+(box.width-1561*scale)*(position[0]||0)+778*scale;
     const offsetY=(box.height-1008*scale)*(position[1]||0);
+    // Keep the complete wordmark above the painted hat as the cover crop changes.
+    const hatY=offsetY+267*scale;
+    const fitWidth=Math.max(1,(hatY-24)*801/270);
+    root.style.setProperty('--logo-fit-width',`${fitWidth}px`);
+    const titleHeight=title.getBoundingClientRect().height;
+    const preferredTop=box.height*(window.innerWidth<=600?.11:.08);
+    root.style.setProperty('--title-top',`${Math.max(12,Math.min(preferredTop,hatY-titleHeight-12))}px`);
     const start=wrapper.top+y,run=Math.max(0,wrapper.height-box.height);
     layout={start,run,faceX,faceY:offsetY+389*scale,groinY:Math.min(box.height-48,offsetY+910*scale),scale:2.3*scale,
-      targetX:target.left,targetY:target.top+y,targetWidth:target.width,targetHeight:target.height,
+      targetX:target.left+target.width/2,targetY:target.top+y+target.height/2,targetWidth:target.width,targetHeight:target.height,
       navHeight,sectionTop:sectionBox.top+y,end:Math.min(Math.max(0,root.scrollHeight-window.innerHeight),Math.max(start+run+1,sectionBox.top+y-navHeight))};
     needsMeasure=false;
   }
@@ -55,12 +105,11 @@
     const dockVisible=g.targetY-y>=g.navHeight&&g.targetY-y+g.targetHeight<=window.innerHeight;
     if(docked&&dockVisible&&!arrived){arrived=true;window.appleExperience?.arrive();}
     if(natural)journey=false;
-    if(docked)return;
+    if(docked){window.fallingAppleSpin?.update(1,false);return;}
     const first=ease(clamp((y-g.start)/Math.max(1,g.run))),second=ease(travel);
-    const size=g.scale;
-    const x=g.faceX-artwork.fruitX*size;
-    const top=mix(mix(g.faceY,g.groinY,first)-artwork.fruitY*size,window.innerHeight+24,second);
+    const {size,x,top}=landingPose(g,artwork,{first,second,y,viewportHeight:window.innerHeight,appleHandle});
     const visible=top+artwork.height*size>0&&top<window.innerHeight;
+    window.fallingAppleSpin?.update(clamp((y-g.start)/Math.max(1,g.end-g.start)),visible);
     if(visible)style(apple,'transform',`translate3d(${x}px,${top}px,0) scale(${size})`);
     style(apple,'visibility',visible?'visible':'hidden');
     const overPainting=y<=g.start+g.run;
@@ -85,8 +134,9 @@
   }
   window.addEventListener('hashchange',()=>{if(redirectHiddenHash())return;if(location.hash!=='#imagine')journey=false;forceDock=Boolean(location.hash&&location.hash!=='#top'&&!journey);schedule();});
   section.addEventListener('focusin',event=>{if(journey&&(event.target===section||event.target===dock))return;journey=false;forceDock=true;schedule();});
+  handleToggle.addEventListener('change',()=>{appleHandle=handleToggle.checked;savePreference('awf-apple-handle',String(appleHandle));root.classList.toggle('apple-handle-mode',appleHandle);needsMeasure=true;schedule();});
   reduced.addEventListener('change',configure);
   if(document.fonts)document.fonts.ready.then(()=>{needsMeasure=true;schedule();});
-  new ResizeObserver(()=>{needsMeasure=true;schedule();}).observe(dock);
+  new ResizeObserver(()=>{needsMeasure=true;schedule();}).observe(document.getElementById('imagination-control'));
   configure();
 })();

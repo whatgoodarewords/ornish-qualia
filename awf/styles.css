@@ -55,3 +55,42 @@ footer{border-top:1px solid var(--line);padding:2.5rem 3.5rem;display:flex;align
 .hero h1.reference-logo{display:block;width:clamp(345px,35vw,440px);max-width:100%;margin:0 auto;font-size:inherit;line-height:0;letter-spacing:normal}
 .reference-logo svg{display:block;width:100%;height:auto;overflow:hidden}
 @media(max-width:600px){.hero h1.reference-logo{width:min(310px,100%)}}
+
+/* The green fruit lands on the same center used by the native range. */
+.imagination-control{height:72px;overflow:visible;contain:layout}
+.slider-track{top:35px}
+.slider-fill{transform:scaleX(.5)}
+.handle-apple{position:absolute;display:none;overflow:visible;pointer-events:none}
+.apple-handle-mode .slider-handle::before{display:none}
+.apple-handle-mode .handle-apple{display:block}
+.apple-handle-mode .imagination-control.keyboard-focus:focus-within .slider-handle::after{inset:3px;border-color:var(--ink);outline:1px solid #101315;outline-offset:1px}
+.hero-scroll-active:not(.experience-arrived) .experience-controls{visibility:visible;pointer-events:auto}
+.hero-scroll-active:not(.experience-arrived) .handle-apple{visibility:hidden}
+.fall-spin-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.scroll-apple.is-over-painting .fall-spin-canvas{filter:drop-shadow(0 2px 2px #0003)}
+/* One quiet disclosure keeps the optional experiments out of the composition. */
+.site-options{position:fixed;z-index:9;left:max(1rem,env(safe-area-inset-left));bottom:calc(.8rem + env(safe-area-inset-bottom));border:0;font-size:.75rem;line-height:1.4}
+.site-options>summary{min-height:40px;padding:.5rem .75rem;border:1px solid #eceae23d;border-radius:999px;background:#101315e8;color:var(--muted);font-size:.75rem;justify-content:center}
+.site-options[open]>summary{color:var(--ink);border-color:#eceae280}
+.options-panel{position:absolute;bottom:calc(100% + .5rem);left:0;width:244px;padding:.5rem 1rem .8rem;border:1px solid #eceae23d;border-radius:9px;background:#111515fa;color:var(--ink);box-shadow:0 8px 28px #0002}
+.option-switch{position:relative;display:flex;justify-content:space-between;align-items:center;min-height:44px;gap:1rem;cursor:pointer}
+.option-switch input{position:absolute;right:0;width:34px;height:30px;opacity:0;cursor:pointer}
+.switch-mark{width:30px;height:17px;padding:3px;border:1px solid #8c91877d;border-radius:99px;background:#3c423c;pointer-events:none}
+.switch-mark::before{content:'';display:block;width:9px;height:9px;border-radius:50%;background:#d0d0c8}
+.option-switch input:checked+.switch-mark{background:#7c8872;border-color:#8b987f}
+.option-switch input:checked+.switch-mark::before{transform:translateX(13px);background:#fff}
+.option-switch input:focus-visible+.switch-mark{outline:2px solid var(--ink);outline-offset:4px}
+.option-switch:has(input:disabled){opacity:.5}
+.logo-options{padding:.4rem 0 0;margin:.5rem 0 0;border:0;border-top:1px solid #eceae225;display:block}
+.logo-options legend{float:none;width:auto;padding:0 .35rem 0 0;color:var(--muted)}
+.logo-options label{position:relative;display:inline-block;cursor:pointer}
+.logo-options input{position:absolute;opacity:0;width:100%;height:100%;margin:0}
+.logo-options span{display:block;padding:.45rem .55rem;border:1px solid transparent;border-radius:4px}
+.logo-options input:checked+span{border-color:#eceae260;background:#eceae212}
+.logo-options input:focus-visible+span{outline:2px solid var(--ink);outline-offset:2px}
+@media(max-width:600px){.site-options{left:max(.6rem,env(safe-area-inset-left));bottom:calc(.5rem + env(safe-area-inset-bottom))}.site-options>summary{min-height:34px;padding:.35rem .65rem}.options-panel{width:232px}.imagine{padding-bottom:3.2rem}}
+
+/* Fit the wordmark into the sky above the hat without changing its lettering. */
+.hero-title{top:var(--title-top,8%)}
+.hero h1.reference-logo{width:min(clamp(345px,35vw,440px),var(--logo-fit-width,9999px))}
+@media(max-width:600px){.hero-title{top:var(--title-top,11%)}.hero h1.reference-logo{width:min(310px,100%,var(--logo-fit-width,9999px))}}

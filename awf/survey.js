@@ -9,11 +9,12 @@
   const identityKey='awf-anonymous-response-id';
   const endpoint=window.location?.hostname==='ornish.org'?'https://aphantasia-minds-eye.andreinbali.chatgpt.site/api/responses':'/api/responses';
   let identity=null,saving=false,savedValue=null;
-  api.subscribe(()=>{submit.disabled=!api.ready||saving;});
+  api.subscribe(()=>{submit.disabled=!api.ready||!api.hasSelection||saving;});
   api.onSelection(()=>{
     results.hidden=true;canvas.hidden=false;api.setResultsVisible(false);
     submit.textContent=savedValue===null?'Submit':'Update response';
     if(!saving)status.textContent='';
+    submit.disabled=!api.ready||!api.hasSelection||saving;
   });
   function browserIdentity() {
     // This browser-only key is a deduplication token, never the tally itself.
@@ -40,7 +41,7 @@
     canvas.hidden=true;results.hidden=false;api.setResultsVisible(true);
   }
   submit.addEventListener('click',async()=>{
-    if(saving||!api.ready)return;
+    if(saving||!api.ready||!api.hasSelection)return;
     let id;
     try{id=browserIdentity();}catch{status.textContent='Allow browser storage to submit one anonymous response. Your selection is still here.';return;}
     const value=api.value;
@@ -55,6 +56,6 @@
       if(api.value===value)showResults(data,value);
       status.textContent=api.value===value?'Response saved. Move the slider to change it.':'Response saved. Submit again to save your new position.';
     } catch {status.textContent='Could not save your response. Your selection is still here. Please try again.';}
-    finally{clearTimeout(timeout);saving=false;submit.disabled=!api.ready;submit.textContent=savedValue===null?'Submit':'Update response';}
+    finally{clearTimeout(timeout);saving=false;submit.disabled=!api.ready||!api.hasSelection;submit.textContent=savedValue===null?'Submit':'Update response';}
   });
 })();
