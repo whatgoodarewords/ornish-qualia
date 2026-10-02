@@ -115,7 +115,7 @@
 
   const $ = id => document.getElementById(id);
   const canvas = $('apple');
-  const BUILD = 'apple-survey-20261002-21';
+  const BUILD = 'apple-survey-20261002-22';
   canvas.setAttribute('data-build',BUILD);
   const ctx = canvas.getContext('2d', { alpha: true });
   const slider = $('imagination');
@@ -148,8 +148,7 @@
   const playbackListeners=new Set();
   const selectionListeners=new Set();
   const artworkListeners=new Set(),variantRecords=new Map();
-  let activeVariant=null,colourChoice=null;
-  const colourButtons=Array.from(document.querySelectorAll?.('[data-apple-colour]')||[]);
+  let activeVariant=null;
   let resultsVisible=false;
   let photo, flat, contour, wordTracks, geometry;
 
@@ -546,7 +545,8 @@
     get resultsVisible(){return resultsVisible;},
     get colour(){return activeVariant?.colour||'green';},
     get artwork(){return activeVariant;},
-    setColour(colour){const variant=variantRecords.get(colour);if(variant?.detailReady)variant.detailActive=true;colourChoice?.request(colour);},
+    // Retain compatibility with old callers without changing the green artwork.
+    setColour(){},
     get artworks(){return Array.from(variantRecords.values());},
     onArtwork(listener){artworkListeners.add(listener);listener(activeVariant);return ()=>artworkListeners.delete(listener);},
     setResultsVisible(value){if(resultsVisible===Boolean(value))return;resultsVisible=Boolean(value);playbackListeners.forEach(listener=>listener());},
@@ -576,11 +576,10 @@
     finally{install(previous);}
     return variant;
   }
-  function activate(variant,colour,items){
+  function activate(variant){
     const changed=activeVariant!==variant;
     activeVariant=variant;install(variant.artwork);
     if(changed&&variant.detailReady)variant.detailActive=true;
-    colourButtons.forEach(button=>{const key=button.dataset.appleColour;button.setAttribute('aria-pressed',String(key===colour));button.disabled=items[key].status!=='ready';});
     if(!state.ready){
       state.ready=true;stage.setAttribute('aria-busy','false');message.hidden=true;
       slider.disabled=false;play.disabled=false;replay.disabled=false;
@@ -598,11 +597,11 @@
     message.textContent='The apple could not be loaded. Please refresh to try again.';syncDebug();console.error('AWF artwork:',error);
   }
   if(root.AppleArtwork){
-    let preferred='green';try{preferred=localStorage.getItem('awf-apple-colour')||'green';}catch{}
-    colourChoice=root.AppleArtwork.createChoice({preferred,save:colour=>localStorage.setItem('awf-apple-colour',colour),load:colour=>root.AppleArtwork.loadBase(colour).then(prepared),changed:activate,failed:()=>fail(Error('Neither apple artwork is available.'))});
-    colourButtons.forEach(button=>button.addEventListener('click',()=>root.appleExperience.setColour(button.dataset.appleColour)));
+    // Green is the only display mode, including browsers with a saved Red choice.
+    const base=root.AppleArtwork.loadBase('green').then(prepared);
+    base.then(activate,fail);
     // Optional details start after the base has made the manual slider usable.
-    root.AppleArtwork.loadBase('green').then(variant=>root.AppleArtwork.loadDetail(variant)).then(variant=>{
+    base.then(variant=>root.AppleArtwork.loadDetail(variant)).then(variant=>{
       const record=variant.artwork;if(!record)return;
       const g=record.geometry,c=surface(),ctx=c.getContext('2d');
       ctx.drawImage(variant.detail,g.source.x,g.source.y,g.source.width,g.source.height,g.x,g.y,g.width,g.height);record.detailPhoto=c;
@@ -611,7 +610,7 @@
     }).catch(()=>{});
   }else{
     // A static source remains usable when an optional renderer script is absent.
-    const image=new Image();image.onload=()=>{try{const variant=prepared({colour:'red',base:image,baseId:'apple.png',detailReady:false});activate(variant,'red',{red:{status:'ready'},green:{status:'failed'}});}catch(error){fail(error);}};
-    image.onerror=()=>fail(Error('Unable to load the apple image.'));image.src='assets/apple.png';
+    const image=new Image();image.onload=()=>{try{const variant=prepared({colour:'green',base:image,baseId:'green-hyperreal-fallback',detailReady:false});activate(variant);}catch(error){fail(error);}};
+    image.onerror=()=>fail(Error('Unable to load the apple image.'));image.src='assets/apple-green-hyperreal-v1.png';
   }
 })(typeof window==='object'?window:null);
