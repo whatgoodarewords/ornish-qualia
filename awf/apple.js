@@ -66,12 +66,13 @@
     const t=smooth(0,1,amount),u=1-t;
     return {x:u*u*motion.from.x+2*u*t*motion.cx+t*t*motion.to.x,y:u*u*motion.from.y+2*u*t*motion.cy+t*t*motion.to.y,size:motion.from.size+(motion.to.size-motion.from.size)*t,angle:motion.from.angle+(motion.to.angle-motion.from.angle)*t};
   }
-  function illustrationColor(r, g, b, x, y) {
+  function illustrationColor(r, g, b, x, y, colour='red') {
     const light=r*.55+g*.3+b*.15;
     const mix=(a,b,t)=>a.map((value,index)=>value+(b[index]-value)*t);
     let color=mix([82,24,28],[130,35,34],smooth(47,69,light));
     color=mix(color,[165,54,43],smooth(82,102,light));
     color=mix(color,[189,89,63],smooth(123,143,light));
+    if(colour==='green')color=mix([49,65,29],[144,161,72],smooth(35,180,r*.25+g*.65+b*.1));
     // Hue and a narrow, sloping stem region distinguish plant parts. Height alone
     // must never recolour the fruit's shoulders as a horizontal brown band.
     const leaf=smooth(.73,.90,g/(r+1))*smooth(1.05,1.45,g/(b+1))*(1-smooth(.16,.26,y));
@@ -80,6 +81,9 @@
     return mix(color,mix([64,73,42],[105,113,61],smooth(45,105,g)),leaf).map(Math.round);
   }
 
+  function smoothOutline(loop){
+    return loop.map((_,i)=>{let x=0,y=0;for(let k=-2;k<=2;k++){const p=loop[(i+k+loop.length)%loop.length];x+=p[0];y+=p[1];}return [x/5,y/5];});
+  }
   // The visual is a pure function of progress: scrubbing, playback and still QA frames agree.
   function sample(progress) {
     const p = clamp(progress);
@@ -106,12 +110,12 @@
     const time=p<=.5?p/.5*OUTLINE_TIME:OUTLINE_TIME+(p-.5)/.4*(DURATION-OUTLINE_TIME);
     return sample(playbackProgress(time));
   };
-  if (typeof module === 'object' && module.exports) module.exports = Object.freeze({ sample, sliderSample, clamp, smooth, illustrationColor, makeMotion, wordPose, DURATION, PLAYBACK_KNOTS, playbackProgress, playbackTime, advancePlayback, EDGE_WORDS, SEMANTIC_NODES, SEMANTIC_LINKS });
+  if (typeof module === 'object' && module.exports) module.exports = Object.freeze({ smoothOutline, sample, sliderSample, clamp, smooth, illustrationColor, makeMotion, wordPose, DURATION, PLAYBACK_KNOTS, playbackProgress, playbackTime, advancePlayback, EDGE_WORDS, SEMANTIC_NODES, SEMANTIC_LINKS });
   if (!root || !root.document) return;
 
   const $ = id => document.getElementById(id);
   const canvas = $('apple');
-  const BUILD = 'apple-survey-20261001-17';
+  const BUILD = 'apple-survey-20261002-21';
   canvas.setAttribute('data-build',BUILD);
   const ctx = canvas.getContext('2d', { alpha: true });
   const slider = $('imagination');
@@ -143,6 +147,9 @@
   let arrivalRequested=false,arrivalConsumed=false,userInteracted=false;
   const playbackListeners=new Set();
   const selectionListeners=new Set();
+  const artworkListeners=new Set(),variantRecords=new Map();
+  let activeVariant=null,colourChoice=null;
+  const colourButtons=Array.from(document.querySelectorAll?.('[data-apple-colour]')||[]);
   let resultsVisible=false;
   let photo, flat, contour, wordTracks, geometry;
 
@@ -232,7 +239,7 @@
       const points = [[x*2+1,y*2],[x*2+2,y*2+1],[x*2+1,y*2+2],[x*2,y*2+1]];
       for (const [a,b] of lookup[v] || []) add(points[a],points[b]);
     }
-    const visited = new Set(); let longest = [];
+    const visited = new Set(); let longest = [];const loops=[];
     for (const start of edges.keys()) {
       if (visited.has(start)) continue;
       const loop = []; let current = start, previous = null;
@@ -241,19 +248,16 @@
         const next = edges.get(current).find(point => point !== previous && (!visited.has(point) || point === start));
         previous = current; current = next;
       }
+      if(loop.length>=12)loops.push(smoothOutline(loop));
       if (loop.length > longest.length) longest = loop;
     }
     if (longest.length < 30) throw new Error('The apple image has no usable transparent silhouette.');
     // A short moving average removes raster stair-steps without changing the photograph's geometry.
-    const points = longest.map((_,i) => {
-      let x=0,y=0;
-      for (let j=-2;j<=2;j++) { const q=longest[(i+j+longest.length)%longest.length]; x+=q[0]; y+=q[1]; }
-      return [x/5,y/5];
-    });
+    const points = smoothOutline(longest);
     const lengths = [0];
     for (let i=1;i<=points.length;i++) { const a=points[i-1], b=points[i%points.length]; lengths.push(lengths[i-1]+Math.hypot(b[0]-a[0],b[1]-a[1])); }
     stats.contourPoints = points.length;
-    return { points, lengths, length:lengths[lengths.length-1] };
+    return { points, lengths, loops, length:lengths[lengths.length-1] };
   }
 
   function pointAt(distance) {
@@ -265,8 +269,8 @@
     return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
   }
 
-  function cacheArtwork(image) {
-    const source = surface(image.naturalWidth,image.naturalHeight);
+  function cacheArtwork(image,colour='red') {
+    const source = surface(image.naturalWidth||image.width,image.naturalHeight||image.height);
     const sourceContext = source.getContext('2d', { willReadFrequently:true });
     sourceContext.drawImage(image,0,0);
     const pixels = sourceContext.getImageData(0,0,source.width,source.height); stats.pixelPasses++;
@@ -285,11 +289,7 @@
     contour=traceAlpha();
     // This exact contour geometry is constant; build its drawing commands once.
     contourPath=new Path2D();
-    const contourSteps=Math.max(2,Math.ceil(contour.length/4));
-    for(let i=0;i<=contourSteps;i++) {
-      const q=pointAt(contour.length*i/contourSteps);
-      if(i===0)contourPath.moveTo(...q);else contourPath.lineTo(...q);
-    }
+    for(const loop of contour.loops){loop.forEach((q,i)=>i===0?contourPath.moveTo(...q):contourPath.lineTo(...q));contourPath.lineTo(...loop[0]);}
 
     // Flatten large colour areas from the same image; alpha remains byte-for-byte aligned.
     const blur=surface();const bg=blur.getContext('2d',{willReadFrequently:true});
@@ -300,7 +300,7 @@
       const r=softened.data[i],g=softened.data[i+1],b=softened.data[i+2];
       const y=(Math.floor(i/4/SIZE)-geometry.y)/height;
       const x=((i/4)%SIZE-geometry.x)/width;
-      const color=illustrationColor(r,g,b,x,y);
+      const color=illustrationColor(r,g,b,x,y,colour);
       illustration.data.set(color,i);illustration.data[i+3]=actual.data[i+3];
     }
     flat=surface();flat.getContext('2d').putImageData(illustration,0,0);
@@ -314,8 +314,9 @@
     });
     const topSlot=slots.reduce((best,slot)=>slot.center[1]<best.center[1]?slot:best);
     const otherSlots=slots.filter(slot=>slot!==topSlot).sort((a,b)=>a.angle-b.angle);
-    const otherNodes=SEMANTIC_NODES.filter(node=>node.role!=='center').slice().sort((a,b)=>Math.atan2(a.y-368,a.x-360)-Math.atan2(b.y-368,b.x-360));
-    const assignments=[{node:SEMANTIC_NODES[0],slot:topSlot},...otherNodes.map((node,index)=>({node,slot:otherSlots[index]}))];
+    const nodes=SEMANTIC_NODES.map(node=>node.word==='red'&&colour==='green'?{...node,word:'green'}:node);
+    const otherNodes=nodes.filter(node=>node.role!=='center').slice().sort((a,b)=>Math.atan2(a.y-368,a.x-360)-Math.atan2(b.y-368,b.x-360));
+    const assignments=[{node:nodes[0],slot:topSlot},...otherNodes.map((node,index)=>({node,slot:otherSlots[index]}))];
     wordTracks=assignments.map(({node,slot},index)=>{
       ctx.font='27px Georgia';
       const naturalWidth=ctx.measureText(node.word).width+1.5*(node.word.length-1);
@@ -365,6 +366,7 @@
     ctx.lineCap='round';ctx.lineJoin='round';
     if(s.flat>.001) {ctx.globalAlpha=s.flat*.79;ctx.drawImage(flat,0,0);}
     if(s.photo>.001) {ctx.globalAlpha=s.photo;ctx.drawImage(photo,0,0);}
+    if(activeVariant?.detailActive&&activeVariant.artwork?.detailPhoto&&state.progress>.9){ctx.globalAlpha=smooth(.9,.92,state.progress);ctx.drawImage(activeVariant.artwork.detailPhoto,0,0);}
     // Connections are semantic, not fragments of an apple. They disappear while
     // the same visible letter tracks begin to move toward their final perimeter.
     if(s.connections>.002) {
@@ -372,7 +374,7 @@
       for(const link of SEMANTIC_LINKS){ctx.beginPath();ctx.moveTo(link[0],link[1]);ctx.bezierCurveTo(...link.slice(2));ctx.stroke();}
     }
     if(s.contour>.001) {
-      const neutral=[207,198,180],red=[192,67,54];
+      const neutral=[207,198,180],red=activeVariant?.colour==='green'?[139,162,81]:[192,67,54];
       const ink=neutral.map((value,index)=>Math.round(value+(red[index]-value)*s.contourColour));
       ctx.lineWidth=1.8;ctx.strokeStyle=`rgb(${ink.join(',')})`;ctx.globalAlpha=s.contour*.79;ctx.stroke(contourPath);
     }
@@ -473,6 +475,7 @@
     if(writeValue){const value=String(Math.round(state.progress*1000));if(slider.value!==value)slider.value=value;}
     syncSliderVisual(state.progress);
     requestRender(false);
+    if(activeVariant?.detailReady)activeVariant.detailActive=true;
     selectionListeners.forEach(listener=>listener());
   }
   function scrub(event) {
@@ -541,6 +544,11 @@
     get value(){return Math.round(state.progress*1000);},
     get hasSelection(){return userInteracted;},
     get resultsVisible(){return resultsVisible;},
+    get colour(){return activeVariant?.colour||'green';},
+    get artwork(){return activeVariant;},
+    setColour(colour){const variant=variantRecords.get(colour);if(variant?.detailReady)variant.detailActive=true;colourChoice?.request(colour);},
+    get artworks(){return Array.from(variantRecords.values());},
+    onArtwork(listener){artworkListeners.add(listener);listener(activeVariant);return ()=>artworkListeners.delete(listener);},
     setResultsVisible(value){if(resultsVisible===Boolean(value))return;resultsVisible=Boolean(value);playbackListeners.forEach(listener=>listener());},
     arrive(){}, toggle(){},
     subscribe(listener){playbackListeners.add(listener);listener();return ()=>playbackListeners.delete(listener);},
@@ -560,24 +568,50 @@
   reducedQuery.addEventListener('change',event=>{state.reducedMotion=event.matches;if(event.matches)setPlaying(false);});
   root.awfSnapshot=()=>JSON.parse(JSON.stringify({ ...state, duration:DURATION, phase:sliderSample(state.progress), geometry, stats, rafActive:Boolean(raf) }));
 
-  const image=new Image();
-  image.onload=()=>{
-    try {
-      cacheArtwork(image);state.ready=true;stage.setAttribute('aria-busy','false');message.hidden=true;
-      slider.disabled=false;play.disabled=false;replay.disabled=false;
-      const query=new URLSearchParams(location.search);const requested=query.get('stage');
-      const fixed=requested!==null&&requested.trim()!==''&&Number.isFinite(Number(requested));
-      state.progress=fixed?clamp(Number(requested)):.5;
-      render();setPlaying(false);attemptArrival();
-      playbackListeners.forEach(listener=>listener());
-    } catch(error) {fail(error);}
-  };
-  function fail(error) {
-    state.error=error.message;stage.setAttribute('aria-busy','false');message.hidden=false;
-    message.textContent='The apple could not be loaded. Please refresh to try again.';
-    syncDebug();
-    console.error('AWF artwork:',error);
+  function install(record){({photo,flat,contour,contourPath,wordTracks,geometry}=record);}
+  function capture(){return {photo,flat,contour,contourPath,wordTracks,geometry};}
+  function prepared(variant){
+    const previous=capture();
+    try{cacheArtwork(variant.base,variant.colour);variant.artwork=capture();variantRecords.set(variant.colour,variant);}
+    finally{install(previous);}
+    return variant;
   }
-  image.onerror=()=>fail(new Error('Unable to load the apple image.'));
-  image.src='assets/apple.png';
+  function activate(variant,colour,items){
+    const changed=activeVariant!==variant;
+    activeVariant=variant;install(variant.artwork);
+    if(changed&&variant.detailReady)variant.detailActive=true;
+    colourButtons.forEach(button=>{const key=button.dataset.appleColour;button.setAttribute('aria-pressed',String(key===colour));button.disabled=items[key].status!=='ready';});
+    if(!state.ready){
+      state.ready=true;stage.setAttribute('aria-busy','false');message.hidden=true;
+      slider.disabled=false;play.disabled=false;replay.disabled=false;
+      const query=new URLSearchParams(location.search),requested=query.get('stage');
+      const fixed=requested!==null&&requested.trim()!==''&&Number.isFinite(Number(requested));state.progress=fixed?clamp(Number(requested)):.5;
+    }
+    // Display changes never enter the manual-selection path or touch results.
+    if(changed){render();dirty=false;cancelFrame();}
+    else if(variant.detailActive){dirty=true;schedule();}
+    artworkListeners.forEach(listener=>listener(activeVariant));
+    playbackListeners.forEach(listener=>listener());
+  }
+  function fail(error) {
+    state.error=error.message;state.ready=false;slider.disabled=true;stage.setAttribute('aria-busy','false');message.hidden=false;
+    message.textContent='The apple could not be loaded. Please refresh to try again.';syncDebug();console.error('AWF artwork:',error);
+  }
+  if(root.AppleArtwork){
+    let preferred='green';try{preferred=localStorage.getItem('awf-apple-colour')||'green';}catch{}
+    colourChoice=root.AppleArtwork.createChoice({preferred,save:colour=>localStorage.setItem('awf-apple-colour',colour),load:colour=>root.AppleArtwork.loadBase(colour).then(prepared),changed:activate,failed:()=>fail(Error('Neither apple artwork is available.'))});
+    colourButtons.forEach(button=>button.addEventListener('click',()=>root.appleExperience.setColour(button.dataset.appleColour)));
+    // Optional details start after the base has made the manual slider usable.
+    root.AppleArtwork.loadBase('green').then(variant=>root.AppleArtwork.loadDetail(variant)).then(variant=>{
+      const record=variant.artwork;if(!record)return;
+      const g=record.geometry,c=surface(),ctx=c.getContext('2d');
+      ctx.drawImage(variant.detail,g.source.x,g.source.y,g.source.width,g.source.height,g.x,g.y,g.width,g.height);record.detailPhoto=c;
+      if(activeVariant===variant&&state.progress<=.9)variant.detailActive=true;
+      artworkListeners.forEach(listener=>listener(activeVariant));
+    }).catch(()=>{});
+  }else{
+    // A static source remains usable when an optional renderer script is absent.
+    const image=new Image();image.onload=()=>{try{const variant=prepared({colour:'red',base:image,baseId:'apple.png',detailReady:false});activate(variant,'red',{red:{status:'ready'},green:{status:'failed'}});}catch(error){fail(error);}};
+    image.onerror=()=>fail(Error('Unable to load the apple image.'));image.src='assets/apple.png';
+  }
 })(typeof window==='object'?window:null);
