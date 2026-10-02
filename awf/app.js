@@ -1,5 +1,42 @@
 (function () {
   'use strict';
+  const EVENT_NAMES=Object.freeze([
+    {id:'world-aphantasia-week',label:'World Aphantasia Week',bounds:[156,121,2046,626]},
+    {id:'aphantasia-world-forum',label:'Aphantasia World Forum',bounds:[101,100,2089,619]},
+    {id:'there-is-no-apple',label:'THERE IS NO APPLE',bounds:[248,105,1899,628]},
+    {id:'aphantasia-anonymous',label:'Aphantasia Anonymous',bounds:[68,72,2114,626]},
+    {id:'aphantasia-research-camp',label:'Aphantasia Research Camp',bounds:[80,90,2113,623]}
+  ]);
+  function createNameSelector({canvas,fallback,fallbackText,heading,choices,status,read,save,makeImage}){
+    const defaultName='aphantasia-world-forum',records=new Map(EVENT_NAMES.map(name=>[name.id,name])),images=new Map(),ctx=canvas.getContext('2d');
+    let active=defaultName,request=0;
+    const check=id=>choices.forEach(choice=>{choice.checked=choice.value===id;});
+    const announce=text=>{status.textContent=text;status.hidden=!text;};
+    function load(id){
+      if(!images.has(id))images.set(id,new Promise((resolve,reject)=>{
+        const image=makeImage();image.onload=async()=>{try{if(image.decode)await image.decode();resolve(image);}catch(error){reject(error);}};image.onerror=()=>reject(Error('Wordmark unavailable'));image.src=`assets/wordmarks-v1/${id}.png`;
+      }).catch(error=>{images.delete(id);throw error;}));
+      return images.get(id);
+    }
+    function display(id,image){
+      const name=records.get(id),[left,top,right,bottom]=name.bounds,x=left-8,y=top-8,width=right-left+16,height=bottom-top+16,scale=Math.min(canvas.width/width,canvas.height/height);
+      ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,x,y,width,height,(canvas.width-width*scale)/2,(canvas.height-height*scale)/2,width*scale,height*scale);
+      canvas.hidden=false;fallback.setAttribute('hidden','');fallbackText.hidden=true;heading.textContent=name.label;active=id;
+    }
+    function textFallback(){if(canvas.hidden){fallback.setAttribute('hidden','');fallbackText.hidden=false;fallbackText.textContent=records.get(active).label;}}
+    function choose(value,persist=true){
+      const id=records.has(value)?value:defaultName,version=++request;check(id);announce(`Loading ${records.get(id).label}…`);
+      load(id).then(image=>{
+        if(version!==request)return;display(id,image);check(id);announce('');if(persist)try{save(id);}catch{}
+      },()=>{if(version!==request)return;check(active);textFallback();announce(`That wordmark could not be loaded. Keeping ${records.get(active).label}.`);});
+    }
+    let preferred;try{preferred=read();}catch{}if(!records.has(preferred))preferred=defaultName;
+    // A decoded default also supplies the visible fallback during a slow saved choice.
+    if(preferred!==defaultName)load(defaultName).then(image=>{if(canvas.hidden&&active===defaultName)display(defaultName,image);},textFallback);
+    for(const choice of choices)choice.addEventListener('change',()=>{if(choice.checked)choose(choice.value);});
+    choose(preferred,false);
+    return {get active(){return active;}};
+  }
   function paintingGeometry(width,height,position=[.5,.5]){
     // The original bitmap is the coordinate system in both compositions.
     const scale=Math.max(width/1561,height/1008),offsetX=(width-1561*scale)*position[0],offsetY=(height-1008*scale)*position[1];
@@ -19,7 +56,7 @@
     const finalPivot=appleHandle?Math.min(g.targetY-end,viewportHeight-(artwork.height-artwork.fruitY)*.7-12):viewportHeight+24+artwork.fruitY*g.scale;
     return {size,x,top:mix(g.faceY,finalPivot)-artwork.fruitY*size};
   }
-  if(typeof module==='object'&&module.exports)module.exports={landingPose,paintingGeometry};
+  if(typeof module==='object'&&module.exports)module.exports={landingPose,paintingGeometry,EVENT_NAMES,createNameSelector};
   if(typeof document==='undefined')return;
   const root=document.documentElement;
   const runway=document.querySelector('.hero-runway');
@@ -55,15 +92,8 @@
   appleHandle=readPreference('awf-apple-handle','true')!=='false';
   handleToggle.checked=appleHandle;
   root.classList.toggle('apple-handle-mode',appleHandle);
-  const logos=Array.from(document.querySelectorAll('[data-logo]'));
-  const logoChoices=Array.from(document.querySelectorAll('input[name="logo"]'));
-  function chooseLogo(value){
-    if(!['original','centered','right'].includes(value))value='original';
-    for(const logo of logos)logo.toggleAttribute('hidden',logo.dataset.logo!==value);
-    for(const choice of logoChoices)choice.checked=choice.value===value;
-  }
-  chooseLogo(readPreference('awf-logo','original'));
-  for(const choice of logoChoices)choice.addEventListener('change',()=>{if(choice.checked){chooseLogo(choice.value);savePreference('awf-logo',choice.value);}});
+  const nameCanvas=document.getElementById('event-wordmark');
+  if(nameCanvas)createNameSelector({canvas:nameCanvas,fallback:document.getElementById('event-wordmark-fallback'),fallbackText:document.getElementById('event-wordmark-text'),heading:document.getElementById('event-name-label'),choices:Array.from(document.querySelectorAll('input[name="event-name"]')),status:document.getElementById('event-name-status'),read:()=>readPreference('awf-event-name','aphantasia-world-forum'),save:value=>savePreference('awf-event-name',value),makeImage:()=>new Image()});
   options.hidden=false;
   options.addEventListener('keydown',event=>{if(event.key==='Escape'){options.open=false;options.querySelector('summary').focus();}});
   document.addEventListener('pointerdown',event=>{if(options.open&&!options.contains(event.target))options.open=false;});
