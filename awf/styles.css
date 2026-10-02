@@ -28,7 +28,8 @@ footer{border-top:1px solid var(--line);padding:2.5rem 3.5rem;display:flex;align
 [hidden]{display:none!important}
 
 /* A single anonymous answer, followed by the shared distribution. */
-.imagine h2{max-width:900px;font-size:clamp(2.1rem,3.65vw,3.7rem);line-height:1.06}
+.experiment-intro{font-family:var(--serif);font-size:clamp(1.35rem,2.1vw,1.75rem);line-height:1.2;margin:0 0 .65rem}
+.imagine h2{max-width:920px;font-size:clamp(1.75rem,3.25vw,3.25rem);line-height:1.1;text-wrap:balance}
 .survey-instruction{color:var(--muted);font-size:1rem;margin-top:.75rem}
 .control-row .submit-response{grid-column:2;min-width:112px;padding:.3rem 1.5rem;color:var(--ink);border:1px solid #777a70;border-radius:2px;font-size:.95rem}
 .control-row .submit-response:hover{background:#eceae20d;border-color:var(--ink)}
