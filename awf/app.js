@@ -4,6 +4,7 @@
     {id:'world-aphantasia-week',label:'World Aphantasia Week',bounds:[156,121,2046,626]},
     {id:'aphantasia-world-forum',label:'Aphantasia World Forum',bounds:[101,100,2089,619]},
     {id:'there-is-no-apple',label:'THERE IS NO APPLE',bounds:[248,105,1899,628]},
+    {id:'there-is-no-apple-lowercase',label:'there is no apple',bounds:[445,93,1727,634]},
     {id:'aphantasia-anonymous',label:'Aphantasia Anonymous',bounds:[68,72,2114,626]},
     {id:'aphantasia-research-camp',label:'Aphantasia Research Camp',bounds:[80,90,2113,623]}
   ]);
