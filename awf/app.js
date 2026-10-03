@@ -9,7 +9,7 @@
     {id:'aphantasia-research-camp',label:'Aphantasia Research Camp',bounds:[80,90,2113,623]}
   ]);
   function createNameSelector({canvas,fallback,fallbackText,heading,choices,status,read,save,makeImage}){
-    const defaultName='aphantasia-world-forum',records=new Map(EVENT_NAMES.map(name=>[name.id,name])),images=new Map(),ctx=canvas.getContext('2d');
+    const defaultName='there-is-no-apple-lowercase',records=new Map(EVENT_NAMES.map(name=>[name.id,name])),images=new Map(),ctx=canvas.getContext('2d');
     let active=defaultName,request=0;
     const check=id=>choices.forEach(choice=>{choice.checked=choice.value===id;});
     const announce=text=>{status.textContent=text;status.hidden=!text;};
@@ -102,7 +102,7 @@
   handleToggle.checked=appleHandle;
   root.classList.toggle('apple-handle-mode',appleHandle);
   const nameCanvas=document.getElementById('event-wordmark');
-  if(nameCanvas)createNameSelector({canvas:nameCanvas,fallback:document.getElementById('event-wordmark-fallback'),fallbackText:document.getElementById('event-wordmark-text'),heading:document.getElementById('event-name-label'),choices:Array.from(document.querySelectorAll('input[name="event-name"]')),status:document.getElementById('event-name-status'),read:()=>readPreference('awf-event-name','aphantasia-world-forum'),save:value=>savePreference('awf-event-name',value),makeImage:()=>new Image()});
+  if(nameCanvas)createNameSelector({canvas:nameCanvas,fallback:document.getElementById('event-wordmark-fallback'),fallbackText:document.getElementById('event-wordmark-text'),heading:document.getElementById('event-name-label'),choices:Array.from(document.querySelectorAll('input[name="event-name"]')),status:document.getElementById('event-name-status'),read:()=>readPreference('awf-event-name','there-is-no-apple-lowercase'),save:value=>savePreference('awf-event-name',value),makeImage:()=>new Image()});
   options.hidden=false;
   options.addEventListener('keydown',event=>{if(event.key==='Escape'){options.open=false;options.querySelector('summary').focus();}});
   document.addEventListener('pointerdown',event=>{if(options.open&&!options.contains(event.target))options.open=false;});
