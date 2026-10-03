@@ -68,10 +68,7 @@
     const finalPivot=appleHandle?Math.min(g.targetY-end,viewportHeight-(artwork.height-artwork.fruitY)*.7-12):viewportHeight+24+artwork.fruitY*g.scale;
     return {size,x,top:mix(g.faceY,finalPivot)-artwork.fruitY*size};
   }
-  function appleClipBottom(pose,artwork,introTop,scrollY){
-    return introTop==null?0:Math.max(0,Math.min(artwork.height,artwork.height-(introTop-scrollY-pose.top)/pose.size));
-  }
-  if(typeof module==='object'&&module.exports)module.exports={landingPose,paintingGeometry,handTurnDuration,appleClipBottom,EVENT_NAMES,createNameSelector,wireQuestions};
+  if(typeof module==='object'&&module.exports)module.exports={landingPose,paintingGeometry,handTurnDuration,EVENT_NAMES,createNameSelector,wireQuestions};
   if(typeof document==='undefined')return;
   const root=document.documentElement;
   const runway=document.querySelector('.hero-runway');
@@ -81,7 +78,6 @@
   const apple=document.querySelector('.scroll-apple');
   const nav=document.querySelector('.navigation');
   const section=document.getElementById('imagine');
-  const gathering=document.getElementById('gathering-intro');
   const dock=document.getElementById('imagination-handle');
   const options=document.getElementById('site-options');
   const handleToggle=document.getElementById('apple-handle-toggle');
@@ -181,7 +177,7 @@
     const start=wrapper.top+y,run=road?Math.min(box.height*.38,Math.max(1,wrapper.height-box.height)):Math.max(0,wrapper.height-box.height);
     layout={start,run,road,handTop:offsetY+838*scale,handBottom:offsetY+954*scale,handTurnRun:handTurnDuration(offsetY+850*scale,window.innerHeight),faceX,centerX:box.left+box.width/2,faceY:geometry.faceY,groinY:road?geometry.groinY:Math.min(box.height-48,geometry.groinY),scale:2.3*scale,
       targetX:target.left+target.width/2,targetY:target.top+y+target.height/2,targetWidth:target.width,targetHeight:target.height,
-      navHeight,sectionTop:sectionBox.top+y,introTop:gathering?gathering.getBoundingClientRect().top+y:null,end:Math.min(Math.max(0,root.scrollHeight-window.innerHeight),Math.max(start+run+1,sectionBox.top+y-navHeight))};
+      navHeight,sectionTop:sectionBox.top+y,end:Math.min(Math.max(0,root.scrollHeight-window.innerHeight),Math.max(start+run+1,sectionBox.top+y-navHeight))};
     if(sceneAnchor!==null){window.scrollTo({top:Math.max(0,y+sectionBox.top-sceneAnchor),behavior:'instant'});sceneAnchor=null;}
     needsMeasure=false;
   }
@@ -212,11 +208,8 @@
     root.classList.toggle('returning-selection',returning);
     const progress=clamp((y-g.start)/Math.max(1,g.end-g.start));
     const {size,x,top}=landingPose(g,artwork,{progress,y,viewportHeight:window.innerHeight,appleHandle:appleHandle&&!returning});
-    // Let the new section occlude the apple at its boundary, before any text.
-    // The scroll-driven trajectory, rotation and eventual survey arrival continue.
-    const clipped=appleClipBottom({top,size},artwork,g.introTop,y);
-    style(apple,'clipPath',clipped>0?`inset(0 0 ${clipped}px 0)`:'none');
-    const visible=top+artwork.height*size>0&&top<window.innerHeight&&clipped<artwork.height;
+    // Keep the traveling fruit in the foreground until it docks or leaves view.
+    const visible=top+artwork.height*size>0&&top<window.innerHeight;
     window.fallingAppleSpin?.update(clamp((y-g.start)/Math.max(1,g.end-g.start)),visible);
     if(visible)style(apple,'transform',`translate3d(${x}px,${top}px,0) scale(${size})`);
     style(apple,'visibility',visible?'visible':'hidden');
