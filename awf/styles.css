@@ -137,3 +137,13 @@ html[data-scene=road] .imagine{background:transparent}
 .take-test{display:inline-flex;align-items:center;gap:.5rem;min-height:44px;margin-top:1.2rem;padding:.4rem .2rem;font-size:.95rem;text-decoration:underline;text-underline-offset:.3em}
 .take-test:hover,.gathering-fact a:hover{color:#fff}
 .take-test:focus-visible,.gathering-fact a:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+
+
+/* Questions stay reachable against both the painting and the charcoal page. */
+.site-questions{border:0;position:fixed;z-index:9;top:max(.75rem,env(safe-area-inset-top));right:max(.75rem,env(safe-area-inset-right))}
+.site-questions>summary{display:flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;list-style:none;border:1px solid #eceae266;border-radius:50%;background:#111515f5;color:var(--ink);font-family:var(--serif);font-size:1.4rem;line-height:1;cursor:pointer}
+.site-questions>summary::-webkit-details-marker{display:none}
+.site-questions>summary::after{content:none}
+.site-questions>summary:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.questions-panel{position:absolute;top:calc(100% + .5rem);right:0;width:min(350px,calc(100vw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)));max-height:calc(100svh - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;padding:1.2rem 1.3rem;border:1px solid #eceae23d;border-radius:9px;background:#111515fa;color:var(--ink);box-shadow:0 8px 28px #0002;font-size:1rem;line-height:1.5}
+.questions-panel p+p{margin-top:1rem}

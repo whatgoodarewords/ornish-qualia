@@ -38,6 +38,13 @@
     choose(preferred,false);
     return {get active(){return active;}};
   }
+  function wireQuestions(disclosure,document){
+    if(!disclosure)return;
+    disclosure.addEventListener('keydown',event=>{
+      if(event.key==='Escape'&&disclosure.open){event.preventDefault();disclosure.open=false;disclosure.querySelector('summary').focus();}
+    });
+    document.addEventListener('pointerdown',event=>{if(disclosure.open&&!disclosure.contains(event.target))disclosure.open=false;});
+  }
   function paintingGeometry(width,height,position=[.5,.5]){
     // The original bitmap is the coordinate system in both compositions.
     const scale=Math.max(width/1561,height/1008),offsetX=(width-1561*scale)*position[0],offsetY=(height-1008*scale)*position[1];
@@ -64,7 +71,7 @@
   function appleClipBottom(pose,artwork,introTop,scrollY){
     return introTop==null?0:Math.max(0,Math.min(artwork.height,artwork.height-(introTop-scrollY-pose.top)/pose.size));
   }
-  if(typeof module==='object'&&module.exports)module.exports={landingPose,paintingGeometry,handTurnDuration,appleClipBottom,EVENT_NAMES,createNameSelector};
+  if(typeof module==='object'&&module.exports)module.exports={landingPose,paintingGeometry,handTurnDuration,appleClipBottom,EVENT_NAMES,createNameSelector,wireQuestions};
   if(typeof document==='undefined')return;
   const root=document.documentElement;
   const runway=document.querySelector('.hero-runway');
@@ -103,6 +110,7 @@
   root.classList.toggle('apple-handle-mode',appleHandle);
   const nameCanvas=document.getElementById('event-wordmark');
   if(nameCanvas)createNameSelector({canvas:nameCanvas,fallback:document.getElementById('event-wordmark-fallback'),fallbackText:document.getElementById('event-wordmark-text'),heading:document.getElementById('event-name-label'),choices:Array.from(document.querySelectorAll('input[name="event-name"]')),status:document.getElementById('event-name-status'),read:()=>readPreference('awf-event-name','there-is-no-apple-lowercase'),save:value=>savePreference('awf-event-name',value),makeImage:()=>new Image()});
+  wireQuestions(document.getElementById('site-questions'),document);
   options.hidden=false;
   options.addEventListener('keydown',event=>{if(event.key==='Escape'){options.open=false;options.querySelector('summary').focus();}});
   document.addEventListener('pointerdown',event=>{if(options.open&&!options.contains(event.target))options.open=false;});
