@@ -11,7 +11,7 @@
 <link rel="preload" href="fonts/IMFeFCrm28P.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="preload" href="fonts/IMFeENrm28P.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="preload" href="assets/seal.png" as="image">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=seal-break-2">
 <script>
 // Runs before first paint. Fail-open: the page is readable unless this
 // script AND script.js both succeed; a watchdog opens it regardless.
@@ -37,7 +37,7 @@
   });
 })();
 </script>
-<script src="script.js" defer></script>
+<script src="script.js?v=seal-break-2" defer></script>
 </head>
 <body>
 
@@ -104,7 +104,10 @@
     </div>
 
     <div class="roll roll-bottom" id="rollBottom" aria-hidden="true"></div>
-    <img class="closed-seal" id="closedSeal" src="assets/seal.png" alt="" aria-hidden="true" draggable="false">
+    <!-- one wax seal, two clipped views of it: the upper piece stays on the
+         top curl, the lower piece rides the bottom curl when it breaks -->
+    <span class="wax wax-top" aria-hidden="true"><img src="assets/seal.png" width="1254" height="1254" alt="" draggable="false"></span>
+    <span class="wax wax-low" aria-hidden="true"><img src="assets/seal.png" width="1254" height="1254" alt="" draggable="false"></span>
   </article>
 
   <footer class="preview-controls" aria-label="Preview controls">

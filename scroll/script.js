@@ -10,7 +10,11 @@
         skipBtn = $("skipBtn"), replayBtn = $("replayBtn"), title = $("title");
 
   const HOLD = 520;      // ms the sealed roll rests before it opens
+  const CRACK = 210;     // ms the seal resists, then breaks
+  const BREAK = .55;     // point in CRACK where the wax gives way
+  const STRAIN = 2.6;    // px the bottom roll pulls against the wax
   const UNFURL = 1950;   // ms of visible unfurling
+  const VARS = ["--lift", "--clip", "--dy", "--sdy", "--wk", "--wuy", "--wtilt", "--wsh"];
   const still = () => window.matchMedia &&
     matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -31,7 +35,9 @@
     clearTimeout(window.__summonsWatchdog); clearTimeout(window.__summonsHardStop);
     running = false;
     root.classList.remove("intro", "unfurling", "measured");
-    ["--lift", "--clip", "--dy"].forEach(k => scroll.style.removeProperty(k));
+    // Without these the seal pieces fall back to their CSS resting pose,
+    // which is exactly where the last frame left them.
+    VARS.forEach(k => scroll.style.removeProperty(k));
     scroll.firstElementChild.style.clipPath = "";
     rollBottom.style.clipPath = "";
     window.removeEventListener("resize", onResize);
@@ -71,13 +77,19 @@
     const bandMid = fallback ? 0 : px * 52;            // image row ~1397: curl top, mid-width
     const bandEnd = fallback ? 0 : px * 18;            // image row ~1363: spiral ends rise higher
     const endW = px * 110, ramp = px * 60, rollW = rollBottom.offsetWidth;
-    return { bottomCurl, finalBottom, closedBottom, sheetTop, end, lift,
+    // offsetTop is rounded; the lower seal piece eases this in while it
+    // travels so it arrives exactly where its CSS resting place is.
+    const seam = Math.max(-1, Math.min(1, rollBottom.getBoundingClientRect().top -
+      scroll.getBoundingClientRect().top - finalBottom));
+    return { bottomCurl, finalBottom, closedBottom, sheetTop, end, lift, seam,
              topRoll, topH, topCurlBottom, bandMid, bandEnd, endW, ramp, rollW, rh };
   }
 
-  function frame(m, pos, lift) {
+  function frame(m, pos, lift, seam = 0) {
     set("--lift", lift.toFixed(1) + "px");
     set("--dy", (pos - m.finalBottom).toFixed(1) + "px");
+    // the lower seal piece is glued to the bottom roll: same travel, same frame
+    set("--sdy", (pos - m.closedBottom + seam).toFixed(2) + "px");
     const clip = Math.max(0, pos + m.bottomCurl - m.sheetTop);
     set("--clip", clip.toFixed(1) + "px");
     // top roll: hide its sheet strip below the curl until the sheet is there
@@ -96,6 +108,33 @@
       `L ${f(w + 60)} ${f(end)} L ${f(w + 60)} ${f(h)} L -60 ${f(h)} Z")`;
   }
 
+  // The seal breaks: the bottom roll pulls a few px and the whole seal goes
+  // with it, pressed flat (tighter shadow, slight tilt); at BREAK the upper
+  // piece springs back onto the top curl while the lower piece stays on the
+  // roll, and both settle into their broken pose (--wk 0 -> 1).
+  function crackFrame(m, u) {
+    let strain = STRAIN, upY, tilt, shade, k = 0;
+    if (u < BREAK) {
+      const e = (u / BREAK) * (u / BREAK);
+      strain = STRAIN * e;
+      upY = strain * .85;      // the wax gives a hair less than the paper
+      tilt = .5 * e;
+      shade = -e;
+    } else {
+      const r = (u - BREAK) / (1 - BREAK), d = (1 - r) * (1 - r),
+            spring = Math.cos(r * Math.PI * 1.5) * d;   // recoil, small overshoot
+      upY = STRAIN * .85 * spring;
+      tilt = .5 * spring;
+      shade = -(1 - r) + .6 * Math.sin(r * Math.PI) * (1 - r);
+      k = easeOut(r);
+    }
+    set("--wuy", upY.toFixed(2) + "px");
+    set("--wtilt", tilt.toFixed(3) + "deg");
+    set("--wsh", shade.toFixed(2) + "px");
+    set("--wk", k.toFixed(3));
+    frame(m, m.closedBottom + strain, m.lift);
+  }
+
   function play() {
     if (running) return;
     running = true;
@@ -104,16 +143,32 @@
     root.classList.remove("unfurling", "measured");
     window.addEventListener("resize", onResize);
     document.addEventListener("keydown", onKey);
-    failsafe = setTimeout(() => finish(false), HOLD + UNFURL + 2500);
+    failsafe = setTimeout(() => finish(false), HOLD + CRACK + UNFURL + 2500);
 
-    // Wait (briefly) for the type and the closing seal, so what is measured
-    // and shown is final; never longer than 900ms.
-    const closedSeal = document.getElementById("closedSeal");
+    // Wait (briefly) for the type and the seal, so what is measured and
+    // shown is final; never longer than 900ms.
+    const wax = scroll.querySelector(".wax img");
     const ready = Promise.all([
       document.fonts && document.fonts.ready,
-      closedSeal && closedSeal.decode ? closedSeal.decode().catch(() => {}) : null,
+      wax && wax.decode ? wax.decode().catch(() => {}) : null,
     ]);
     const fontsReady = Promise.race([ready, new Promise(r => setTimeout(r, 900))]);
+
+    const unfurl = m => {
+      root.classList.add("unfurling");
+      const start = m.closedBottom + STRAIN;   // carry on from the strained roll
+      const t0 = performance.now();
+      const step = now => {
+        if (!running) return;
+        const t = Math.min(1, (now - t0) / UNFURL), e = easeInOut(t);
+        const pos = start + (m.end - start) * e;
+        const lift = m.lift * (1 - easeOut(Math.min(1, t / .7)));
+        frame(m, pos, lift, m.seam * e);
+        if (t < 1) raf = requestAnimationFrame(step);
+        else finish(false);
+      };
+      raf = requestAnimationFrame(step);
+    };
 
     fontsReady.then(() => {
       if (!running) return;
@@ -122,18 +177,15 @@
       root.classList.add("measured");
       holdTimer = setTimeout(() => {
         if (!running) return;
-        root.classList.add("unfurling");
-        const t0 = performance.now();
-        const step = now => {
+        const c0 = performance.now();
+        const crack = now => {
           if (!running) return;
-          const t = Math.min(1, (now - t0) / UNFURL);
-          const pos = m.closedBottom + (m.end - m.closedBottom) * easeInOut(t);
-          const lift = m.lift * (1 - easeOut(Math.min(1, t / .7)));
-          frame(m, pos, lift);
-          if (t < 1) raf = requestAnimationFrame(step);
-          else finish(false);
+          const u = Math.min(1, (now - c0) / CRACK);
+          crackFrame(m, u);
+          if (u < 1) raf = requestAnimationFrame(crack);
+          else unfurl(m);
         };
-        raf = requestAnimationFrame(step);
+        raf = requestAnimationFrame(crack);
       }, HOLD);
     }).catch(() => finish(false));
   }
