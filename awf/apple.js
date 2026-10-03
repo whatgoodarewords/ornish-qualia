@@ -11,35 +11,18 @@
   const SIZE = 720;
   const WORD_INK = 'rgb(208,199,179)';
   const SEMANTIC_NODES = Object.freeze([
-    {word:'apple',x:354,y:367,size:94,role:'center'},
-    {word:'round',x:313,y:138,size:55,role:'edge'},
-    {word:'fruit',x:198,y:255,size:57,role:'edge'},
-    {word:'skin',x:498,y:239,size:55,role:'interior'},
-    {word:'red',x:146,y:447,size:54,role:'edge'},
-    {word:'crisp',x:566,y:419,size:52,role:'interior'},
-    {word:'sweet',x:473,y:518,size:54,role:'interior'},
-    {word:'shape',x:184,y:93,size:23,role:'secondary'},
-    {word:'orchard',x:98,y:197,size:23,role:'secondary'},
-    {word:'seed',x:89,y:307,size:23,role:'secondary'},
-    {word:'peel',x:579,y:174,size:23,role:'secondary'},
-    {word:'flesh',x:617,y:269,size:23,role:'secondary'},
-    {word:'crunch',x:661,y:388,size:22,role:'secondary'},
-    {word:'colour',x:76,y:508,size:23,role:'secondary'},
-    {word:'taste',x:608,y:544,size:23,role:'secondary'},
-    {word:'memory',x:275,y:539,size:23,role:'secondary'},
-    {word:'language',x:371,y:607,size:23,role:'secondary'}
+    {word:'apple',x:360,y:310,size:68,role:'center'},
+    {word:'round',x:205,y:195,size:32,role:'edge'},
+    {word:'fruit',x:165,y:325,size:32,role:'edge'},
+    {word:'red',x:195,y:455,size:32,role:'edge'},
+    {word:'crisp',x:270,y:550,size:30,role:'edge'},
+    {word:'memory',x:450,y:550,size:24,role:'secondary'},
+    {word:'sweet',x:525,y:455,size:32,role:'edge'},
+    {word:'skin',x:555,y:325,size:32,role:'edge'},
+    {word:'seed',x:515,y:195,size:30,role:'edge'}
   ].map(Object.freeze));
   const EDGE_WORDS = Object.freeze(SEMANTIC_NODES.map(node=>node.word));
-  const SEMANTIC_LINKS = Object.freeze([
-    [215,95,232,97,246,107,250,122], [317,165,352,215,345,284,337,335],
-    [137,198,153,200,163,214,165,226], [112,307,141,306,152,294,160,280],
-    [222,282,264,291,268,317,285,339], [520,215,522,191,537,177,556,175],
-    [543,261,555,276,574,276,591,271], [451,250,425,254,425,284,408,309],
-    [187,433,211,423,205,389,249,380], [132,473,130,491,120,499,109,504],
-    [460,384,487,389,491,411,512,413], [607,400,615,391,621,390,630,390],
-    [364,420,372,472,390,495,426,503], [542,525,552,542,570,545,582,544],
-    [325,419,319,456,278,476,279,523], [302,556,305,575,315,590,328,597]
-  ].map(Object.freeze));
+  const SEMANTIC_LINKS = Object.freeze([]);
   const clamp = (n, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : lo));
   const smooth = (a, b, value) => { const t = clamp((value - a) / (b - a)); return t * t * (3 - 2 * t); };
   const bell = (a, b, c, d, p) => smooth(a, b, p) * (1 - smooth(c, d, p));
@@ -94,7 +77,7 @@
       mapWords: bell(.012,.10,.49,.54,p),
       morph: smooth(.225,.407,p),
       words: bell(.225,.407,.49,.54,p),
-      contour: bell(.515, .57, .815, .91, p),
+      contour: bell(.407, .57, .815, .91, p),
       contourColour: smooth(.62, .67, p),
       flat: smooth(.72, .815, p) * (1 - smooth(.86, .995, p)),
       photo: smooth(.855, .995, p),
@@ -115,7 +98,7 @@
 
   const $ = id => document.getElementById(id);
   const canvas = $('apple');
-  const BUILD = 'apple-survey-20261002-24';
+  const BUILD = 'apple-survey-20261003-27';
   canvas.setAttribute('data-build',BUILD);
   const ctx = canvas.getContext('2d', { alpha: true });
   const slider = $('imagination');
@@ -259,15 +242,6 @@
     return { points, lengths, loops, length:lengths[lengths.length-1] };
   }
 
-  function pointAt(distance) {
-    const d=((distance%contour.length)+contour.length)%contour.length;
-    let lo=0,hi=contour.points.length;
-    while(lo+1<hi) { const m=(lo+hi)>>1; if(contour.lengths[m]<=d) lo=m; else hi=m; }
-    const a=contour.points[lo],b=contour.points[(lo+1)%contour.points.length];
-    const t=(d-contour.lengths[lo])/(contour.lengths[lo+1]-contour.lengths[lo] || 1);
-    return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
-  }
-
   function cacheArtwork(image,colour='red') {
     const source = surface(image.naturalWidth||image.width,image.naturalHeight||image.height);
     const sourceContext = source.getContext('2d', { willReadFrequently:true });
@@ -304,40 +278,29 @@
     }
     flat=surface();flat.getContext('2d').putImageData(illustration,0,0);
     stats.cachedLayers=2;
-    // Pair map labels with nearby angular slots, reserving the topmost slot for
-    // the central idea. Every label owns one continuous glyph track; none crossfade.
+    // Upright words follow ordered paths. The central idea has the open top
+    // corridor; the surrounding associations expand toward nearby contour slots.
+    const polarPoints=contour.points.map(center=>({center,angle:Math.atan2(center[1]-368,center[0]-360)}));
     const slots=EDGE_WORDS.map((_,index)=>{
-      const distance=(index+.28)/EDGE_WORDS.length*contour.length;
-      const center=pointAt(distance);
-      return {distance,center,angle:Math.atan2(center[1]-368,center[0]-360)};
+      const angle=-Math.PI/2+index*Math.PI*2/EDGE_WORDS.length;
+      return polarPoints.reduce((best,point)=>Math.cos(point.angle-angle)>Math.cos(best.angle-angle)?point:best);
     });
-    const topSlot=slots.reduce((best,slot)=>slot.center[1]<best.center[1]?slot:best);
+    const topSlot=slots[0];
     const otherSlots=slots.filter(slot=>slot!==topSlot).sort((a,b)=>a.angle-b.angle);
     const nodes=SEMANTIC_NODES.map(node=>node.word==='red'&&colour==='green'?{...node,word:'green'}:node);
     const otherNodes=nodes.filter(node=>node.role!=='center').slice().sort((a,b)=>Math.atan2(a.y-368,a.x-360)-Math.atan2(b.y-368,b.x-360));
     const assignments=[{node:nodes[0],slot:topSlot},...otherNodes.map((node,index)=>({node,slot:otherSlots[index]}))];
-    wordTracks=assignments.map(({node,slot},index)=>{
-      ctx.font='27px Georgia';
-      const naturalWidth=ctx.measureText(node.word).width+1.5*(node.word.length-1);
-      const fontSize=Math.min(27,27*(contour.length/EDGE_WORDS.length*.78)/naturalWidth);
-      ctx.font=`${fontSize}px Georgia`;
-      const advances=Array.from(node.word,letter=>ctx.measureText(letter).width+1.5);
-      let offset=-advances.reduce((a,b)=>a+b,0)/2;
-      const before=pointAt(slot.distance-4),after=pointAt(slot.distance+4);
-      const direction=after[0]<before[0]?-1:1;
+    wordTracks=assignments.map(({node,slot})=>{
+      const fontSize=27;
       ctx.font=`${node.size}px Georgia`;
       const sourceWidth=ctx.measureText(node.word).width;
       const letters=Array.from(node.word,(letter,i)=>{
-        const sourceX=node.x-sourceWidth/2+ctx.measureText(node.word.slice(0,i)).width+ctx.measureText(letter).width/2;
-        const d=slot.distance+direction*(offset+advances[i]/2);
-        const at=pointAt(d),a=pointAt(d-direction*4),b=pointAt(d+direction*4);
-        offset+=advances[i];
-        const dx=360-at[0],dy=385-at[1],length=Math.hypot(dx,dy)||1;
-        const target={x:at[0]+dx/length*13,y:at[1]+dy/length*13,size:fontSize,angle:Math.atan2(b[1]-a[1],b[0]-a[0])};
-        const source={x:sourceX,y:node.y,size:node.size,angle:0};
-        return {letter,sprite:cacheGlyph(letter),motion:makeMotion(source,target,(index%2?1:-1)*(12+index%4*5))};
+        const offset=-sourceWidth/2+ctx.measureText(node.word.slice(0,i)).width+ctx.measureText(letter).width/2;
+        const source={x:node.x+offset,y:node.y,size:node.size,angle:0};
+        const target={x:slot.center[0]+offset*fontSize/node.size,y:slot.center[1],size:fontSize,angle:0};
+        return {letter,sprite:cacheGlyph(letter),motion:makeMotion(source,target)};
       });
-      return {word:node.word,role:node.role,letters,start:.225+(index%5)*.006,end:.383+(index%5)*.006};
+      return {word:node.word,role:node.role,letters,start:.225,end:.407};
     });
     stats.words=wordTracks.length;
     stats.glyphTracks=wordTracks.reduce((total,track)=>total+track.letters.length,0);
@@ -366,8 +329,7 @@
     if(s.flat>.001) {ctx.globalAlpha=s.flat*.79;ctx.drawImage(flat,0,0);}
     if(s.photo>.001) {ctx.globalAlpha=s.photo;ctx.drawImage(photo,0,0);}
     if(activeVariant?.detailActive&&activeVariant.artwork?.detailPhoto&&state.progress>.9){ctx.globalAlpha=smooth(.9,.92,state.progress);ctx.drawImage(activeVariant.artwork.detailPhoto,0,0);}
-    // Connections are semantic, not fragments of an apple. They disappear while
-    // the same visible letter tracks begin to move toward their final perimeter.
+    // Word glyphs remain cached as the semantic composition becomes a contour.
     if(s.connections>.002) {
       ctx.globalAlpha=s.connections*.62;ctx.strokeStyle=WORD_INK;ctx.lineWidth=1;
       for(const link of SEMANTIC_LINKS){ctx.beginPath();ctx.moveTo(link[0],link[1]);ctx.bezierCurveTo(...link.slice(2));ctx.stroke();}

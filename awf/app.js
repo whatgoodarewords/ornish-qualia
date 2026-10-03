@@ -57,7 +57,10 @@
     const finalPivot=appleHandle?Math.min(g.targetY-end,viewportHeight-(artwork.height-artwork.fruitY)*.7-12):viewportHeight+24+artwork.fruitY*g.scale;
     return {size,x,top:mix(g.faceY,finalPivot)-artwork.fruitY*size};
   }
-  if(typeof module==='object'&&module.exports)module.exports={landingPose,paintingGeometry,EVENT_NAMES,createNameSelector};
+  function appleClipBottom(pose,artwork,introTop,scrollY){
+    return introTop==null?0:Math.max(0,Math.min(artwork.height,artwork.height-(introTop-scrollY-pose.top)/pose.size));
+  }
+  if(typeof module==='object'&&module.exports)module.exports={landingPose,paintingGeometry,appleClipBottom,EVENT_NAMES,createNameSelector};
   if(typeof document==='undefined')return;
   const root=document.documentElement;
   const runway=document.querySelector('.hero-runway');
@@ -67,6 +70,7 @@
   const apple=document.querySelector('.scroll-apple');
   const nav=document.querySelector('.navigation');
   const section=document.getElementById('imagine');
+  const gathering=document.getElementById('gathering-intro');
   const dock=document.getElementById('imagination-handle');
   const options=document.getElementById('site-options');
   const handleToggle=document.getElementById('apple-handle-toggle');
@@ -100,7 +104,7 @@
   document.addEventListener('pointerdown',event=>{if(options.open&&!options.contains(event.target))options.open=false;});
   let layout,frame=0,needsMeasure=true,inspectHash=true,previousY=window.scrollY;
   let roadRequested=readPreference('awf-scene','road')!=='original',roadAvailable=true,road=false,roadAttempt=0,sceneAnchor=null;
-  let forceDock=Boolean(location.hash&&location.hash!=='#top'),journey=false,docked=false,connected=false,arrived=false;
+  let forceDock=Boolean(location.hash&&location.hash!=='#top'&&location.hash!=='#gathering-intro'),journey=false,docked=false,connected=false,arrived=false;
   const written=new WeakMap();
   function style(node,key,value){let cache=written.get(node);if(!cache){cache={};written.set(node,cache);}if(cache[key]!==value){node.style[key]=value;cache[key]=value;}}
   function attribute(node,key,value){if(node.getAttribute(key)!==String(value))node.setAttribute(key,String(value));}
@@ -153,6 +157,7 @@
         '--road-fade-start':1120/.748*scale,'--road-fade-end':1380/.748*scale,'--road-grain':780*scale
       }))root.style.setProperty(key,`${value}px`);
     }
+    window.paintedHands?.setLayout({scale,offsetX:geometry.offsetX,offsetY,road});
     const wrapper=runway.getBoundingClientRect(),target=dock.getBoundingClientRect(),sectionBox=section.getBoundingClientRect();
     const faceX=box.left+geometry.faceX;
     // Keep the complete wordmark above the painted hat as the cover crop changes.
@@ -162,9 +167,9 @@
     const preferredTop=box.height*(window.innerWidth<=600?.11:.08);
     root.style.setProperty('--title-top',`${Math.max(12,Math.min(preferredTop,hatY-titleHeight-12))}px`);
     const start=wrapper.top+y,run=road?Math.min(box.height*.38,Math.max(1,wrapper.height-box.height)):Math.max(0,wrapper.height-box.height);
-    layout={start,run,road,faceX,centerX:box.left+box.width/2,faceY:geometry.faceY,groinY:road?geometry.groinY:Math.min(box.height-48,geometry.groinY),scale:2.3*scale,
+    layout={start,run,road,handTop:offsetY+838*scale,handBottom:offsetY+954*scale,handTurnRun:Math.max(1,offsetY+850*scale-window.innerHeight*.3),faceX,centerX:box.left+box.width/2,faceY:geometry.faceY,groinY:road?geometry.groinY:Math.min(box.height-48,geometry.groinY),scale:2.3*scale,
       targetX:target.left+target.width/2,targetY:target.top+y+target.height/2,targetWidth:target.width,targetHeight:target.height,
-      navHeight,sectionTop:sectionBox.top+y,end:Math.min(Math.max(0,root.scrollHeight-window.innerHeight),Math.max(start+run+1,sectionBox.top+y-navHeight))};
+      navHeight,sectionTop:sectionBox.top+y,introTop:gathering?gathering.getBoundingClientRect().top+y:null,end:Math.min(Math.max(0,root.scrollHeight-window.innerHeight),Math.max(start+run+1,sectionBox.top+y-navHeight))};
     if(sceneAnchor!==null){window.scrollTo({top:Math.max(0,y+sectionBox.top-sceneAnchor),behavior:'instant'});sceneAnchor=null;}
     needsMeasure=false;
   }
@@ -187,12 +192,19 @@
     const dockVisible=g.targetY-y>=g.navHeight&&g.targetY-y+g.targetHeight<=window.innerHeight;
     if(docked&&dockVisible&&!arrived){arrived=true;window.appleExperience?.arrive();}
     if(natural)journey=false;
+    // Hands finish while the wrists remain in view, independently of the apple.
+    const handHostTop=g.start-y+(g.road?0:Math.max(0,Math.min(g.run,y-g.start)));
+    window.paintedHands?.update(clamp((y-g.start)/g.handTurnRun),handHostTop+g.handBottom>0&&handHostTop+g.handTop<window.innerHeight);
     if(docked){window.fallingAppleSpin?.update(1,false);return;}
     const returning=Boolean(window.appleExperience?.hasSelection);
     root.classList.toggle('returning-selection',returning);
     const progress=clamp((y-g.start)/Math.max(1,g.end-g.start));
     const {size,x,top}=landingPose(g,artwork,{progress,y,viewportHeight:window.innerHeight,appleHandle:appleHandle&&!returning});
-    const visible=top+artwork.height*size>0&&top<window.innerHeight;
+    // Let the new section occlude the apple at its boundary, before any text.
+    // The scroll-driven trajectory, rotation and eventual survey arrival continue.
+    const clipped=appleClipBottom({top,size},artwork,g.introTop,y);
+    style(apple,'clipPath',clipped>0?`inset(0 0 ${clipped}px 0)`:'none');
+    const visible=top+artwork.height*size>0&&top<window.innerHeight&&clipped<artwork.height;
     window.fallingAppleSpin?.update(clamp((y-g.start)/Math.max(1,g.end-g.start)),visible);
     if(visible)style(apple,'transform',`translate3d(${x}px,${top}px,0) scale(${size})`);
     style(apple,'visibility',visible?'visible':'hidden');
@@ -216,7 +228,7 @@
     history.replaceState(null,'','#imagine');journey=false;forceDock=true;
     section.scrollIntoView({behavior:'instant',block:'start'});schedule();return true;
   }
-  window.addEventListener('hashchange',()=>{if(redirectHiddenHash())return;if(location.hash!=='#imagine')journey=false;forceDock=Boolean(location.hash&&location.hash!=='#top'&&!journey);schedule();});
+  window.addEventListener('hashchange',()=>{if(redirectHiddenHash())return;if(location.hash!=='#imagine')journey=false;forceDock=Boolean(location.hash&&location.hash!=='#top'&&location.hash!=='#gathering-intro'&&!journey);schedule();});
   section.addEventListener('focusin',event=>{if(journey&&(event.target===section||event.target===dock))return;journey=false;forceDock=true;schedule();});
   handleToggle.addEventListener('change',()=>{appleHandle=handleToggle.checked;savePreference('awf-apple-handle',String(appleHandle));root.classList.toggle('apple-handle-mode',appleHandle);needsMeasure=true;schedule();});
   reduced.addEventListener('change',configure);
