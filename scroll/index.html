@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A Summons for the Unsimulated</title>
+<meta name="description" content="We seek Poets, Philosophers, Dancers, Fools &amp; Kings. Two Moons: August &amp; September, in a private forest estate by the sea.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#121510">
+<link rel="icon" href='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Crect width="64" height="64" fill="%23f4efe4"/%3E%3Ccircle cx="32" cy="32" r="14" fill="%23b3341b"/%3E%3C/svg%3E'>
+<link rel="preload" href="fonts/IMFeFCrm28P.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="fonts/IMFeENrm28P.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="assets/seal.png" as="image">
+<link rel="stylesheet" href="style.css">
+<script>
+// Runs before first paint. Fail-open: the page is readable unless this
+// script AND script.js both succeed; a watchdog opens it regardless.
+(function () {
+  var d = document.documentElement;
+  d.classList.remove("no-js");
+  d.classList.add("js");
+  try {
+    var bg = localStorage.getItem("summons-preview-backdrop");
+    if (bg === "moss" || bg === "forest") d.setAttribute("data-backdrop", bg);
+  } catch (e) {}
+  var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (still) return;
+  d.classList.add("intro");
+  function open() { d.classList.remove("intro", "unfurling"); }
+  // script.js clears this when it takes over; if it never does, open anyway.
+  window.__summonsWatchdog = setTimeout(open, 2500);
+  window.__summonsHardStop = setTimeout(open, 7000);
+  window.addEventListener("error", open);
+  // Skip works even if script.js never arrives.
+  document.addEventListener("click", function (e) {
+    if (e.target && e.target.id === "skipBtn") open();
+  });
+})();
+</script>
+<script src="script.js" defer></script>
+</head>
+<body>
+
+<div class="backdrop" aria-hidden="true"></div>
+
+<div class="stage">
+  <article class="scroll" id="scroll">
+    <div class="roll roll-top" aria-hidden="true"></div>
+
+    <div class="sheet" id="sheet">
+      <main class="sheet-in">
+
+        <hr class="rule">
+
+        <h1 class="title" id="title" tabindex="-1">A Summons for the<br class="br-title">
+        <span class="red">Un</span>simulated</h1>
+
+        <p class="litany"><span class="lead">We seek</span> Poets, Philosophers, Fools <i>&amp;</i> Kings;<br class="br">
+        Dancers; the Uncompromised; the Sovereign;<br class="br">
+        those of extraordinary Agency, Merit, Wit,<br class="br">
+        Talent, Notoriety, Craft, Judgment, Stubbornness, Incredulity.<br class="br">
+        <i>the Unsimulated, the Uncompressible;<br class="br">
+        those with a direct Connection to Life herself.</i></p>
+
+        <p class="ornament" aria-hidden="true">⁂</p>
+
+        <h2 class="turn">Heretics, the Time has come</h2>
+
+        <p class="particulars">Two Moons: August <i>&amp;</i> September, in the Year MMXXVI.<br class="br">
+        in a private forest estate by the sea,<br class="br">
+        its whereabouts disclosed upon a Yes.</p>
+
+        <p class="terms">If you wish to attend, speak your truth.</p>
+
+        <p class="terms">Once sealed, you&rsquo;ll be hearing from us soon.</p>
+
+        <p class="ornament red" aria-hidden="true">❧</p>
+
+        <div class="recorder" id="recorder">
+          <button class="seal" id="sealBtn" type="button" aria-describedby="recStatus">
+            <img class="seal-img" id="sealImg" src="assets/seal.png" width="1254" height="1254"
+                 alt="Wax seal; press to speak" draggable="false">
+          </button>
+          <p class="rec-status" id="recStatus" aria-live="polite"><span class="hand" aria-hidden="true">☞</span> Press the Seal, and speak.</p>
+          <canvas class="trace" id="trace" hidden aria-hidden="true"></canvas>
+          <p class="rec-time sc" id="recTime" hidden>5:00</p>
+          <p class="rec-actions" id="recActions" hidden>
+            <a href="#" id="hearBtn" role="button">Hear it</a> &nbsp;·&nbsp; <a href="#" id="burnBtn" role="button">Burn it, begin anew</a>
+          </p>
+          <div class="rec-actions" id="sendWrap" hidden>
+            <button class="send" id="sendBtn" type="button" aria-describedby="sendNote">Seal &amp; Send</button>
+            <p class="send-note" id="sendNote">There is no Post-house here: Seal &amp; Send saves the Recording to your Machine and opens a Letter, to which you attach it by hand. Nothing is uploaded.</p>
+          </div>
+        </div>
+
+        <p class="answer alt" id="letterLine"><span class="hand" aria-hidden="true">☞</span>or answer by Letter:
+        <a href="mailto:concierge@castle.community?subject=Five%20Minutes">concierge@castle.community</a></p>
+
+        <p class="enter"><a href="https://thegarden.pt/">Enter the garden &rarr;</a></p>
+
+        <p class="colophon">MMXXVI</p>
+
+      </main>
+    </div>
+
+    <div class="roll roll-bottom" id="rollBottom" aria-hidden="true"></div>
+    <img class="closed-seal" id="closedSeal" src="assets/seal.png" alt="" aria-hidden="true" draggable="false">
+  </article>
+
+  <footer class="preview-controls" aria-label="Preview controls">
+    <fieldset class="backdrop-pick">
+      <legend>Backdrop</legend>
+      <label><input type="radio" name="backdrop" value="forest" id="bgForest" checked> Forest</label>
+      <label><input type="radio" name="backdrop" value="moss" id="bgMoss"> Moss</label>
+    </fieldset>
+    <button class="replay" id="replayBtn" type="button">Replay the unfurling</button>
+  </footer>
+</div>
+
+<button class="skip" id="skipBtn" type="button">Skip</button>
+
+</body>
+</html>

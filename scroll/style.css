@@ -1,0 +1,419 @@
+/* A Summons for the Unsimulated: mobile scroll preview.
+   Fonts: IM FELL by Igino Marini, SIL Open Font License 1.1 (fonts/OFL-*.txt). */
+
+@font-face{font-family:"IM Fell French Canon";src:url("fonts/IMFeFCrm28P.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"IM Fell English";src:url("fonts/IMFeENrm28P.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"IM Fell English";src:url("fonts/IMFeENit28P.ttf") format("truetype");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"IM Fell English SC";src:url("fonts/IMFeENsc28P.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"IM Fell Double Pica";src:url("fonts/IMFELLDoublePica-Regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+
+:root{
+  --paper:#ece0ca;
+  --ink:rgba(33,26,19,.93);
+  --red:#a3311e;
+  --red-deep:#7a2213;
+  --night:#0e110c;
+  --w:min(90vw, 620px);
+  --rh:clamp(26px, 8vw, 44px);           /* roll (curl) diameter */
+}
+*{box-sizing:border-box}
+html{color-scheme:light only;background:var(--night)}
+body{
+  margin:0;
+  color:var(--ink);
+  font-family:"IM Fell English",serif;
+  font-feature-settings:"liga" 1,"dlig" 1;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  -webkit-text-size-adjust:100%;
+}
+::selection{background:var(--red);color:var(--paper)}
+
+/* ---------- backdrop: dim forest, fixed behind the reading scroll ---------- */
+.backdrop{position:fixed;inset:0;z-index:-1;overflow:hidden;background:var(--night)}
+.backdrop::before{
+  content:"";position:absolute;inset:-2%;
+  background:url("assets/forest.png") center 72%/cover no-repeat;
+  filter:brightness(.66) saturate(.82);
+}
+.backdrop::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 85% 70% at 50% 46%, transparent 40%, rgba(5,7,4,.55) 100%),
+    linear-gradient(to bottom, rgba(5,7,4,.35), transparent 30%, transparent 70%, rgba(5,7,4,.4));
+}
+[data-backdrop="moss"] .backdrop::before{
+  background-image:url("assets/moss.png");background-position:center;
+  filter:brightness(.6) saturate(.78);
+}
+/* no-JS: the radio still switches the backdrop where :has() exists */
+.no-js:has(#bgMoss:checked) .backdrop::before{
+  background-image:url("assets/moss.png");background-position:center;
+  filter:brightness(.6) saturate(.78);
+}
+
+/* ---------- stage ---------- */
+.stage{
+  overflow-x:clip;               /* curl ends overhang the sheet slightly */
+  min-height:100vh;min-height:100svh;
+  padding:calc(env(safe-area-inset-top) + clamp(14px, 4vw, 44px)) 0
+          calc(env(safe-area-inset-bottom) + 28px);
+}
+.scroll{position:relative;width:var(--w);margin:0 auto}
+
+/* ---------- the rolls ----------
+   assets/paper.png is 1024x1536 with the flat sheet spanning image x 60..965.
+   One image pixel = --px. The curls are cut from that same image at their
+   native scale (never stretched); the sheet between them is CSS paper whose
+   deckled side edges are also cut from the image. */
+.scroll{--px:calc(var(--w) / 905)}
+.roll{
+  position:relative;z-index:2;
+  margin-left:calc(var(--px) * -60);
+  margin-right:calc(var(--px) * -59);
+  background:url("assets/paper.png") no-repeat;
+  background-size:calc(var(--px) * 1024) calc(var(--px) * 1536);
+}
+.roll-top{
+  height:calc(var(--px) * 112);                /* image rows 40..152 */
+  margin-bottom:calc(var(--px) * -22);         /* sheet tucks under the curl */
+  background-position:0 calc(var(--px) * -40);
+  -webkit-mask-image:linear-gradient(#000 calc(100% - var(--px) * 18), transparent);
+          mask-image:linear-gradient(#000 calc(100% - var(--px) * 18), transparent);
+  filter:drop-shadow(0 calc(var(--px) * 6) calc(var(--px) * 8) rgba(40,26,10,.28));
+}
+.roll-bottom{
+  height:calc(var(--px) * 150);                /* image rows 1345..1495 */
+  margin-top:calc(var(--px) * -52);
+  background-position:0 calc(var(--px) * -1345);
+  -webkit-mask-image:linear-gradient(transparent, #000 calc(var(--px) * 26));
+          mask-image:linear-gradient(transparent, #000 calc(var(--px) * 26));
+  filter:drop-shadow(0 calc(var(--px) * 14) calc(var(--px) * 14) rgba(0,0,0,.5));
+}
+
+/* fallback rolls, drawn in CSS, if paper.png cannot load */
+.paper-fallback .roll{
+  height:var(--rh);
+  margin:0 calc(var(--rh) * -.12);
+  -webkit-mask-image:none;mask-image:none;
+  filter:none;
+  border-radius:calc(var(--rh) * .22) / 50%;
+  background:
+    linear-gradient(to bottom,
+      #a8916c 0%, #d6c4a0 12%, #efe2c8 30%, #f3e8d2 38%, #e3d3b4 58%,
+      #c8b28a 78%, #a28a63 93%, #877152 100%);
+  box-shadow:
+    0 calc(var(--rh) * .14) calc(var(--rh) * .2) calc(var(--rh) * -.08) rgba(66,44,20,.42),
+    0 1px 0 rgba(90,64,34,.25);
+}
+.paper-fallback .roll::before,.paper-fallback .roll::after{
+  content:"";position:absolute;top:0;bottom:0;
+  width:calc(var(--rh) * .5);
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse 22% 26% at 50% 50%, #5c4932 0 40%, transparent 75%),
+    repeating-radial-gradient(ellipse 50% 50% at 50% 50%,
+      #e3d4b5 0 1.4px, #b39c76 1.4px 2.3px, #d8c7a4 2.3px 3.6px);
+  box-shadow:inset 0 0 calc(var(--rh) * .12) rgba(60,40,18,.45);
+}
+.paper-fallback .roll::before{left:calc(var(--rh) * -.18)}
+.paper-fallback .roll::after{right:calc(var(--rh) * -.18)}
+.paper-fallback .roll-top{margin-bottom:calc(var(--rh) * -.5)}
+.paper-fallback .roll-bottom{
+  margin-top:calc(var(--rh) * -.5);
+  box-shadow:
+    0 calc(var(--rh) * -.06) calc(var(--rh) * .16) calc(var(--rh) * -.06) rgba(66,44,20,.35),
+    0 calc(var(--rh) * .35) calc(var(--rh) * .5) calc(var(--rh) * -.2) rgba(0,0,0,.55);
+}
+.paper-fallback .sheet::after{display:none}
+.paper-fallback .sheet::before{left:0;right:0}
+
+/* ---------- the sheet: pale smooth old paper ---------- */
+.sheet{
+  position:relative;z-index:1;
+  isolation:isolate;
+  box-shadow:
+    0 2px 5px rgba(0,0,0,.26),
+    0 22px 44px rgba(0,0,0,.4);
+}
+/* the body: smooth CSS paper toned to the image (#ebdcc3), never stretched */
+.sheet::before{
+  content:"";position:absolute;z-index:-2;
+  top:0;bottom:0;left:calc(var(--px) * 18);right:calc(var(--px) * 18);
+  background-color:var(--paper);
+  background-image:
+    /* a few restrained age spots; two tile heights so they never visibly repeat */
+    radial-gradient(circle at 14% 22%, rgba(150,96,40,.20) 0 1.2px, rgba(150,96,40,.07) 2.6px, transparent 6px),
+    radial-gradient(circle at 83% 61%, rgba(150,96,40,.16) 0 1px, rgba(150,96,40,.05) 3px, transparent 6px),
+    radial-gradient(circle at 66% 12%, rgba(150,96,40,.07) 0 3px, transparent 11px),
+    radial-gradient(circle at 29% 79%, rgba(150,96,40,.14) 0 1px, rgba(150,96,40,.05) 3.5px, transparent 8px),
+    radial-gradient(circle at 92% 37%, rgba(150,96,40,.11) 0 1.5px, transparent 8px),
+    radial-gradient(circle at 7% 64%, rgba(150,96,40,.10) 0 1.5px, transparent 9px),
+    /* slow pulp mottle */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0065' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .52 0 0 0 0 .38 0 0 0 0 .2 .42 0 0 0 -.15'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E"),
+    /* paler toward the middle, as the image is */
+    linear-gradient(to right, rgba(214,186,140,.32), transparent 22%, transparent 78%, rgba(214,186,140,.32)),
+    linear-gradient(to bottom, rgba(196,160,108,.22), transparent calc(var(--px) * 90));
+  background-size:
+    100% 760px, 100% 760px, 100% 760px,
+    100% 1210px, 100% 1210px, 100% 1210px,
+    640px 640px, 100% 100%, 100% 100%;
+  background-repeat:repeat-y,repeat-y,repeat-y,repeat-y,repeat-y,repeat-y,repeat,no-repeat,no-repeat;
+}
+/* the deckled, browned side edges: assets/paper-edges.png is cut from
+   paper.png (left and right 170px columns) by tools/make-edges.cjs and made
+   seamlessly tileable, so it repeats at native scale with no visible join */
+.sheet::after{
+  content:"";position:absolute;z-index:-1;pointer-events:none;
+  top:0;bottom:0;
+  left:calc(var(--px) * -60);right:calc(var(--px) * -59);
+  border-style:solid;
+  border-width:0 calc(var(--px) * 170);
+  border-color:transparent;
+  border-image:url("assets/paper-edges.png") 0 170 / 0 calc(var(--px) * 170) round;
+  -webkit-mask-image:linear-gradient(to right,
+    #000 calc(var(--px) * 140), transparent calc(var(--px) * 170),
+    transparent calc(100% - var(--px) * 170), #000 calc(100% - var(--px) * 140));
+          mask-image:linear-gradient(to right,
+    #000 calc(var(--px) * 140), transparent calc(var(--px) * 170),
+    transparent calc(100% - var(--px) * 170), #000 calc(100% - var(--px) * 140));
+}
+
+.sheet-in{
+  padding:calc(var(--px) * 22 + clamp(1.2rem, 5.5vw, 2.6rem))
+          clamp(1.1rem, 5.6vw, 3.2rem)
+          calc(var(--px) * 52 + clamp(1.8rem, 6vw, 3rem));
+  text-align:center;
+}
+.paper-fallback .sheet-in{
+  padding-top:calc(var(--rh) * .5 + clamp(1.2rem, 5.5vw, 2.6rem));
+  padding-bottom:calc(var(--rh) * .5 + clamp(1.8rem, 6vw, 3rem));
+}
+.sheet-in > *{margin-left:auto;margin-right:auto}
+
+/* ---------- typography: matte, nearly flat letterpress ---------- */
+.sc{font-family:"IM Fell English SC",serif}
+.red{color:var(--red)}
+
+.rule{
+  width:5.5rem;height:0;margin:0 auto 1.4rem;
+  border:0;border-top:1px solid rgba(33,26,19,.78);
+}
+
+.title{
+  margin:0;
+  font-family:"IM Fell French Canon",serif;
+  font-weight:400;
+  font-size:clamp(2.2rem, 10.8vw, 4.1rem);
+  line-height:1.06;
+  letter-spacing:-.005em;
+  text-wrap:balance;
+  outline:none;
+}
+
+.litany{
+  margin:2.2rem 0 0;
+  font-size:clamp(1.15rem, 4.9vw, 1.3rem);
+  line-height:1.6;
+  max-width:36em;
+  text-wrap:balance;
+}
+.litany .lead{font-family:"IM Fell English SC",serif;letter-spacing:.1em}
+
+.ornament{margin:2rem 0;font-size:1.45rem;line-height:1}
+
+.turn{
+  margin:0;
+  font-family:"IM Fell Double Pica",serif;
+  font-weight:400;
+  font-size:clamp(1.6rem, 7vw, 2.45rem);
+  line-height:1.2;
+  text-wrap:balance;
+}
+
+.particulars,.terms{
+  font-style:italic;
+  font-size:clamp(1.15rem, 4.9vw, 1.3rem);
+  line-height:1.62;
+  max-width:36em;
+  text-wrap:balance;
+}
+.particulars{margin:1.6rem 0 0}
+.terms{margin:1.2rem 0 0}
+
+.admission{
+  margin:1.8rem 0 0;
+  font-family:"IM Fell English SC",serif;
+  font-size:clamp(1.12rem, 4.6vw, 1.25rem);
+  letter-spacing:.14em;text-indent:.14em;
+}
+
+.answer{margin:2rem 0 0;color:var(--red);text-wrap:balance}
+.answer.alt{margin-top:1.8rem;font-size:clamp(1.12rem, 4.7vw, 1.28rem)}
+.answer .hand,.rec-status .hand{margin-right:.35em}
+.answer a,.rec-actions a{
+  color:var(--red);
+  text-decoration:underline;
+  text-decoration-thickness:.05em;
+  text-underline-offset:.16em;
+  overflow-wrap:anywhere;
+}
+.answer a:hover,.rec-actions a:hover{color:var(--red-deep)}
+
+/* ---------- the Recorder: a wax seal, pressed to speak ---------- */
+.recorder{margin:1.2rem 0 0}
+.seal{
+  display:block;margin:0 auto;
+  width:clamp(96px, 27vw, 132px);aspect-ratio:1;
+  padding:0;border:0;border-radius:50%;background:transparent;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.seal:disabled{cursor:default}
+.seal:disabled .seal-img{opacity:.5;filter:saturate(.6)}
+.seal[aria-busy="true"] .seal-img{opacity:.8}
+.seal-img{
+  display:block;width:100%;height:auto;
+  user-select:none;-webkit-user-select:none;
+  filter:
+    drop-shadow(0 2px 2px rgba(50,14,6,.35))
+    drop-shadow(0 0 calc(var(--lvl, 0) * 26px) rgba(163,49,30,.5));
+  transition:transform .15s ease;
+}
+.seal:hover:not(:disabled) .seal-img{transform:scale(1.03)}
+.seal:active:not(:disabled) .seal-img{transform:scale(.96)}
+.recording .seal-img{animation:breathe 2.6s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.04)}}
+
+.rec-status{
+  margin:1rem 0 0;
+  font-style:italic;
+  font-size:clamp(1.15rem, 4.9vw, 1.3rem);
+  text-wrap:balance;
+  min-height:1.6em;
+}
+.trace{display:block;width:min(26rem, 74vw);height:56px;margin:1.2rem auto 0}
+.trace[hidden]{display:none}
+.rec-time{margin:.6rem 0 0;font-size:1.1rem;letter-spacing:.22em;text-indent:.22em}
+.rec-actions{margin:1.2rem 0 0;font-style:italic;font-size:clamp(1.12rem, 4.7vw, 1.28rem)}
+.send{
+  margin:.2rem 0 0;
+  padding:.6em 1.5em;
+  font-family:"IM Fell English SC",serif;
+  font-size:clamp(1.08rem, 4.4vw, 1.25rem);
+  letter-spacing:.16em;text-indent:.16em;
+  color:var(--paper);
+  background:var(--red);
+  border:0;border-radius:2px;
+  cursor:pointer;
+  box-shadow:0 1px 2px rgba(60,20,0,.3);
+}
+.send:hover{background:var(--red-deep)}
+.send:disabled{opacity:.5;cursor:default}
+.send-note{
+  margin:.9rem auto 0;max-width:30em;
+  font-size:clamp(1rem, 4.2vw, 1.1rem);
+  line-height:1.5;
+  opacity:.82;
+}
+
+.closing{margin:2rem 0 0;font-style:italic;font-size:clamp(1.12rem, 4.7vw, 1.25rem)}
+.enter{
+  margin:1.6rem 0 0;
+  font-family:"IM Fell English SC",serif;
+  font-size:clamp(1.1rem, 4.6vw, 1.25rem);
+  letter-spacing:.08em;
+}
+.enter a{color:inherit;text-underline-offset:.22em}
+.enter a:hover{color:var(--red-deep)}
+.colophon{
+  margin:2.6rem 0 0;
+  font-family:"IM Fell English SC",serif;
+  font-size:.9rem;
+  letter-spacing:.3em;text-indent:.3em;
+  opacity:.62;
+}
+
+/* focus, visible on paper */
+.sheet a:focus-visible,.sheet button:focus-visible{outline:2px solid var(--red);outline-offset:4px;border-radius:2px}
+.seal:focus-visible{border-radius:50%}
+
+@media (max-width:640px){
+  .br{display:none}
+}
+@media (max-width:520px){
+  .br-title{display:none}
+}
+
+/* ---------- quiet preview controls, off the paper ---------- */
+.preview-controls{
+  width:var(--w);margin:2.4rem auto 0;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.5rem 1.6rem;
+  font-size:1rem;color:rgba(232,223,201,.74);
+}
+.backdrop-pick{display:flex;align-items:center;gap:1rem;margin:0;padding:0;border:0}
+.backdrop-pick legend{float:left;margin-right:.2rem;font-family:"IM Fell English SC",serif;letter-spacing:.08em}
+.backdrop-pick label{display:inline-flex;align-items:center;gap:.35rem;min-height:44px;cursor:pointer}
+.backdrop-pick input{accent-color:#b9a47b;width:1rem;height:1rem;margin:0}
+.replay{
+  min-height:44px;padding:0 .2rem;
+  font:inherit;font-style:italic;color:inherit;
+  background:none;border:0;cursor:pointer;
+  text-decoration:underline;text-decoration-thickness:.05em;text-underline-offset:.2em;
+}
+.replay:hover{color:#f1e8d4}
+.no-js .replay,.replay[hidden]{display:none}
+.preview-controls :focus-visible{outline:2px solid #e8dcc0;outline-offset:3px;border-radius:2px}
+
+/* ---------- skip (intro only) ---------- */
+.skip{
+  display:none;
+  position:fixed;z-index:20;left:50%;transform:translateX(-50%);
+  bottom:calc(env(safe-area-inset-bottom) + 22px);
+  min-height:44px;padding:0 1.4em;
+  font-family:"IM Fell English SC",serif;font-size:1rem;letter-spacing:.14em;
+  color:rgba(240,232,214,.86);
+  background:rgba(10,12,8,.42);
+  border:1px solid rgba(232,223,201,.28);border-radius:999px;
+  cursor:pointer;
+}
+.skip:hover{color:#fff8ea;border-color:rgba(232,223,201,.5)}
+.skip:focus-visible{outline:2px solid #e8dcc0;outline-offset:3px}
+
+/* ---------- the unfurling (only while html.intro is set) ---------- */
+.closed-seal{display:none}
+.intro,.intro body{overflow:hidden}
+.intro .skip{display:block}
+.intro .preview-controls{visibility:hidden}
+.intro .scroll{transform:translateY(var(--lift, calc(38svh - 3rem)))}
+.intro .sheet{clip-path:inset(0 -80px calc(100% - var(--clip, 0px)) -80px)}
+/* before measuring, hide the flat sheet strip cut along with the top curl */
+.intro:not(.measured) .roll-top{clip-path:inset(0 -60px calc(var(--px) * 18) -60px)}
+.paper-fallback.intro:not(.measured) .roll-top{clip-path:none}
+.intro .roll-bottom{transform:translateY(var(--dy, 0px))}
+.intro:not(.measured) .roll-bottom{visibility:hidden}
+.intro .closed-seal{
+  display:block;position:absolute;z-index:3;left:50%;
+  top:calc(var(--px) * 52);
+  width:clamp(64px, calc(var(--w) * .2), 116px);height:auto;
+  transform:translate(-50%, -42%);
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,.45));
+  pointer-events:none;
+  transition:opacity .4s ease;
+}
+.intro.unfurling .closed-seal{opacity:0}
+.paper-fallback .closed-seal{top:calc(var(--rh) * .5)}
+
+@media (prefers-reduced-motion:reduce){
+  .recording .seal-img{animation:none}
+  .seal-img{transition:none}
+}
+
+@media print{
+  html{background:#fff}
+  .backdrop,.roll,.preview-controls,.skip,.closed-seal{display:none}
+  .sheet{box-shadow:none;background:#fff}
+  .scroll{width:auto}
+}
