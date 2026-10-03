@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;600&family=Libre+Caslon+Display&display=swap');
-:root{color-scheme:dark;--ink:#eceae2;--muted:#b4b6b2;--paper:#101315;--line:#454945;--accent:#cf8e82;--serif:'Libre Caslon Display',Georgia,serif;--sans:'DM Sans',Arial,sans-serif}
+:root{color-scheme:dark;--ink:#eceae2;--muted:#b4b6b2;--paper:#101315;--line:#454945;--accent:#cf8e82;--serif:'Libre Caslon Display',Georgia,serif;--sans:'DM Sans',Arial,sans-serif;--t-display:clamp(2.375rem,4vw,3.25rem);--t-text:clamp(1.25rem,1.9vw,1.625rem);--t-ui:.875rem}
 *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:1rem}body{margin:0;background:var(--paper);background-image:linear-gradient(#0a0e1140,#0a0e1140),url('assets/charcoal-paper.png');background-size:auto,780px 780px;color:var(--ink);font-family:var(--sans);font-size:1rem;line-height:1.6;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}button,input{font:inherit}a,button,input,summary{-webkit-tap-highlight-color:transparent}a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:6px}p,h1,h2{margin:0}h1,h2{font-family:var(--serif);font-weight:400;line-height:1.02;letter-spacing:-.025em}button{cursor:pointer}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.skip-link{position:fixed;z-index:10;left:1rem;top:1rem;padding:.6rem 1rem;background:var(--paper);transform:translateY(-200%)}.skip-link:focus{transform:none}
 /* Preserve the painted hero and its Caslon wordmark. */
 .hero{position:relative;isolation:isolate;height:100svh;min-height:720px;max-height:1200px;overflow:hidden;background:#b8cede;color:#25343b}.hero-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%;z-index:-1}.navigation{padding:2rem 3.5rem;display:flex;align-items:center;justify-content:flex-end;gap:2rem}.nav-links{display:flex;gap:2.4rem;font-size:.9rem}.nav-links a,.mobile-explore{border-bottom:1px solid transparent;padding:.2rem 0}.nav-links a:hover,.mobile-explore:hover{border-color:currentColor}.mobile-explore{display:none}.hero-title{position:absolute;top:8%;left:1rem;right:1rem;text-align:center}.hero h1{font-size:clamp(4.2rem,7vw,6.4rem);line-height:.95;letter-spacing:-.04em}.wordmark-period{color:var(--accent)}.hero .wordmark-period{color:#873d35}.hero-forum{display:block;font-family:var(--sans);font-size:clamp(1.3rem,2.1vw,2rem);font-weight:400;letter-spacing:.15em;line-height:1.3;text-transform:uppercase;margin-top:.65rem}.hero-bottom{position:absolute;bottom:2.25rem;left:3.5rem;right:3.5rem;display:flex;justify-content:space-between;align-items:flex-end;gap:2rem}.hero-bottom p,.hero-note{font-size:.9rem;line-height:1.5;text-shadow:0 1px 10px #ecebe2}.hero-note{text-align:right}.hero-note:hover{text-decoration:underline;text-underline-offset:.3rem}.explore-link{color:var(--ink);display:flex;align-items:center;gap:1.3rem;font-size:.95rem;background:var(--paper);padding:.8rem 1.3rem;border:1px solid #fff8}.scroll-line{height:1.3rem;width:1px;background:var(--ink)}.explore-link:hover{background:#29353b}
@@ -28,17 +28,18 @@ footer{border-top:1px solid var(--line);padding:2.5rem 3.5rem;display:flex;align
 [hidden]{display:none!important}
 
 /* A single anonymous answer, followed by the shared distribution. */
-.experiment-intro{font-family:var(--sans);font-size:clamp(.875rem,1.25vw,1rem);line-height:1.4;letter-spacing:.01em;color:var(--muted);margin:0 0 .75rem}
-.imagine h2{max-width:920px;font-size:clamp(1.4375rem,2.1875vw,1.75rem);line-height:1.15}
+.gathering-fact,.gathering-invitation,.gathering-forum,.experiment-intro,.question-setup{font:400 var(--t-text)/1.35 var(--serif);letter-spacing:-.005em;color:var(--ink);max-width:30ch;margin:0 auto;text-wrap:balance}
+.experiment-intro{margin-bottom:1rem}
+.imagine h2{max-width:920px;font-size:var(--t-text);line-height:1.35}
 .question-setup,.question-focus{display:block}
-.question-focus{font-size:clamp(2.375rem,4.0625vw,3.25rem);line-height:1.06;margin-top:.2em}
+.gathering-intro h2,.question-focus{font:400 var(--t-display)/1.08 var(--serif);letter-spacing:-.02em;color:var(--ink);margin-top:0}
 .survey-instruction{color:var(--muted);font-size:.875rem;line-height:1.4;margin-top:.5rem}
 .control-row .submit-response{grid-column:2;min-width:112px;padding:.3rem 1.5rem;color:var(--ink);border:1px solid #777a70;border-radius:2px;font-size:.95rem}
 .control-row .submit-response:hover{background:#eceae20d;border-color:var(--ink)}
 .survey-status{font-size:.8rem;line-height:1.4;color:var(--muted);min-height:2.8em;margin-top:.6rem}
 .apple-dock{height:1px;margin:0 auto}
 .survey-results{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:1.5rem;text-align:center}
-.results-total{font-family:var(--serif);font-size:clamp(1.7rem,2.7vw,2.4rem);line-height:1.1}
+.results-total{font-family:var(--serif);font-size:var(--t-text);line-height:1.35}
 .results-chart{position:relative;display:flex;align-items:flex-end;gap:5px;height:56%;margin:0 10px;border-bottom:1px solid #eceae25c}
 .result-bin{flex:1;min-width:0;background:#eceae2b3;min-height:1px}
 .result-marker{position:absolute;bottom:-7px;top:-12px;width:1px;background:var(--ink);transform:translateX(-.5px)}
@@ -128,22 +129,30 @@ html[data-scene=road] .imagine{background:transparent}
 /* A quiet invitation between the painting's feet and the experiment. */
 .gathering-intro{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:clamp(3.5rem,8svh,6rem);padding-bottom:clamp(4rem,9svh,7rem);scroll-margin-top:1rem}
 .gathering-intro:focus{outline:none}
-.gathering-fact{max-width:43ch;color:var(--muted);font-size:clamp(1rem,1.45vw,1.2rem);line-height:1.6;text-wrap:balance}
-.gathering-fact a{text-decoration:underline;text-decoration-color:#eceae25c;text-underline-offset:.2em}
-.gathering-invitation{max-width:34ch;margin-top:1.5rem;font-family:var(--serif);font-size:clamp(1.35rem,2.1vw,1.75rem);line-height:1.3;text-wrap:balance}
-.gathering-intro h2{margin-top:.9rem;font-size:clamp(2.4rem,4.1vw,3.5rem);line-height:1.08}
-.gathering-presenter{max-width:38ch;margin-top:1.7rem;font-size:clamp(.875rem,1.2vw,1rem);line-height:1.5;color:var(--muted);text-wrap:balance}
-.gathering-forum{margin-top:.3rem;font-family:var(--serif);font-size:clamp(1.6rem,2.6vw,2.15rem);line-height:1.15;text-wrap:balance}
-.take-test{display:inline-flex;align-items:center;gap:.5rem;min-height:44px;margin-top:1.2rem;padding:.4rem .2rem;font-size:.95rem;text-decoration:underline;text-underline-offset:.3em}
+.gathering-invitation{margin-top:1rem}
+.gathering-intro h2{margin-top:1.5rem}
+.gathering-forum{margin-top:1rem}
+.take-test{display:inline-flex;align-items:center;gap:.5rem;min-height:44px;margin-top:1.5rem;padding:.4rem .2rem;font-size:var(--t-ui);text-decoration:underline;text-underline-offset:.3em}
 .take-test:hover,.gathering-fact a:hover{color:#fff}
-.take-test:focus-visible,.gathering-fact a:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+.take-test:focus-visible,.gathering-fact a:focus-visible,.source-note a:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
 
 
 /* Questions stay reachable against both the painting and the charcoal page. */
 .site-questions{border:0;position:fixed;z-index:9;top:max(.75rem,env(safe-area-inset-top));right:max(.75rem,env(safe-area-inset-right))}
-.site-questions>summary{display:flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;list-style:none;border:1px solid #eceae266;border-radius:50%;background:#111515f5;color:var(--ink);font-family:var(--serif);font-size:1.4rem;line-height:1;cursor:pointer}
+.site-questions>summary{display:flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;list-style:none;border:1px solid #eceae266;border-radius:50%;background:#111515f5;color:var(--ink);font-family:var(--sans);font-size:1.4rem;line-height:1;cursor:pointer}
 .site-questions>summary::-webkit-details-marker{display:none}
 .site-questions>summary::after{content:none}
 .site-questions>summary:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .questions-panel{position:absolute;top:calc(100% + .5rem);right:0;width:min(350px,calc(100vw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)));max-height:calc(100svh - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;padding:1.2rem 1.3rem;border:1px solid #eceae23d;border-radius:9px;background:#111515fa;color:var(--ink);box-shadow:0 8px 28px #0002;font-size:1rem;line-height:1.5}
 .questions-panel p+p{margin-top:1rem}
+
+/* Shared control and citation typography. */
+.take-test,.survey-instruction,.scale-labels,.control-row .submit-response,.survey-status,.results-legend,.source-note,.explore-link,.hero-note,.questions-panel,.options-panel,.site-options>summary,.name-status{font-family:var(--sans);font-size:var(--t-ui);font-weight:400;line-height:1.5;letter-spacing:.01em}
+.survey-instruction,.scale-labels,.survey-status,.source-note{color:var(--muted)}
+.questions-panel{line-height:1.6}
+.gathering-fact sup{font:500 .5em/0 var(--sans);vertical-align:.8em;margin-left:.12em}
+.gathering-fact sup a{color:var(--muted);text-decoration:none;padding:.4em}
+.gathering-fact sup a:hover{color:var(--ink)}
+.source-note{margin-top:2.5rem;max-width:40ch;scroll-margin-top:1rem}
+.source-note:focus{outline:none}
+.source-note a{text-decoration:underline;text-decoration-color:#eceae25c;text-underline-offset:.2em}

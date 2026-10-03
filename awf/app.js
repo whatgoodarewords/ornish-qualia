@@ -112,7 +112,7 @@
   document.addEventListener('pointerdown',event=>{if(options.open&&!options.contains(event.target))options.open=false;});
   let layout,frame=0,needsMeasure=true,inspectHash=true,previousY=window.scrollY;
   let roadRequested=readPreference('awf-scene','road')!=='original',roadAvailable=true,road=false,roadAttempt=0,sceneAnchor=null;
-  let forceDock=Boolean(location.hash&&location.hash!=='#top'&&location.hash!=='#gathering-intro'),journey=false,docked=false,connected=false,arrived=false;
+  let forceDock=Boolean(location.hash&&location.hash!=='#top'&&location.hash!=='#gathering-intro'&&location.hash!=='#source-note'),journey=false,docked=false,connected=false,arrived=false;
   const written=new WeakMap();
   function style(node,key,value){let cache=written.get(node);if(!cache){cache={};written.set(node,cache);}if(cache[key]!==value){node.style[key]=value;cache[key]=value;}}
   function attribute(node,key,value){if(node.getAttribute(key)!==String(value))node.setAttribute(key,String(value));}
@@ -233,7 +233,7 @@
     history.replaceState(null,'','#imagine');journey=false;forceDock=true;
     section.scrollIntoView({behavior:'instant',block:'start'});schedule();return true;
   }
-  window.addEventListener('hashchange',()=>{if(redirectHiddenHash())return;if(location.hash!=='#imagine')journey=false;forceDock=Boolean(location.hash&&location.hash!=='#top'&&location.hash!=='#gathering-intro'&&!journey);schedule();});
+  window.addEventListener('hashchange',()=>{if(redirectHiddenHash())return;if(location.hash!=='#imagine')journey=false;forceDock=Boolean(location.hash&&location.hash!=='#top'&&location.hash!=='#gathering-intro'&&location.hash!=='#source-note'&&!journey);schedule();});
   section.addEventListener('focusin',event=>{if(journey&&(event.target===section||event.target===dock))return;journey=false;forceDock=true;schedule();});
   handleToggle.addEventListener('change',()=>{appleHandle=handleToggle.checked;savePreference('awf-apple-handle',String(appleHandle));root.classList.toggle('apple-handle-mode',appleHandle);needsMeasure=true;schedule();});
   reduced.addEventListener('change',configure);
