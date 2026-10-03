@@ -6,9 +6,35 @@
   function frameAt(progress,count){return Math.round(handPhase(progress)*(count-1));}
   function patchPosition(patch,layout){return {left:layout.offsetX+patch.x*layout.scale,top:layout.offsetY+patch.y*layout.scale,width:patch.width*layout.scale,height:patch.height*layout.scale};}
   const assets={original:'assets/hero.png',cleanplate:'assets/hands-v1/cleanplate.png',atlas:'assets/hands-v1/hand-atlas.png',columns:5,frames:25,patches:[
-    {name:'left',x:590,y:838,width:90,height:116,pivotX:46,pivotY:12},
-    {name:'right',x:879,y:838,width:90,height:116,pivotX:43,pivotY:12,mirror:true}
+    {name:'left',x:575,y:838,width:120,height:126,pivotX:61,pivotY:12},
+    {name:'right',x:863,y:838,width:120,height:126,pivotX:59,pivotY:12,mirror:true}
   ]};
+  function unfoldingRow(spec,phase,y){
+    const p=clamp(phase),relax=handPhase((y-spec.pivotY)/86);
+    return {width:1+.12*p*relax,outward:(spec.mirror?1:-1)*10*p*relax,length:1+.1*p};
+  }
+  function handPoint(x,y,spec,phase){
+    if(y<spec.pivotY)return {x,y};
+    const row=unfoldingRow(spec,phase,y);
+    return {x:spec.pivotX+(x-spec.pivotX)*row.width+row.outward,y:spec.pivotY+(y-spec.pivotY)*row.length};
+  }
+  function unfoldPixels(data,spec,phase){
+    if(phase===0)return new Uint8ClampedArray(data);
+    const {width,height,pivotX,pivotY}=spec,output=new Uint8ClampedArray(data.length),length=1+.1*clamp(phase);
+    for(let y=0;y<height;y++){
+      const sourceY=y<pivotY?y:pivotY+(y-pivotY)/length,row=unfoldingRow(spec,phase,sourceY),top=Math.floor(sourceY),fy=sourceY-top;
+      for(let x=0;x<width;x++){
+        const sourceX=pivotX+(x-pivotX-row.outward)/row.width,left=Math.floor(sourceX),fx=sourceX-left,sum=[0,0,0];let alpha=0;
+        for(let dy=0;dy<=1;dy++)for(let dx=0;dx<=1;dx++){
+          const sx=left+dx,sy=top+dy;if(sx<0||sy<0||sx>=width||sy>=height)continue;
+          const i=(sy*width+sx)*4,weight=(dx?fx:1-fx)*(dy?fy:1-fy)*data[i+3]/255;
+          alpha+=weight;for(let k=0;k<3;k++)sum[k]+=data[i+k]*weight;
+        }
+        if(alpha){const i=(y*width+x)*4;for(let k=0;k<3;k++)output[i+k]=sum[k]/alpha;output[i+3]=alpha*255;}
+      }
+    }
+    return output;
+  }
   const skin=(r,g,b)=>r>g*1.1&&g>b*1.08&&r-g>15&&g>35&&b>20&&r-g<125;
   function cleanCell(data,width,height){
     const mask=new Uint8Array(width*height),seen=new Uint8Array(mask.length);let largest=[];
@@ -89,7 +115,7 @@
       // It introduces the atlas through a registered geometric transition.
       const originalPose=source.context.getImageData(0,0,spec.width,spec.height);
       for(let i=0;i<mask.length;i++)originalPose.data[i*4+3]=b.data[i*4+3];
-      const poses=[originalPose.data,...cells.map(cell=>{
+      const poses=[originalPose.data,...cells.map((cell,index)=>{
         const frame=make(spec.width,spec.height,true),sprite=make(cell.width,cell.height,true);sprite.context.drawImage(cell.canvas,0,0);
         const pixels=sprite.context.getImageData(0,0,cell.width,cell.height),sum=[0,0,0];let samples=0;
         for(let i=0;i<pixels.data.length;i+=4)if(pixels.data[i+3]>200){samples++;for(let k=0;k<3;k++)sum[k]+=pixels.data[i+k];}
@@ -97,7 +123,9 @@
         sprite.context.putImageData(pixels,0,0);
         const scale=86/(cell.bottom-cell.top+1),horizontal=spec.mirror?-1:1;
         frame.context.save();frame.context.translate(spec.pivotX,spec.pivotY);frame.context.scale(horizontal*scale,scale);frame.context.drawImage(sprite.canvas,-cell.pivotX,-cell.top);frame.context.restore();
-        return frame.context.getImageData(0,0,spec.width,spec.height).data;
+        // The cuff opening stays fixed. Only the hand below it relaxes outward
+        // and gains a little length and palm width, with no upward shrug.
+        return unfoldPixels(frame.context.getImageData(0,0,spec.width,spec.height).data,spec,index/(cells.length-1));
       })],bounds=poses.map(pose=>rowBounds(pose,spec.width,spec.height)),frames=[];
       function cache(data){
         const hand=make(spec.width,spec.height),frame=make(spec.width,spec.height),pixels=hand.context.createImageData(spec.width,spec.height);pixels.data.set(data);hand.context.putImageData(pixels,0,0);
@@ -174,7 +202,7 @@
     preference();
     return {setLayout(value){layout=value;position();sync();},update(value,onScreen=true){progress=clamp(value);visible=onScreen;sync();},get enabled(){return enabled;},get ready(){return ready;}};
   }
-  if(typeof module==='object'&&module.exports)module.exports={handPhase,frameAt,patchPosition,createController,assets,cleanCell,prepareArtwork,rowBounds,tweenSilhouette};
+  if(typeof module==='object'&&module.exports)module.exports={handPhase,frameAt,patchPosition,createController,assets,cleanCell,prepareArtwork,rowBounds,tweenSilhouette,handPoint,unfoldPixels};
   if(!root?.document)return;
   const document=root.document,button=document.getElementById('hands-turn-toggle'),hero=document.querySelector('.hero'),roadPainting=document.querySelector('.road-painting');
   if(!button||!hero||!roadPainting)return;

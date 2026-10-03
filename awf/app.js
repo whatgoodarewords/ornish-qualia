@@ -47,6 +47,10 @@
       extensionWidth:1024*extensionScale,extensionHeight:1536*extensionScale,shoeY,
       runwayHeight:Math.max(height,shoeY+Math.max(48,Math.min(90,height*.09)))};
   }
+  function handTurnDuration(wristY,viewportHeight){
+    // Give the welcome more time, retaining a visible cuff at its held endpoint.
+    return Math.max(1,Math.min((wristY-viewportHeight*.3)*1.3,wristY-Math.max(48,viewportHeight*.12)));
+  }
   function landingPose(g,artwork,{progress,y,viewportHeight,appleHandle}){
     const p=Math.max(0,Math.min(1,progress)),mix=(a,b)=>a+(b-a)*p;
     // A single scroll interval owns position and scale. There is no waypoint
@@ -60,7 +64,7 @@
   function appleClipBottom(pose,artwork,introTop,scrollY){
     return introTop==null?0:Math.max(0,Math.min(artwork.height,artwork.height-(introTop-scrollY-pose.top)/pose.size));
   }
-  if(typeof module==='object'&&module.exports)module.exports={landingPose,paintingGeometry,appleClipBottom,EVENT_NAMES,createNameSelector};
+  if(typeof module==='object'&&module.exports)module.exports={landingPose,paintingGeometry,handTurnDuration,appleClipBottom,EVENT_NAMES,createNameSelector};
   if(typeof document==='undefined')return;
   const root=document.documentElement;
   const runway=document.querySelector('.hero-runway');
@@ -167,7 +171,7 @@
     const preferredTop=box.height*(window.innerWidth<=600?.11:.08);
     root.style.setProperty('--title-top',`${Math.max(12,Math.min(preferredTop,hatY-titleHeight-12))}px`);
     const start=wrapper.top+y,run=road?Math.min(box.height*.38,Math.max(1,wrapper.height-box.height)):Math.max(0,wrapper.height-box.height);
-    layout={start,run,road,handTop:offsetY+838*scale,handBottom:offsetY+954*scale,handTurnRun:Math.max(1,offsetY+850*scale-window.innerHeight*.3),faceX,centerX:box.left+box.width/2,faceY:geometry.faceY,groinY:road?geometry.groinY:Math.min(box.height-48,geometry.groinY),scale:2.3*scale,
+    layout={start,run,road,handTop:offsetY+838*scale,handBottom:offsetY+954*scale,handTurnRun:handTurnDuration(offsetY+850*scale,window.innerHeight),faceX,centerX:box.left+box.width/2,faceY:geometry.faceY,groinY:road?geometry.groinY:Math.min(box.height-48,geometry.groinY),scale:2.3*scale,
       targetX:target.left+target.width/2,targetY:target.top+y+target.height/2,targetWidth:target.width,targetHeight:target.height,
       navHeight,sectionTop:sectionBox.top+y,introTop:gathering?gathering.getBoundingClientRect().top+y:null,end:Math.min(Math.max(0,root.scrollHeight-window.innerHeight),Math.max(start+run+1,sectionBox.top+y-navHeight))};
     if(sceneAnchor!==null){window.scrollTo({top:Math.max(0,y+sectionBox.top-sceneAnchor),behavior:'instant'});sceneAnchor=null;}
