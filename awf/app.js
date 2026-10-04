@@ -58,6 +58,7 @@
     // Give the welcome more time, retaining a visible cuff at its held endpoint.
     return Math.max(1,Math.min((wristY-viewportHeight*.3)*1.3,wristY-Math.max(48,viewportHeight*.12)));
   }
+  function landingScrollEnd(targetY,viewportHeight){return targetY-Math.min(viewportHeight*.8,viewportHeight-44);}
   function landingPose(g,artwork,{progress,y,viewportHeight,appleHandle}){
     const p=Math.max(0,Math.min(1,progress)),mix=(a,b)=>a+(b-a)*p;
     // A single scroll interval owns position and scale. There is no waypoint
@@ -65,10 +66,10 @@
     const size=appleHandle?mix(g.scale,.7):g.scale;
     const x=(g.centerX??g.faceX)-artwork.fruitX*size;
     const end=g.end??y;
-    const finalPivot=appleHandle?Math.min(g.targetY-end,viewportHeight-(artwork.height-artwork.fruitY)*.7-12):viewportHeight+24+artwork.fruitY*g.scale;
+    const finalPivot=appleHandle?g.targetY-end:viewportHeight+24+artwork.fruitY*g.scale;
     return {size,x,top:mix(g.faceY,finalPivot)-artwork.fruitY*size};
   }
-  if(typeof module==='object'&&module.exports)module.exports={landingPose,paintingGeometry,handTurnDuration,EVENT_NAMES,createNameSelector,wireQuestions};
+  if(typeof module==='object'&&module.exports)module.exports={landingPose,landingScrollEnd,paintingGeometry,handTurnDuration,EVENT_NAMES,createNameSelector,wireQuestions};
   if(typeof document==='undefined')return;
   const root=document.documentElement;
   const runway=document.querySelector('.hero-runway');
@@ -92,15 +93,17 @@
   const handleScale=.7;
   function readPreference(key,fallback){try{return localStorage.getItem(key)||fallback;}catch{return fallback;}}
   function savePreference(key,value){try{localStorage.setItem(key,value);}catch{}}
-  const handleArt=scene.cloneNode(true);
+  const handleArt=document.createElement('span'),handleFallback=scene.cloneNode(true);
   handleArt.classList.add('handle-apple');
-  handleArt.querySelector('clipPath').id='magritte-handle-clip';
-  handleArt.querySelector('image').setAttribute('clip-path','url(#magritte-handle-clip)');
+  handleFallback.querySelector('clipPath').id='magritte-handle-clip';
+  handleFallback.querySelector('image').setAttribute('clip-path','url(#magritte-handle-clip)');
+  handleArt.appendChild(handleFallback);
   handleArt.style.width=`${artwork.width*handleScale}px`;
   handleArt.style.height=`${artwork.height*handleScale}px`;
   handleArt.style.left=`${18-artwork.fruitX*handleScale}px`;
   handleArt.style.top=`${18-artwork.fruitY*handleScale}px`;
   dock.appendChild(handleArt);
+  window.fallingAppleSpin?.attachHandle?.(handleArt);
   appleHandle=readPreference('awf-apple-handle','true')!=='false';
   handleToggle.checked=appleHandle;
   root.classList.toggle('apple-handle-mode',appleHandle);
@@ -112,7 +115,7 @@
   document.addEventListener('pointerdown',event=>{if(options.open&&!options.contains(event.target))options.open=false;});
   let layout,frame=0,needsMeasure=true,inspectHash=true,previousY=window.scrollY;
   let roadRequested=readPreference('awf-scene','road')!=='original',roadAvailable=true,road=false,roadAttempt=0,sceneAnchor=null;
-  let forceDock=Boolean(location.hash&&location.hash!=='#top'&&location.hash!=='#gathering-intro'&&location.hash!=='#source-note'),journey=false,docked=false,connected=false,arrived=false;
+  let forceDock=Boolean(location.hash&&location.hash!=='#top'),journey=false,docked=false,connected=false,arrived=false;
   const written=new WeakMap();
   function style(node,key,value){let cache=written.get(node);if(!cache){cache={};written.set(node,cache);}if(cache[key]!==value){node.style[key]=value;cache[key]=value;}}
   function attribute(node,key,value){if(node.getAttribute(key)!==String(value))node.setAttribute(key,String(value));}
@@ -177,7 +180,7 @@
     const start=wrapper.top+y,run=road?Math.min(box.height*.38,Math.max(1,wrapper.height-box.height)):Math.max(0,wrapper.height-box.height);
     layout={start,run,road,handTop:offsetY+838*scale,handBottom:offsetY+954*scale,handTurnRun:handTurnDuration(offsetY+850*scale,window.innerHeight),faceX,centerX:box.left+box.width/2,faceY:geometry.faceY,groinY:road?geometry.groinY:Math.min(box.height-48,geometry.groinY),scale:2.3*scale,
       targetX:target.left+target.width/2,targetY:target.top+y+target.height/2,targetWidth:target.width,targetHeight:target.height,
-      navHeight,sectionTop:sectionBox.top+y,end:Math.min(Math.max(0,root.scrollHeight-window.innerHeight),Math.max(start+run+1,sectionBox.top+y-navHeight))};
+      navHeight,sectionTop:sectionBox.top+y,end:landingScrollEnd(target.top+y+target.height/2,window.innerHeight)};
     if(sceneAnchor!==null){window.scrollTo({top:Math.max(0,y+sectionBox.top-sceneAnchor),behavior:'instant'});sceneAnchor=null;}
     needsMeasure=false;
   }
@@ -195,7 +198,7 @@
     previousY=y;
     const navVisible=!nav.hidden&&y>=g.sectionTop-g.navHeight-1;
     nav.classList.toggle('is-visible',navVisible);nav.inert=!navVisible;attribute(nav,'aria-hidden',!navVisible);
-    const natural=y>=g.end-1;
+    const natural=y>=g.end;
     setDocked(natural||forceDock||reduced.matches);
     const dockVisible=g.targetY-y>=g.navHeight&&g.targetY-y+g.targetHeight<=window.innerHeight;
     if(docked&&dockVisible&&!arrived){arrived=true;window.appleExperience?.arrive();}
@@ -233,11 +236,13 @@
     history.replaceState(null,'','#imagine');journey=false;forceDock=true;
     section.scrollIntoView({behavior:'instant',block:'start'});schedule();return true;
   }
-  window.addEventListener('hashchange',()=>{if(redirectHiddenHash())return;if(location.hash!=='#imagine')journey=false;forceDock=Boolean(location.hash&&location.hash!=='#top'&&location.hash!=='#gathering-intro'&&location.hash!=='#source-note'&&!journey);schedule();});
+  window.addEventListener('hashchange',()=>{if(redirectHiddenHash())return;if(location.hash!=='#imagine')journey=false;forceDock=Boolean(location.hash&&location.hash!=='#top'&&!journey);schedule();});
   section.addEventListener('focusin',event=>{if(journey&&(event.target===section||event.target===dock))return;journey=false;forceDock=true;schedule();});
   handleToggle.addEventListener('change',()=>{appleHandle=handleToggle.checked;savePreference('awf-apple-handle',String(appleHandle));root.classList.toggle('apple-handle-mode',appleHandle);needsMeasure=true;schedule();});
   reduced.addEventListener('change',configure);
   if(document.fonts)document.fonts.ready.then(()=>{needsMeasure=true;schedule();});
-  new ResizeObserver(()=>{needsMeasure=true;schedule();}).observe(document.getElementById('imagination-control'));
+  const layoutObserver=new ResizeObserver(()=>{needsMeasure=true;schedule();});
+  layoutObserver.observe(section);
+  layoutObserver.observe(document.getElementById('imagination-control'));
   configure();
 })();

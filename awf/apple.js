@@ -98,7 +98,7 @@
 
   const $ = id => document.getElementById(id);
   const canvas = $('apple');
-  const BUILD = 'apple-survey-20261003-32';
+  const BUILD = 'apple-survey-20261003-35';
   canvas.setAttribute('data-build',BUILD);
   const ctx = canvas.getContext('2d', { alpha: true });
   const slider = $('imagination');
@@ -327,8 +327,12 @@
     ctx.clearRect(0,0,SIZE,SIZE);
     ctx.lineCap='round';ctx.lineJoin='round';
     if(s.flat>.001) {ctx.globalAlpha=s.flat*.79;ctx.drawImage(flat,0,0);}
-    if(s.photo>.001) {ctx.globalAlpha=s.photo;ctx.drawImage(photo,0,0);}
-    if(activeVariant?.detailActive&&activeVariant.artwork?.detailPhoto&&state.progress>.9){ctx.globalAlpha=smooth(.9,.92,state.progress);ctx.drawImage(activeVariant.artwork.detailPhoto,0,0);}
+    const detail=activeVariant?.detailActive&&activeVariant.artwork?.detailPhoto&&state.progress>.9?smooth(.9,.92,state.progress):0;
+    if(detail&&root.AppleArtwork.drawFrame){
+      const record=activeVariant.artwork,g=record.geometry;
+      root.AppleArtwork.drawFrame(record.transitionPhoto.getContext('2d'),activeVariant,detail);
+      ctx.globalAlpha=1;ctx.drawImage(record.transitionPhoto,g.source.x,g.source.y,g.source.width,g.source.height,g.x,g.y,g.width,g.height);
+    }else if(s.photo>.001){ctx.globalAlpha=s.photo;ctx.drawImage(detail?activeVariant.artwork.detailPhoto:photo,0,0);}
     // Word glyphs remain cached as the semantic composition becomes a contour.
     if(s.connections>.002) {
       ctx.globalAlpha=s.connections*.62;ctx.strokeStyle=WORD_INK;ctx.lineWidth=1;
@@ -566,7 +570,9 @@
     base.then(variant=>root.AppleArtwork.loadDetail(variant)).then(variant=>{
       const record=variant.artwork;if(!record)return;
       const g=record.geometry,c=surface(),ctx=c.getContext('2d');
-      ctx.drawImage(variant.detail,g.source.x,g.source.y,g.source.width,g.source.height,g.x,g.y,g.width,g.height);record.detailPhoto=c;
+      const endpoint=root.AppleModel?.endpoint(variant)||variant.detail;
+      ctx.drawImage(endpoint,g.source.x,g.source.y,g.source.width,g.source.height,g.x,g.y,g.width,g.height);record.detailPhoto=c;
+      record.transitionPhoto=surface(variant.base.width,variant.base.height);
       if(activeVariant===variant&&state.progress<=.9)variant.detailActive=true;
       artworkListeners.forEach(listener=>listener(activeVariant));
     }).catch(()=>{});

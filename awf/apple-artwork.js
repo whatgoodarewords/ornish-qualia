@@ -37,7 +37,33 @@
     for(const colour of ['green','red'])Promise.resolve().then(()=>load(colour)).then(value=>{items[colour]={status:'ready',value};reconcile();},()=>{items[colour]={status:'failed'};reconcile();});
     return {request,get active(){return active;},get wanted(){return wanted;},items};
   }
-  const api={paths,greenParts,greenStems,samplePath,createChoice};
+  const petiolePath='M624 348 C627 349 631 350 634 351 L633 354 C629 353 626 352 624 351 Z';
+  // Register material, never generated geometry. Rays map the source's actual
+  // alpha contour into each original mask, so no guessed crop can expose gaps.
+  function registeredPixels(source,width,height,polygon){
+    const {data, width:sw,height:sh}=source;let l=sw,r=0,t=sh,b=0;
+    for(let y=0;y<sh;y++)for(let x=0;x<sw;x++)if(data[(y*sw+x)*4+3]>127){l=Math.min(l,x);r=Math.max(r,x);t=Math.min(t,y);b=Math.max(b,y);}
+    if(r<=l||b<=t)throw Error('Empty apple material');
+    const box={l:Math.min(...polygon.map(p=>p[0])),r:Math.max(...polygon.map(p=>p[0])),t:Math.min(...polygon.map(p=>p[1])),b:Math.max(...polygon.map(p=>p[1]))};
+    const cx=(box.l+box.r)/2,cy=(box.t+box.b)/2,rx=(box.r-box.l)/2,ry=(box.b-box.t)/2,sx=(l+r)/2,sy=(t+b)/2,srx=(r-l)/2,sry=(b-t)/2;
+    const poly=polygon.map(([x,y])=>[(x-cx)/rx,(y-cy)/ry]),rays=2048,src=new Float32Array(rays),dst=new Float32Array(rays);
+    for(let i=0;i<rays;i++){
+      const a=i/rays*Math.PI*2,dx=Math.cos(a),dy=Math.sin(a);let edge=Infinity;
+      for(let j=0;j<poly.length;j++){const p=poly[j],q=poly[(j+1)%poly.length],ex=q[0]-p[0],ey=q[1]-p[1],det=dx*ey-dy*ex;if(Math.abs(det)<1e-9)continue;const distance=(p[0]*ey-p[1]*ex)/det,u=(p[0]*dy-p[1]*dx)/det;if(distance>0&&u>=0&&u<=1)edge=Math.min(edge,distance);}
+      dst[i]=Number.isFinite(edge)?edge:1;
+      let distance=0;for(let step=1;step<=Math.max(sw,sh)*2;step++){const d=step/Math.max(sw,sh),x=Math.round(sx+dx*d*srx),y=Math.round(sy+dy*d*sry);if(x<0||y<0||x>=sw||y>=sh||data[(y*sw+x)*4+3]<128)break;distance=d;}
+      src[i]=Math.max(.01,distance-.006);
+    }
+    const out=new Uint8ClampedArray(width*height*4);
+    for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+      const nx=(x+.5-cx)/rx,ny=(y+.5-cy)/ry,a=(Math.atan2(ny,nx)+Math.PI*2)%(Math.PI*2),i=Math.floor(a/Math.PI/2*rays)%rays,d=Math.min(.995,Math.hypot(nx,ny)/dst[i])*src[i];
+      const px=Math.max(0,Math.min(sw-1.001,sx+Math.cos(a)*d*srx)),py=Math.max(0,Math.min(sh-1.001,sy+Math.sin(a)*d*sry)),ix=Math.floor(px),iy=Math.floor(py),fx=px-ix,fy=py-iy,k=(y*width+x)*4;
+      for(let c=0;c<3;c++)out[k+c]=data[(iy*sw+ix)*4+c]*(1-fx)*(1-fy)+data[(iy*sw+ix+1)*4+c]*fx*(1-fy)+data[((iy+1)*sw+ix)*4+c]*(1-fx)*fy+data[((iy+1)*sw+ix+1)*4+c]*fx*fy;
+      out[k+3]=255;
+    }
+    return out;
+  }
+  const api={paths,greenParts,greenStems,petiolePath,samplePath,createChoice,registeredPixels};
   if(typeof module==='object'&&module.exports)module.exports=api;
   if(!root?.document)return;
   const cache=new Map();
@@ -47,33 +73,33 @@
     const c=canvas(594,654),ctx=c.getContext('2d');ctx.scale(3,3);ctx.translate(-530,-312);
     const clip=new Path2D();for(const path of paths)clip.addPath(new Path2D(path));ctx.clip(clip);ctx.drawImage(source,0,0);return c;
   }
-  function register(front,base,skin){
-    const c=canvas(base.width,base.height),ctx=c.getContext('2d');ctx.drawImage(base,0,0);ctx.scale(3,3);
-    // Register each generated part independently; the original masks own the silhouette.
-    const regions=[
-      {src:[238,510,770,722],dst:[24,97,120,117]},
-      {src:[67,55,469,338],dst:[9,8,77,49]},
-      {src:[708,77,499,279],dst:[102,8,86,47]},
-      {src:[95,354,458,401],dst:[16,57,61,59]},
-      {src:[704,347,480,361],dst:[102,51,69,40]},
-      {src:[556,366,114,252],dst:[85,59,25,44]}
-    ];
-    // The generated central leaf/stalk overlaps its fruit. Remove those pixels
-    // from the fruit-only material before registration, using clean nearby skin.
-    const body=canvas(front.naturalWidth,front.naturalHeight),b=body.getContext('2d');b.drawImage(front,0,0);
-    for(const [x,y,rx,ry] of [[625,563,105,85],[350,586,160,145],[910,548,145,100]]){
-      const patch=canvas(Math.ceil(rx*2),Math.ceil(ry*2)),p=patch.getContext('2d');
-      p.drawImage(skin,0,0,skin.naturalWidth,skin.naturalHeight,0,0,patch.width,patch.height);
-      p.globalCompositeOperation='destination-in';p.save();p.scale(rx,ry);
-      const fade=p.createRadialGradient(1,1,.48,1,1,1);fade.addColorStop(0,'#fff');fade.addColorStop(1,'#fff0');p.fillStyle=fade;p.fillRect(0,0,2,2);p.restore();
-      b.drawImage(patch,x-rx,y-ry);
+  function register(front,base,leaf){
+    const c=canvas(base.width,base.height),ctx=c.getContext('2d');
+    function part(source,index){
+      const input=canvas(source.naturalWidth,source.naturalHeight),g=input.getContext('2d',{willReadFrequently:true});g.drawImage(source,0,0);
+      const data=g.getImageData(0,0,input.width,input.height),warped=canvas(c.width,c.height),w=warped.getContext('2d'),pixels=w.createImageData(c.width,c.height);
+      pixels.data.set(registeredPixels({data:data.data,width:input.width,height:input.height},c.width,c.height,greenParts[index].map(([x,y])=>[x*3,y*3])));w.putImageData(pixels,0,0);
+      ctx.save();ctx.scale(3,3);ctx.translate(-530,-312);ctx.clip(new Path2D(paths[index]));ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(warped,0,0);ctx.restore();
     }
-    for(let i=0;i<regions.length;i++){
-      ctx.save();ctx.translate(-530,-312);ctx.clip(new Path2D(paths[i]));ctx.translate(530,312);
-      ctx.drawImage(i===0?body:front,...regions[i].src,...regions[i].dst);ctx.restore();
-    }
-    ctx.save();ctx.translate(-530,-312);ctx.clip(new Path2D(paths[6]));ctx.translate(530,312);
-    ctx.drawImage(front,590,192,94,390,86,24,13,81);ctx.restore();return c;
+    part(front,0);part(leaf,2);
+    ctx.save();ctx.scale(3,3);ctx.translate(-530,-312);
+    const stalk=new Path2D(paths[6].match(/M[^M]+/g)[0]);stalk.addPath(new Path2D(petiolePath));ctx.clip(stalk);
+    const bark=ctx.createLinearGradient(617,0,629,0);bark.addColorStop(0,'#493b1a');bark.addColorStop(.45,'#9a8548');bark.addColorStop(1,'#50471d');ctx.fillStyle=bark;ctx.fillRect(610,330,30,95);ctx.restore();return c;
+  }
+  // Composite each material inside the same body mask: the body stays opaque
+  // while the four extra leaves disappear. Also serves the no-WebGL fallback.
+  function drawFrame(ctx,variant,detail=1,source=variant.endpoint||variant.detail,foliage=detail){
+    const t=Math.max(0,Math.min(1,detail)),base=variant.base;
+    ctx.clearRect(0,0,base.width,base.height);
+    if(t===0&&foliage===0){ctx.drawImage(base,0,0);return;}
+    source=source||base;
+    function part(path,amount,photo){ctx.save();ctx.scale(3,3);ctx.translate(-530,-312);ctx.clip(new Path2D(path));ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=amount;ctx.drawImage(photo,0,0);ctx.restore();}
+    for(const index of [0,2]){part(paths[index],1,base);part(paths[index],t,source);}
+    part(paths[6].match(/M[^M]+/g)[0],1,base);part(paths[6].match(/M[^M]+/g)[0],t,source);
+    for(const index of [1,3,4,5])part(paths[index],1-foliage,base);
+    for(const path of paths[6].match(/M[^M]+/g).slice(1))part(path,1-foliage,base);
+    ctx.save();ctx.scale(3,3);ctx.translate(-530,-312);ctx.globalAlpha=foliage;ctx.fillStyle='#655726';ctx.fill(new Path2D(petiolePath));ctx.restore();
+    part(petiolePath,t,source);
   }
   function loadBase(colour){
     if(!cache.has(colour))cache.set(colour,image(colour==='green'?'assets/magritte-full-resolution.jpg':'assets/apple.png').then(source=>({colour,source,base:colour==='green'?painted(source):source,baseId:colour==='green'?'painting-cutout':'apple.png',detailReady:colour==='red',detailActive:colour==='red',detail:null,skin:null})));
@@ -81,10 +107,10 @@
   }
   function loadDetail(variant){
     if(variant.colour!=='green')return Promise.resolve(variant);
-    if(!variant.detailPromise)variant.detailPromise=Promise.all([image('assets/apple-green-hyperreal-v1.png'),image('assets/apple-green-skin-v1.png')]).then(([front,skin])=>{
-      variant.detail=register(front,variant.base,skin);variant.skin=skin;variant.detailReady=true;return variant;
+    if(!variant.detailPromise)variant.detailPromise=Promise.all([image('assets/apple-green-body-v3.png'),image('assets/apple-green-leaf-v2.png'),image('assets/apple-green-skin-v3.png')]).then(([front,leaf,skin])=>{
+      variant.detail=register(front,variant.base,leaf);variant.skin=skin;variant.detailReady=true;return variant;
     });
     return variant.detailPromise;
   }
-  root.AppleArtwork={...api,loadBase,loadDetail,painted,register};
+  root.AppleArtwork={...api,loadBase,loadDetail,painted,register,drawFrame};
 })(typeof window==='object'?window:null);
