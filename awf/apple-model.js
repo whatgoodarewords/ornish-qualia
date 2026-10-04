@@ -134,17 +134,21 @@
         for(let j=1;j<layers;j++)for(let i=0;i<n;i++){const k=(i+1)%n,a=ids[side][j][i],b=ids[side][j][k],c=ids[side][j+1][i],d=ids[side][j+1][k];face(a,c,b);face(b,c,d);}
       }
       for(let i=0;i<n;i++){const k=(i+1)%n,a=ids[0][layers][i],b=ids[0][layers][k],c=ids[1][layers][i],d=ids[1][layers][k];tri(a,b,c);tri(b,d,c);}
-      end('leaf',start);
+      end('leaf',start);Object.assign(groups.at(-1),{leaf:index,root});
       leafDepths.push(depth);leafDepthAt.push((x,y)=>depth+bend(((x-root[0])*dx+(y-root[1])*dy)/(length*length),(-(x-root[0])*dy+(y-root[1])*dx)/(length*width)));
     });
     if(green){
       const upper=Math.max(leafDepths[0],leafDepths[1]),central=leafDepths[4];
       const trunkDepth=(x,y)=>{const sourceY=y/h*218,lower=smooth((sourceY-70)/34);return (upper+(central-upper)*smooth((sourceY-36)/23))*(1-lower)+(frontDepth(x,y)+bw*.02)*lower;};
-      artwork.greenStems.forEach((poly,index)=>stemSurface(poly.map(([x,y])=>[x*w/198,y*h/218]),index===0?trunkDepth:(x,y)=>{
+      artwork.greenStems.forEach((poly,index)=>{stemSurface(poly.map(([x,y])=>[x*w/198,y*h/218]),index===0?trunkDepth:(x,y)=>{
         const join=index===1?[96,34]:[98,35],end=index===1?[76,58]:[109,55],dx=end[0]-join[0],dy=end[1]-join[1];
         const t=clamp(((x/w*198-join[0])*dx+(y/h*218-join[1])*dy)/(dx*dx+dy*dy));
         return trunkDepth(join[0]*w/198,join[1]*h/218)*(1-t)+leafDepthAt[index+1](x,y)*t;
-      }));
+      });Object.assign(groups.at(-1),{branch:index,leaf:index?index+1:null,root:index?leafRoots[index+1]:null});});
+      const join=[95*w/198,37*h/218],tip=leafRoots[1];
+      stemSurface(artwork.samplePath(artwork.petiolePath).map(([x,y])=>[(x-530)*w/198,(y-312)*h/218]),(x,y)=>{
+        const t=clamp((x-join[0])/(tip[0]-join[0]));return trunkDepth(...join)*(1-t)+leafDepthAt[1](...tip)*t;
+      });groups.at(-1).kind='petiole';
     }else{
       // Follow the photograph's actual alpha at each row above the fruit;
       // inside the fruit retain the narrow visible brown stalk's centre line.
@@ -168,7 +172,15 @@
       for(let c=0;c<3;c++)data[k+c]=Math.round((at(u,v,c)*a+at((u+.5)%1,v,c)*(1-a))*b+(at(u,(v+.5)%1,c)*a+at((u+.5)%1,(v+.5)%1,c)*(1-a))*(1-b));data[k+3]=255;
     }return {data,size};
   }
-  const api={buildGeometry,periodicSkin,stage};if(typeof module==='object'&&module.exports)module.exports=api;
+  function partPose(group,{detail=1,foliage=detail,leafShedding=null}={},width=594,height=654){
+    const extra=group.leaf!==undefined&&group.leaf!==null&&group.leaf!==1;
+    if(group.kind==='petiole')return {opacity:leafShedding===null?foliage:smooth(leafShedding/.25),detail,offset:[0,0,0],turn:0};
+    if(!extra)return {opacity:1,detail,offset:[0,0,0],turn:0};
+    if(leafShedding===null)return {opacity:1-clamp(foliage),detail:0,offset:[0,0,0],turn:0};
+    const order=[0,0,1,2,3][group.leaf],p=smooth((leafShedding-(.18+order*.055))/.43),direction=group.leaf===0||group.leaf===2?-1:1;
+    return {opacity:1-smooth((p-.65)/.35),detail:0,offset:[direction*width*.42*p,height*.32*p*p,width*.1*p],turn:direction*p*1.8};
+  }
+  const api={buildGeometry,periodicSkin,stage,partPose};if(typeof module==='object'&&module.exports)module.exports=api;
   if(!root?.document)return;
   function pixels(image){const c=document.createElement('canvas');c.width=image.naturalWidth||image.width;c.height=image.naturalHeight||image.height;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,0,0);return {data:ctx.getImageData(0,0,c.width,c.height).data,width:c.width,height:c.height};}
   const preparedBases=new Map(),preparedTextures=new WeakMap();
@@ -200,11 +212,78 @@
   }
   function renderer(canvas){
     const gl=canvas.getContext('webgl',{alpha:true,antialias:true,premultipliedAlpha:true,preserveDrawingBuffer:true,powerPreference:'low-power'});if(!gl)throw Error('WebGL unavailable');
-    const vertex=`attribute vec3 a_position;attribute vec2 a_uv;attribute vec3 a_normal;attribute vec2 a_local;attribute float a_kind;attribute vec2 a_flat;uniform mediump float u_shape;uniform float u_angle;uniform vec2 u_pivot;uniform vec2 u_center;uniform vec4 u_view;varying mediump vec2 v_uv;varying mediump vec2 v_local;varying mediump vec2 v_surface;varying mediump vec3 v_normal;varying mediump vec3 v_object;varying mediump float v_kind;void main(){vec3 p=vec3(a_flat,a_position.z*u_shape);float c=cos(u_angle),s=sin(u_angle);mat3 turn=mat3(c,0.,-s,0.,1.,0.,s,0.,c);p=turn*vec3(p.xy-u_pivot,p.z);p.xy+=u_pivot;gl_Position=vec4(p.xy*u_view.xy+u_view.zw,-p.z/2400.,1.);v_uv=a_uv;v_local=a_local;v_surface=vec2(a_position.x-u_center.x,a_position.z);v_normal=turn*a_normal;v_object=a_normal;v_kind=a_kind;}`;
-    const fragment=`precision mediump float;uniform sampler2D u_base;uniform sampler2D u_detail;uniform sampler2D u_skin;uniform mediump float u_shape;uniform float u_detailAmount;uniform float u_reveal;uniform float u_green;varying mediump vec2 v_uv;varying mediump vec2 v_local;varying mediump vec2 v_surface;varying mediump vec3 v_normal;varying mediump vec3 v_object;varying mediump float v_kind;void main(){vec4 base=texture2D(u_base,v_uv),detail=texture2D(u_detail,v_uv);float coverage=mix(base.a,detail.a,u_detailAmount);if(u_reveal<.001&&coverage<.5)discard;vec3 front=mix(base.rgb,detail.rgb,u_detailAmount);if(coverage<.5)front=v_kind>1.5?vec3(.30,.24,.12):v_kind>.5?vec3(.24,.31,.10):texture2D(u_skin,v_uv*2.).rgb;vec3 n=normalize(v_normal),light=normalize(vec3(-.55,-.45,1.));vec3 color=front;float diffuse=.58+.42*max(0.,dot(n,light));float spec=pow(max(0.,dot(n,normalize(light+vec3(0.,0.,1.)))),32.);if(v_kind<.5){vec2 uv=vec2(atan(v_surface.y,v_surface.x)/6.2831853*3.,v_local.y*2.);vec3 skin=texture2D(u_skin,uv).rgb;float pole=smoothstep(0.,.08,v_local.y)*smoothstep(0.,.08,1.-v_local.y);skin=mix(texture2D(u_skin,vec2(.5,uv.y)).rgb,skin,pole);float crown=smoothstep(.22,.34,v_local.y);float projected=smoothstep(.25,.92,v_object.z)*crown*smoothstep(.8,1.,base.a);color=mix(front,mix(skin,front,projected*.65),u_reveal);float pore=texture2D(u_skin,uv+vec2(.0015,0.)).g-texture2D(u_skin,uv-vec2(.0015,0.)).g;diffuse+=pore*.12;spec*=.11;}else if(v_kind<1.5){vec3 leaf=mix(vec3(.24,.31,.10),front,smoothstep(.1,.95,mix(base.a,detail.a,u_detailAmount)));float midrib=exp(-abs(v_local.y)*100.);float veins=pow(max(0.,cos((v_local.x*9.+abs(v_local.y)*2.5)*6.283)),18.)*exp(-abs(v_local.y)*2.);leaf+=vec3(.035,.047,.012)*(midrib+veins);color=mix(front,leaf,u_reveal);diffuse*=mix(.76,1.,smoothstep(-.4,.4,v_object.z));spec*=.07;}else{color=mix(front,vec3(.30,.24,.12),u_reveal*.22);spec*=.035;}gl_FragColor=vec4(color*mix(1.,diffuse,u_reveal)+spec*u_reveal,1.);}`;
+    const vertex=`
+attribute vec3 a_position;attribute vec2 a_uv;attribute vec3 a_normal;attribute vec2 a_local;attribute float a_kind;attribute vec2 a_flat;
+uniform mediump float u_shape;uniform float u_angle;uniform vec2 u_pivot;uniform vec2 u_center;uniform vec4 u_view;uniform vec3 u_offset;uniform vec2 u_root;uniform float u_partTurn;
+varying mediump vec2 v_uv;varying mediump vec2 v_local;varying mediump vec2 v_surface;varying mediump vec3 v_normal;varying mediump vec3 v_object;varying mediump float v_kind;
+void main(){
+ vec3 p=vec3(a_flat,a_position.z*u_shape);float c=cos(u_angle),s=sin(u_angle),lc=cos(u_partTurn),ls=sin(u_partTurn);
+ mat3 turn=mat3(c,0.,-s,0.,1.,0.,s,0.,c),localTurn=mat3(lc,ls,0.,-ls,lc,0.,0.,0.,1.);
+ p=localTurn*vec3(p.xy-u_root,p.z);p.xy+=u_root;p+=u_offset;p=turn*vec3(p.xy-u_pivot,p.z);p.xy+=u_pivot;
+ // A flat projection must retain a meaningful depth order. Normalize only
+ // clip-space depth; x/y still use the exact requested zero-depth geometry.
+ float depthScale=max(u_shape,.01);
+ float orderedDepth=(p.z+a_position.z*(depthScale-u_shape)*c)/depthScale;
+ gl_Position=vec4(p.xy*u_view.xy+u_view.zw,-orderedDepth/2400.,1.);v_uv=a_uv;v_local=a_local;v_surface=vec2(a_position.x-u_center.x,a_position.z);
+ v_normal=turn*localTurn*a_normal;v_object=a_normal;v_kind=a_kind;
+}`;
+    const fragment=`precision mediump float;
+uniform sampler2D u_base;uniform sampler2D u_detail;uniform sampler2D u_skin;uniform mediump float u_shape;uniform float u_detailAmount;uniform float u_reveal;uniform float u_green;uniform float u_opacity;
+varying mediump vec2 v_uv;varying mediump vec2 v_local;varying mediump vec2 v_surface;varying mediump vec3 v_normal;varying mediump vec3 v_object;varying mediump float v_kind;
+void main(){
+ vec4 base=texture2D(u_base,v_uv),detail=texture2D(u_detail,v_uv);float coverage=mix(base.a,detail.a,u_detailAmount);
+ if(u_reveal<.001&&(u_green<.5||u_detailAmount<.001)&&coverage<.5)discard;
+ vec3 front=base.rgb;if(base.a<.5)front=v_kind>1.5?vec3(.30,.24,.12):v_kind>.5?vec3(.24,.31,.10):texture2D(u_skin,v_uv*2.).rgb;
+ vec3 n=normalize(v_normal),objectNormal=normalize(v_object),light=normalize(vec3(-.55,-.45,1.));
+ float diffuse=.57+.43*max(0.,dot(n,light)),reference=.57+.43*max(0.,dot(objectNormal,light));
+ float spec=pow(max(0.,dot(n,normalize(light+vec3(0.,0.,1.)))),24.);
+ vec3 painted=front,photographic=detail.a>.5?detail.rgb:front;
+ if(v_kind<.5){
+  vec2 uv=vec2(atan(v_surface.y,v_surface.x)/6.2831853*2.,v_local.y*1.5);vec3 skin=texture2D(u_skin,uv).rgb;
+  float pole=smoothstep(0.,.08,v_local.y)*smoothstep(0.,.08,1.-v_local.y);skin=mix(texture2D(u_skin,vec2(.5,uv.y)).rgb,skin,pole);
+  float facing=smoothstep(-.12,.28,objectNormal.z);
+  painted=mix(front,mix(skin,front,facing*.75)*diffuse+spec*.05,u_reveal);
+  // Both hemispheres share the registered photograph all the way to the rim.
+  // Its RGB is dilated beyond the mask before upload: alpha must not switch
+  // the rim to painted pixels or a brighter skin swatch when viewed side-on.
+  vec3 sourceNormal=vec3(objectNormal.xy,abs(objectNormal.z));
+  float sourceDiffuse=.57+.43*max(0.,dot(sourceNormal,light));
+  vec3 halfVector=normalize(light+vec3(0.,0.,1.));
+  float sourceHalf=max(0.,dot(sourceNormal,halfVector));
+  vec3 referenceAppearance=detail.rgb;
+  // Remove the reference's broad reflection before applying the same light
+  // response in world space. At angle zero the correction is exactly zero.
+  float lightRatio=diffuse/sourceDiffuse;
+  float reflection=.19*pow(max(0.,dot(n,halfVector)),8.);
+  float sourceReflection=.19*pow(sourceHalf,8.);
+  photographic=referenceAppearance*lightRatio+(reflection-sourceReflection*lightRatio);
+ }else if(v_kind<1.5){
+  painted=mix(front,front*diffuse+spec*.035,u_reveal);
+  photographic*=diffuse/reference;
+ }else{
+  painted=mix(front,front*diffuse,u_reveal);photographic*=diffuse/reference;
+ }
+ vec3 color=mix(painted,photographic,u_detailAmount);
+ if(u_green<.5){
+  // Preserve the hidden legacy red renderer's material and light response.
+  vec3 legacy=mix(base.rgb,detail.rgb,u_detailAmount);if(coverage<.5)legacy=v_kind>1.5?vec3(.30,.24,.12):v_kind>.5?vec3(.24,.31,.10):texture2D(u_skin,v_uv*2.).rgb;
+  float d=.58+.42*max(0.,dot(n,light)),s=pow(max(0.,dot(n,normalize(light+vec3(0.,0.,1.)))),32.);color=legacy;
+  if(v_kind<.5){
+   vec2 uv=vec2(atan(v_surface.y,v_surface.x)/6.2831853*3.,v_local.y*2.);vec3 skin=texture2D(u_skin,uv).rgb;
+   float pole=smoothstep(0.,.08,v_local.y)*smoothstep(0.,.08,1.-v_local.y);skin=mix(texture2D(u_skin,vec2(.5,uv.y)).rgb,skin,pole);
+   float projected=smoothstep(.25,.92,v_object.z)*smoothstep(.22,.34,v_local.y)*smoothstep(.8,1.,base.a);
+   color=mix(legacy,mix(skin,legacy,projected*.65),u_reveal);d+=(texture2D(u_skin,uv+vec2(.0015,0.)).g-texture2D(u_skin,uv-vec2(.0015,0.)).g)*.12;s*=.11;
+  }else if(v_kind<1.5){
+   vec3 leaf=mix(vec3(.24,.31,.10),legacy,smoothstep(.1,.95,coverage));float midrib=exp(-abs(v_local.y)*100.),veins=pow(max(0.,cos((v_local.x*9.+abs(v_local.y)*2.5)*6.283)),18.)*exp(-abs(v_local.y)*2.);
+   leaf+=vec3(.035,.047,.012)*(midrib+veins);color=mix(legacy,leaf,u_reveal);d*=mix(.76,1.,smoothstep(-.4,.4,v_object.z));s*=.07;
+  }else{color=mix(legacy,vec3(.30,.24,.12),u_reveal*.22);s*=.035;}
+  color=color*mix(1.,d,u_reveal)+s*u_reveal;
+ }
+ gl_FragColor=vec4(color,u_opacity);
+}`;
     function shader(type,code){const s=gl.createShader(type);gl.shaderSource(s,code);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
     const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program);
-    const uniform=Object.fromEntries(['shape','angle','pivot','center','view','detailAmount','reveal','green','base','detail','skin'].map(k=>[k,gl.getUniformLocation(program,'u_'+k)])),resources=new Map();
+    const uniform=Object.fromEntries(['shape','angle','pivot','center','view','detailAmount','reveal','green','base','detail','skin','offset','root','partTurn','opacity'].map(k=>[k,gl.getUniformLocation(program,'u_'+k)])),resources=new Map();
     function upload(variant){
       const model=prepare(variant),old=resources.get(variant);if(old?.model===model)return old;
       if(old){gl.deleteBuffer(old.vertices);gl.deleteBuffer(old.indices);old.textures.forEach(t=>gl.deleteTexture(t));}
@@ -213,16 +292,33 @@
       const textures=[model.base,model.detailPixels,model.skin].map((source,i)=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,source.size||source.width,source.size||source.height,0,gl.RGBA,gl.UNSIGNED_BYTE,source.data);for(const axis of [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T])gl.texParameteri(gl.TEXTURE_2D,axis,i===2?gl.REPEAT:gl.CLAMP_TO_EDGE);for(const filter of [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER])gl.texParameteri(gl.TEXTURE_2D,filter,gl.LINEAR);return t;});
       const resource={model,vertices,indices,textures};resources.set(variant,resource);return resource;
     }
-    function draw(variant,{shape=1,detail=1,angle=0,geometry=null}={}){
+    function draw(variant,{shape=1,detail=1,angle=0,geometry=null,singleLeaf=false,foliage=variant.colour==='green'?detail:0,leafShedding=null,padding=0}={}){
       const resource=resources.get(variant);if(!resource)return false;const m=resource.model.geometry;
       gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,resource.vertices);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,resource.indices);
       for(const [name,size,offset] of [['position',3,0],['uv',2,12],['normal',3,20],['local',2,32],['kind',1,40],['flat',2,44]]){const loc=gl.getAttribLocation(program,'a_'+name);if(loc>=0){gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,size,gl.FLOAT,false,52,offset);}}
       resource.textures.forEach((t,i)=>{gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,t);gl.uniform1i(uniform[['base','detail','skin'][i]],i);});
-      let view=[2/m.width,-2/m.height,-1,1];if(geometry){const scale=geometry.width/geometry.source.width;view=[scale/360,-scale/360,(geometry.x-geometry.source.x*scale)/360-1,1-(geometry.y-geometry.source.y*scale)/360];}
+      const span=1+padding*2;let view=[2/m.width/span,-2/m.height/span,-1/span,1/span];if(geometry){const scale=geometry.width/geometry.source.width;view=[scale/360,-scale/360,(geometry.x-geometry.source.x*scale)/360-1,1-(geometry.y-geometry.source.y*scale)/360];}
       gl.uniform4fv(uniform.view,view);gl.uniform2fv(uniform.pivot,m.pivot);gl.uniform2fv(uniform.center,[(m.bodyBox.left+m.bodyBox.right)/2,(m.bodyBox.top+m.bodyBox.bottom)/2]);gl.uniform1f(uniform.shape,shape);gl.uniform1f(uniform.reveal,shape*smooth(Math.abs(Math.sin(angle/2))/.16));gl.uniform1f(uniform.detailAmount,detail);gl.uniform1f(uniform.angle,angle);gl.uniform1f(uniform.green,variant.colour==='green'?1:0);
-      gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(0,0,0,0);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.BLEND);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.drawElements(gl.TRIANGLES,m.indices.length,gl.UNSIGNED_SHORT,0);return true;
+      gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(0,0,0,0);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+      for(const group of m.groups){
+        const part=variant.colour==='green'?partPose(group,{detail,foliage:singleLeaf?1:foliage,leafShedding},m.width,m.height):{detail,opacity:1,offset:[0,0,0],turn:0};
+        if(part.opacity<.001)continue;
+        gl.uniform1f(uniform.detailAmount,part.detail);gl.uniform1f(uniform.opacity,part.opacity);gl.uniform3fv(uniform.offset,part.offset);gl.uniform2fv(uniform.root,group.root||[0,0]);gl.uniform1f(uniform.partTurn,part.turn);
+        gl.drawElements(gl.TRIANGLES,group.count,gl.UNSIGNED_SHORT,group.offset*2);
+      }return true;
     }
     return {upload,draw};
   }
-  root.AppleModel={...api,prepare,renderer};
+  let endpointRenderer,endpointCanvas;
+  function endpoint(variant){
+    if(variant.endpointDetail===variant.detail&&variant.endpoint)return variant.endpoint;
+    if(!variant.detail)return variant.base;
+    try{
+      if(!endpointRenderer){endpointCanvas=document.createElement('canvas');endpointCanvas.width=594;endpointCanvas.height=654;endpointRenderer=renderer(endpointCanvas);}
+      endpointRenderer.upload(variant);endpointRenderer.draw(variant,{shape:1,detail:1,angle:0,singleLeaf:true});
+      const copy=document.createElement('canvas');copy.width=594;copy.height=654;copy.getContext('2d').drawImage(endpointCanvas,0,0);variant.endpoint=copy;
+    }catch{variant.endpoint=variant.detail;}
+    variant.endpointDetail=variant.detail;return variant.endpoint;
+  }
+  root.AppleModel={...api,prepare,renderer,endpoint};
 })(typeof window==='object'?window:null);
