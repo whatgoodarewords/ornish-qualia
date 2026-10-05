@@ -11,18 +11,33 @@
   const SIZE = 720;
   const WORD_INK = 'rgb(208,199,179)';
   const SEMANTIC_NODES = Object.freeze([
-    {word:'apple',x:360,y:310,size:68,role:'center'},
-    {word:'round',x:205,y:195,size:32,role:'edge'},
-    {word:'fruit',x:165,y:325,size:32,role:'edge'},
-    {word:'red',x:195,y:455,size:32,role:'edge'},
-    {word:'crisp',x:270,y:550,size:30,role:'edge'},
-    {word:'memory',x:450,y:550,size:24,role:'secondary'},
-    {word:'sweet',x:525,y:455,size:32,role:'edge'},
-    {word:'skin',x:555,y:325,size:32,role:'edge'},
-    {word:'seed',x:515,y:195,size:30,role:'edge'}
+    {word:'apple',x:350,y:330,size:60,role:'center'},
+    {word:'orchard',x:410,y:105,size:30,role:'edge'},
+    {word:'crisp',x:150,y:145,size:30,role:'edge'},
+    {word:'fresh',x:95,y:335,size:30,role:'edge'},
+    {word:'sweet',x:145,y:515,size:30,role:'edge'},
+    {word:'crunch',x:105,y:630,size:28,role:'edge'},
+    {word:'fruit',x:500,y:535,size:30,role:'edge'},
+    {word:'tart',x:600,y:285,size:30,role:'edge'},
+    {word:'seed',x:625,y:480,size:30,role:'edge'}
   ].map(Object.freeze));
   const EDGE_WORDS = Object.freeze(SEMANTIC_NODES.map(node=>node.word));
-  const SEMANTIC_LINKS = Object.freeze([]);
+  // Cubic web connections stop at the labels' margins. These same curves,
+  // sampled once, supply every point that will gather into the traced outline.
+  const SEMANTIC_LINKS = Object.freeze([
+    ['apple','orchard',[350,285,355,225,315,155,352,122]],
+    ['apple','crisp',[300,289,245,264,248,170,195,151]],
+    ['apple','fresh',[270,332,218,375,178,354,143,338]],
+    ['apple','sweet',[294,373,265,420,241,492,188,509]],
+    ['sweet','crunch',[143,541,146,570,125,597,114,610]],
+    ['apple','fruit',[395,370,412,422,432,504,457,523]],
+    ['apple','tart',[438,326,488,348,505,281,563,286]],
+    ['tart','seed',[619,310,586,348,642,413,625,454]],
+    ['orchard','tart',[471,119,516,134,512,230,576,263]],
+    ['fruit','seed',[543,536,576,563,576,494,588,489]]
+  ].map(([from,to,curve])=>Object.freeze({from,to,curve:Object.freeze(curve)})));
+  const FRUIT_TAIL=Object.freeze([515,558,546,592,540,628,577,644]);
+  const TENDRIL_START=.30, TENDRIL_ARRIVAL=.475;
   const clamp = (n, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : lo));
   const smooth = (a, b, value) => { const t = clamp((value - a) / (b - a)); return t * t * (3 - 2 * t); };
   const bell = (a, b, c, d, p) => smooth(a, b, p) * (1 - smooth(c, d, p));
@@ -91,14 +106,83 @@
   const sliderSample=progress=>{
     const p=clamp(progress,0,.9);
     const time=p<=.5?p/.5*OUTLINE_TIME:OUTLINE_TIME+(p-.5)/.4*(DURATION-OUTLINE_TIME);
-    return sample(playbackProgress(time));
+    const phase=sample(playbackProgress(time));
+    if(p>=.5)return phase;
+    const web=smooth(.01,.09,p),gather=smooth(TENDRIL_START,TENDRIL_ARRIVAL,p);
+    return {...phase,semanticMap:web*(1-gather),connections:p<TENDRIL_ARRIVAL?web:0,
+      mapWords:web*(1-smooth(TENDRIL_START,.45,p)),words:0,morph:gather,
+      contour:p>=TENDRIL_ARRIVAL?1:0,contourColour:0,flat:0,photo:0,detail:0,
+      blob:smooth(.10,.18,p)*(1-smooth(.482,.50,p)),blobColour:smooth(.18,.26,p),
+      gather,web,stage:p<.01?'absence':p<.10?'semantic-web':p<.18?'grey-blob':p<TENDRIL_START?'colour-blob':p<TENDRIL_ARRIVAL?'gathering-tendrils':'neutral-outline',
+      caption:p<.01?'An idea, before an image.':p<.10?'A word and its associations.':p<.18?'A diffuse grey impression.':p<TENDRIL_START?'A diffuse green impression.':p<TENDRIL_ARRIVAL?'Connections gather into an outline.':'Only an outline.'};
   };
-  if (typeof module === 'object' && module.exports) module.exports = Object.freeze({ smoothOutline, sample, sliderSample, clamp, smooth, illustrationColor, makeMotion, wordPose, DURATION, PLAYBACK_KNOTS, playbackProgress, playbackTime, advancePlayback, EDGE_WORDS, SEMANTIC_NODES, SEMANTIC_LINKS });
+  function cubicPoint(curve,t) {
+    const u=1-t;
+    return [u*u*u*curve[0]+3*u*u*t*curve[2]+3*u*t*t*curve[4]+t*t*t*curve[6],
+      u*u*u*curve[1]+3*u*u*t*curve[3]+3*u*t*t*curve[5]+t*t*t*curve[7]];
+  }
+  function prepareTendrils(loops) {
+    // Cover each original edge exactly once, including all small secondary loops.
+    // Extra tracks subdivide source links; they never add an independent outline.
+    const count=Math.max(SEMANTIC_LINKS.length,loops.length),parts=loops.map(()=>1);
+    const lengths=loops.map(loop=>loop.reduce((sum,p,i)=>sum+Math.hypot(p[0]-loop[(i+1)%loop.length][0],p[1]-loop[(i+1)%loop.length][1]),0));
+    for(let n=loops.length;n<count;n++){
+      let best=0;for(let i=1;i<loops.length;i++)if(lengths[i]/parts[i]>lengths[best]/parts[best])best=i;
+      parts[best]++;
+    }
+    const targets=[];
+    loops.forEach((loop,loopIndex)=>{
+      for(let part=0;part<parts[loopIndex];part++){
+        const start=Math.floor(part*loop.length/parts[loopIndex]),end=Math.floor((part+1)*loop.length/parts[loopIndex]);
+        targets.push({loop:loopIndex,start,end,points:Array.from({length:end-start+1},(_,i)=>loop[(start+i)%loop.length])});
+      }
+    });
+    const sourceParts=SEMANTIC_LINKS.map(()=>1);
+    for(let n=SEMANTIC_LINKS.length;n<count;n++)sourceParts[(n-SEMANTIC_LINKS.length)%SEMANTIC_LINKS.length]++;
+    const sources=SEMANTIC_LINKS.flatMap((link,index)=>Array.from({length:sourceParts[index]},(_,part)=>({link:index,from:part/sourceParts[index],to:(part+1)/sourceParts[index]})));
+    // Locality and direction matching keep nearby branches near their destination.
+    const tracks=[];
+    while(sources.length){
+      let best={cost:Infinity};
+      sources.forEach((source,si)=>{
+        const curve=SEMANTIC_LINKS[source.link].curve,a=cubicPoint(curve,source.from),b=cubicPoint(curve,source.to);
+        targets.forEach((target,ti)=>{
+          const first=target.points[0],last=target.points.at(-1);
+          for(const reverse of [false,true]){
+            const x=reverse?last:first,y=reverse?first:last;
+            const cost=Math.hypot(a[0]-x[0],a[1]-x[1])+Math.hypot(b[0]-y[0],b[1]-y[1]);
+            if(cost<best.cost)best={cost,si,ti,reverse};
+          }
+        });
+      });
+      const source=sources.splice(best.si,1)[0],target=targets.splice(best.ti,1)[0];
+      const points=best.reverse?target.points.slice().reverse():target.points;
+      tracks.push({...source,loop:target.loop,start:target.start,end:target.end,target:points,
+        source:points.map((_,i)=>cubicPoint(SEMANTIC_LINKS[source.link].curve,source.from+(source.to-source.from)*i/(points.length-1)))});
+    }
+    return tracks;
+  }
+  function tendrilPoint(track,index,amount) {
+    const a=track.source[index],b=track.target[index],t=clamp(amount);
+    if(t===1)return b;
+    return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+  }
+  function blobPixels(size,tint) {
+    const pixels=new Uint8ClampedArray(size*size*4);
+    for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+      const nx=x/(size-1),ny=y/(size-1),dx=(nx-.5)/.19,dy=(ny-.54)/.21;
+      const cloud=.74*Math.exp(-(dx*dx+dy*dy)*.5)+.18*Math.exp(-(((nx-.39)/.13)**2+((ny-.47)/.16)**2)*.5)+.08*Math.exp(-(((nx-.62)/.12)**2+((ny-.62)/.12)**2)*.5);
+      const edge=smooth(0,.08,Math.min(nx,ny,1-nx,1-ny)),i=(y*size+x)*4;
+      pixels.set(tint,i);pixels[i+3]=Math.round(93*cloud*edge);
+    }
+    return pixels;
+  }
+  if (typeof module === 'object' && module.exports) module.exports = Object.freeze({ smoothOutline, sample, sliderSample, clamp, smooth, illustrationColor, makeMotion, wordPose, DURATION, PLAYBACK_KNOTS, playbackProgress, playbackTime, advancePlayback, EDGE_WORDS, SEMANTIC_NODES, SEMANTIC_LINKS, TENDRIL_START, TENDRIL_ARRIVAL, prepareTendrils, tendrilPoint, blobPixels });
   if (!root || !root.document) return;
 
   const $ = id => document.getElementById(id);
   const canvas = $('apple');
-  const BUILD = 'apple-survey-20261003-35';
+  const BUILD = 'apple-leaves-20261005-1';
   canvas.setAttribute('data-build',BUILD);
   const ctx = canvas.getContext('2d', { alpha: true });
   const slider = $('imagination');
@@ -133,7 +217,7 @@
   const artworkListeners=new Set(),variantRecords=new Map();
   let activeVariant=null;
   let resultsVisible=false;
-  let photo, flat, contour, wordTracks, geometry;
+  let photo, flat, contour, wordTracks, geometry, tendrils, blobs;
 
   // Opt-in diagnostics: no overlay, sampling or probe frames in normal use.
   const perf = perfEnabled ? {
@@ -278,29 +362,22 @@
     }
     flat=surface();flat.getContext('2d').putImageData(illustration,0,0);
     stats.cachedLayers=2;
-    // Upright words follow ordered paths. The central idea has the open top
-    // corridor; the surrounding associations expand toward nearby contour slots.
-    const polarPoints=contour.points.map(center=>({center,angle:Math.atan2(center[1]-368,center[0]-360)}));
-    const slots=EDGE_WORDS.map((_,index)=>{
-      const angle=-Math.PI/2+index*Math.PI*2/EDGE_WORDS.length;
-      return polarPoints.reduce((best,point)=>Math.cos(point.angle-angle)>Math.cos(best.angle-angle)?point:best);
+    tendrils=prepareTendrils(contour.loops);
+    blobs=[[168,163,150],[151,175,91]].map(tint=>{
+      const layer=surface(192),ink=layer.getContext('2d'),pixels=ink.createImageData(192,192);
+      pixels.data.set(blobPixels(192,tint));ink.putImageData(pixels,0,0);return layer;
     });
-    const topSlot=slots[0];
-    const otherSlots=slots.filter(slot=>slot!==topSlot).sort((a,b)=>a.angle-b.angle);
-    const nodes=SEMANTIC_NODES.map(node=>node.word==='red'&&colour==='green'?{...node,word:'green'}:node);
-    const otherNodes=nodes.filter(node=>node.role!=='center').slice().sort((a,b)=>Math.atan2(a.y-368,a.x-360)-Math.atan2(b.y-368,b.x-360));
-    const assignments=[{node:nodes[0],slot:topSlot},...otherNodes.map((node,index)=>({node,slot:otherSlots[index]}))];
-    wordTracks=assignments.map(({node,slot})=>{
-      const fontSize=27;
+    stats.cachedLayers+=blobs.length;
+    // Glyphs retain their complete original pose; only opacity changes.
+    wordTracks=SEMANTIC_NODES.map(node=>{
       ctx.font=`${node.size}px Georgia`;
       const sourceWidth=ctx.measureText(node.word).width;
       const letters=Array.from(node.word,(letter,i)=>{
         const offset=-sourceWidth/2+ctx.measureText(node.word.slice(0,i)).width+ctx.measureText(letter).width/2;
-        const source={x:node.x+offset,y:node.y,size:node.size,angle:0};
-        const target={x:slot.center[0]+offset*fontSize/node.size,y:slot.center[1],size:fontSize,angle:0};
-        return {letter,sprite:cacheGlyph(letter),motion:makeMotion(source,target)};
+        const pose={x:node.x+offset,y:node.y,size:node.size,angle:0};
+        return {letter,sprite:cacheGlyph(letter),motion:makeMotion(pose,pose)};
       });
-      return {word:node.word,role:node.role,letters,start:.225,end:.407};
+      return {word:node.word,role:node.role,letters};
     });
     stats.words=wordTracks.length;
     stats.glyphTracks=wordTracks.reduce((total,track)=>total+track.letters.length,0);
@@ -326,17 +403,37 @@
     if(!perfRenderDisabled) {
     ctx.clearRect(0,0,SIZE,SIZE);
     ctx.lineCap='round';ctx.lineJoin='round';
+    if(s.blob>0){
+      // Add complementary premultiplied tints on the cleared canvas: the cloud's
+      // alpha and shape stay identical throughout the grey-to-green transition.
+      ctx.globalCompositeOperation='lighter';
+      ctx.globalAlpha=s.blob*(1-s.blobColour);ctx.drawImage(blobs[0],0,0,SIZE,SIZE);
+      ctx.globalAlpha=s.blob*s.blobColour;ctx.drawImage(blobs[1],0,0,SIZE,SIZE);
+      ctx.globalCompositeOperation='source-over';
+    }
     if(s.flat>.001) {ctx.globalAlpha=s.flat*.79;ctx.drawImage(flat,0,0);}
     const detail=activeVariant?.detailActive&&activeVariant.artwork?.detailPhoto&&state.progress>.9?smooth(.9,.92,state.progress):0;
     if(detail&&root.AppleArtwork.drawFrame){
       const record=activeVariant.artwork,g=record.geometry;
-      root.AppleArtwork.drawFrame(record.transitionPhoto.getContext('2d'),activeVariant,detail);
+      root.AppleArtwork.drawFrame(record.transitionPhoto.getContext('2d'),activeVariant,detail,undefined,'all');
       ctx.globalAlpha=1;ctx.drawImage(record.transitionPhoto,g.source.x,g.source.y,g.source.width,g.source.height,g.x,g.y,g.width,g.height);
     }else if(s.photo>.001){ctx.globalAlpha=s.photo;ctx.drawImage(detail?activeVariant.artwork.detailPhoto:photo,0,0);}
-    // Word glyphs remain cached as the semantic composition becomes a contour.
-    if(s.connections>.002) {
-      ctx.globalAlpha=s.connections*.62;ctx.strokeStyle=WORD_INK;ctx.lineWidth=1;
-      for(const link of SEMANTIC_LINKS){ctx.beginPath();ctx.moveTo(link[0],link[1]);ctx.bezierCurveTo(...link.slice(2));ctx.stroke();}
+    if(s.connections>0) {
+      const gather=s.gather,style=smooth(0,.8,gather);
+      ctx.globalAlpha=s.connections*(.56+.23*style);ctx.strokeStyle='rgb(207,198,180)';ctx.lineWidth=1+.8*style;
+      // One combined stroke avoids accumulating alpha at connected track ends.
+      ctx.beginPath();
+      for(const track of tendrils)track.source.forEach((_,i)=>{
+        const point=tendrilPoint(track,i,gather);if(i===0)ctx.moveTo(...point);else ctx.lineTo(...point);
+      });
+      ctx.stroke();
+      const tail=1-smooth(0,.7,gather);
+      if(tail>0){
+        // The short fruit tail retracts into its root before the contour arrives.
+        ctx.beginPath();ctx.moveTo(...cubicPoint(FRUIT_TAIL,0));
+        for(let i=1;i<=24;i++)ctx.lineTo(...cubicPoint(FRUIT_TAIL,i/24*tail));
+        ctx.globalAlpha=s.connections*.34*tail;ctx.lineWidth=.7*tail;ctx.stroke();
+      }
     }
     if(s.contour>.001) {
       const neutral=[207,198,180],red=activeVariant?.colour==='green'?[139,162,81]:[192,67,54];
@@ -345,12 +442,10 @@
     }
     ctx.textAlign='center';ctx.textBaseline='middle';
     for(const track of wordTracks) {
-      const arrival=track.role==='center'?smooth(.012,.065,s.progress):track.role==='secondary'?smooth(.045,.10,s.progress):smooth(.025,.095,s.progress);
-      const opacity=arrival*(1-smooth(.49,.54,s.progress));
-      if(opacity<.002) continue;
-      const amount=clamp((s.progress-track.start)/(track.end-track.start));
+      const opacity=state.progress<.5?(s.web||0)*(1-smooth(TENDRIL_START,track.role==='center'?.415:.45,state.progress)):0;
+      if(opacity<=0)continue;
       for(const letter of track.letters) {
-        const pose=wordPose(letter.motion,amount);
+        const pose=letter.motion.from;
         ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
         ctx.globalAlpha=opacity;
         const scale=pose.size/GLYPH_SIZE;
@@ -377,7 +472,7 @@
   function syncDebug() {
     if(!debugEnabled)return;
     const phase=sliderSample(state.progress);
-    for(const [key,value] of Object.entries({stage:phase.stage,'word-labels':EDGE_WORDS.join(','),'label-count':stats.words,'perimeter-only':true,progress:state.progress.toFixed(5),playing:state.playing,ready:state.ready,'pixel-passes':stats.pixelPasses,frames:stats.frames,'raf-active':Boolean(raf),'reduced-motion':state.reducedMotion,error:state.error||'',words:phase.words.toFixed(5),'map-words':phase.mapWords.toFixed(5),'semantic-map':phase.semanticMap.toFixed(5),morph:phase.morph.toFixed(5),connections:phase.connections.toFixed(5),contour:phase.contour.toFixed(5),'contour-colour':phase.contourColour.toFixed(5),flat:phase.flat.toFixed(5),photo:phase.photo.toFixed(5)})) {
+    for(const [key,value] of Object.entries({stage:phase.stage,'word-labels':EDGE_WORDS.join(','),'label-count':stats.words,'perimeter-only':state.progress>=TENDRIL_ARRIVAL,progress:state.progress.toFixed(5),playing:state.playing,ready:state.ready,'pixel-passes':stats.pixelPasses,frames:stats.frames,'raf-active':Boolean(raf),'reduced-motion':state.reducedMotion,error:state.error||'',words:phase.words.toFixed(5),'map-words':phase.mapWords.toFixed(5),'semantic-map':phase.semanticMap.toFixed(5),morph:phase.morph.toFixed(5),connections:phase.connections.toFixed(5),contour:phase.contour.toFixed(5),'contour-colour':phase.contourColour.toFixed(5),flat:phase.flat.toFixed(5),photo:phase.photo.toFixed(5),blob:(phase.blob||0).toFixed(5),'blob-colour':(phase.blobColour||0).toFixed(5)})) {
       if(renderedUI.debug[key]!==value){canvas.setAttribute(`data-${key}`,String(value));renderedUI.debug[key]=value;}
     }
   }
@@ -534,8 +629,8 @@
   reducedQuery.addEventListener('change',event=>{state.reducedMotion=event.matches;if(event.matches)setPlaying(false);});
   root.awfSnapshot=()=>JSON.parse(JSON.stringify({ ...state, duration:DURATION, phase:sliderSample(state.progress), geometry, stats, rafActive:Boolean(raf) }));
 
-  function install(record){({photo,flat,contour,contourPath,wordTracks,geometry}=record);}
-  function capture(){return {photo,flat,contour,contourPath,wordTracks,geometry};}
+  function install(record){({photo,flat,contour,contourPath,wordTracks,geometry,tendrils,blobs}=record);}
+  function capture(){return {photo,flat,contour,contourPath,wordTracks,geometry,tendrils,blobs};}
   function prepared(variant){
     const previous=capture();
     try{cacheArtwork(variant.base,variant.colour);variant.artwork=capture();variantRecords.set(variant.colour,variant);}
@@ -570,7 +665,7 @@
     base.then(variant=>root.AppleArtwork.loadDetail(variant)).then(variant=>{
       const record=variant.artwork;if(!record)return;
       const g=record.geometry,c=surface(),ctx=c.getContext('2d');
-      const endpoint=root.AppleModel?.endpoint(variant)||variant.detail;
+      const endpoint=root.AppleModel?.endpoint(variant,'all')||variant.detail;
       ctx.drawImage(endpoint,g.source.x,g.source.y,g.source.width,g.source.height,g.x,g.y,g.width,g.height);record.detailPhoto=c;
       record.transitionPhoto=surface(variant.base.width,variant.base.height);
       if(activeVariant===variant&&state.progress<=.9)variant.detailActive=true;

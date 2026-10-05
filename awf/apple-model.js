@@ -1,5 +1,6 @@
 (function(root){
   'use strict';
+  // @see https://github.com/whatgoodarewords/awf/issues/3
   const artwork=typeof module==='object'&&module.exports?require('./apple-artwork.js'):root.AppleArtwork;
   const clamp=n=>Math.max(0,Math.min(1,n)),smooth=n=>{const t=clamp(n);return t*t*(3-2*t);};
   function stage(colour,value,detail=true){return {detail:colour==='green'?detail?smooth((value-900)/20):0:1,shape:colour==='green'?detail?smooth((value-920)/20):0:smooth((value-900)/40)};}
@@ -84,7 +85,7 @@
       }
       return depth;
     }
-    const leafRoots=green?[[86,44],[102,40],[77,57],[102,51],[98,59]].map(([x,y])=>[x*w/198,y*h/218]):[[.55*w,.092*h]];
+    const leafRoots=green?artwork.leafRoots.map(([x,y])=>[x*w/198,y*h/218]):[[.55*w,.092*h]];
     // Closed stem surfaces use the painted outline, including both branches.
     // Ear clipping preserves narrow concave strokes without fan triangles
     // reaching outside their mask.
@@ -134,7 +135,7 @@
         for(let j=1;j<layers;j++)for(let i=0;i<n;i++){const k=(i+1)%n,a=ids[side][j][i],b=ids[side][j][k],c=ids[side][j+1][i],d=ids[side][j+1][k];face(a,c,b);face(b,c,d);}
       }
       for(let i=0;i<n;i++){const k=(i+1)%n,a=ids[0][layers][i],b=ids[0][layers][k],c=ids[1][layers][i],d=ids[1][layers][k];tri(a,b,c);tri(b,d,c);}
-      end('leaf',start);Object.assign(groups.at(-1),{leaf:index,root});
+      end('leaf',start);Object.assign(groups.at(-1),{leaf:index,root,root3:[...root,depth],path:artwork.paths[index+1]});
       leafDepths.push(depth);leafDepthAt.push((x,y)=>depth+bend(((x-root[0])*dx+(y-root[1])*dy)/(length*length),(-(x-root[0])*dy+(y-root[1])*dx)/(length*width)));
     });
     if(green){
@@ -160,6 +161,14 @@
       }
       if(left.length>2)stemSurface([...right,...left.reverse()],(x,y)=>frontDepth(x,y)+bw*.03);
     }
+    // Each shedding twig shares its blade's actual 3D pivot and envelope.
+    for(const group of groups){
+      if(group.leaf!==undefined&&group.leaf!==null){const blade=groups.find(g=>g.kind==='leaf'&&g.leaf===group.leaf);group.root3=blade.root3;}
+      if(green&&group.kind==='stem')group.path=artwork.paths[6].match(/M[^M]+/g)[group.branch];
+      if(group.kind==='petiole')group.path=artwork.petiolePath;
+      if(group.kind==='body')group.path=artwork.paths[0];
+      if(group.root3){let radius=0;for(let i=group.offset;i<group.offset+group.count;i++){const k=indices[i]*13;radius=Math.max(radius,Math.hypot(vertices[k]-group.root3[0],vertices[k+1]-group.root3[1],vertices[k+2]-group.root3[2]));}group.radius=radius;}
+    }
     // Area-weighted normals include both blade surfaces and the joined walls.
     for(let i=0;i<indices.length;i+=3){const a=indices[i]*13,b=indices[i+1]*13,c=indices[i+2]*13,ux=vertices[b]-vertices[a],uy=vertices[b+1]-vertices[a+1],uz=vertices[b+2]-vertices[a+2],vx=vertices[c]-vertices[a],vy=vertices[c+1]-vertices[a+1],vz=vertices[c+2]-vertices[a+2],n=[uy*vz-uz*vy,uz*vx-ux*vz,ux*vy-uy*vx];for(const k of [a,b,c])for(let d=0;d<3;d++)vertices[k+5+d]+=n[d];}
     for(let i=0;i<vertices.length;i+=13){const length=Math.hypot(...vertices.slice(i+5,i+8))||1;for(let d=5;d<8;d++)vertices[i+d]/=length;}
@@ -172,15 +181,52 @@
       for(let c=0;c<3;c++)data[k+c]=Math.round((at(u,v,c)*a+at((u+.5)%1,v,c)*(1-a))*b+(at(u,(v+.5)%1,c)*a+at((u+.5)%1,(v+.5)%1,c)*(1-a))*(1-b));data[k+3]=255;
     }return {data,size};
   }
-  function partPose(group,{detail=1,foliage=detail,leafShedding=null}={},width=594,height=654){
+  function partPose(group,{detail=1,leaves='all'}={}){
     const extra=group.leaf!==undefined&&group.leaf!==null&&group.leaf!==1;
-    if(group.kind==='petiole')return {opacity:leafShedding===null?foliage:smooth(leafShedding/.25),detail,offset:[0,0,0],turn:0};
-    if(!extra)return {opacity:1,detail,offset:[0,0,0],turn:0};
-    if(leafShedding===null)return {opacity:1-clamp(foliage),detail:0,offset:[0,0,0],turn:0};
-    const order=[0,0,1,2,3][group.leaf],p=smooth((leafShedding-(.18+order*.055))/.43),direction=group.leaf===0||group.leaf===2?-1:1;
-    return {opacity:1-smooth((p-.65)/.35),detail:0,offset:[direction*width*.42*p,height*.32*p*p,width*.1*p],turn:direction*p*1.8};
+    return {opacity:leaves==='single'&&extra?0:1,detail,offset:[0,0,0],turn:0};
   }
-  const api={buildGeometry,periodicSkin,stage,partPose};if(typeof module==='object'&&module.exports)module.exports=api;
+  const releaseTimes={0:.18,2:.235,3:.29,4:.345};
+  const apply=(m,p)=>[0,1,2].map(i=>m[i]*p[0]+m[i+3]*p[1]+m[i+6]*p[2]);
+  const multiply=(a,b)=>[...apply(a,b.slice(0,3)),...apply(a,b.slice(3,6)),...apply(a,b.slice(6,9))];
+  function rotation(angle,roll=0,tilt=0){
+    const c=Math.cos(angle),s=Math.sin(angle),cr=Math.cos(roll),sr=Math.sin(roll),ct=Math.cos(tilt),st=Math.sin(tilt);
+    return multiply([c,0,-s,0,1,0,s,0,c],multiply([cr,sr,0,-sr,cr,0,0,0,1],[1,0,0,0,ct,st,0,-st,ct]));
+  }
+  function transformPoint(transform,p){return apply(transform.matrix,p).map((n,i)=>n+transform.offset[i]);}
+  function frameAt(mesh,layout,p){
+    const fruit=layout.fruitAt(p),b=Math.min(66/mesh.width,74/mesh.height),scale=b*fruit.size;
+    return {scale,origin:[fruit.x+fruit.size*(66-b*mesh.width)/2,fruit.top+fruit.size*(74-b*mesh.height)/2,0]};
+  }
+  function attachedTransform(mesh,layout,p,angle){
+    const frame=frameAt(mesh,layout,p),matrix=rotation(angle).map(n=>n*frame.scale),pivot=[...mesh.pivot,0],rotated=apply(matrix,pivot);
+    return {matrix,offset:frame.origin.map((n,i)=>n+frame.scale*pivot[i]-rotated[i]),scale:frame.scale,angle,roll:0,tilt:0,detached:false};
+  }
+  // Progress is the only clock. Release snapshots are solved analytically even
+  // when a scroll jumps over release; later fruit transforms never enter them.
+  function flightScene(mesh,layout,progress,{spin=true,angleAt=p=>p*Math.PI*2}={}){
+    const p=clamp(progress),angle=p=>spin?angleAt(p):0,attached=attachedTransform(mesh,layout,p,angle(p)),snapshots=new Map(),epsilon=1e-5;
+    let gravity=layout.viewport.height*8;
+    for(const group of mesh.groups){
+      const r=releaseTimes[group.leaf];if(r===undefined||snapshots.has(group.leaf))continue;
+      const root=group.root3,at=q=>{const t=attachedTransform(mesh,layout,q,angle(q));return {position:transformPoint(t,root),scale:t.scale,angle:t.angle};};
+      const current=at(r),before=at(r-epsilon),after=at(r+epsilon),velocity=current.position.map((_,i)=>(after.position[i]-before.position[i])/(2*epsilon));
+      const radius=Math.max(...mesh.groups.filter(g=>g.leaf===group.leaf).map(g=>g.radius||0))*current.scale;
+      const tau=.96-r,I=-Math.expm1(-3*tau)/3,J=(tau-I)/3;
+      gravity=Math.max(gravity,(layout.viewport.height+radius*2+24-current.position[1]-velocity[1]*I)/J);
+      snapshots.set(group.leaf,{...current,root,velocity,radius,release:r,scaleRate:(after.scale-before.scale)/(2*epsilon),angleRate:(after.angle-before.angle)/(2*epsilon)});
+    }
+    const parts=mesh.groups.map(group=>{
+      const snapshot=snapshots.get(group.leaf);if(!snapshot||p<=snapshot.release)return {...attached,root:group.root3?transformPoint(attached,group.root3):null};
+      const tau=p-snapshot.release,I=-Math.expm1(-3*tau)/3,J=(tau-I)/3,sign=group.leaf===0||group.leaf===2?-1:1;
+      const flutter=1-Math.exp(-tau*tau*12),roll=sign*flutter*.65*Math.sin(tau*11+group.leaf*.4),tilt=flutter*.85*Math.sin(tau*15);
+      const position=snapshot.position.map((n,i)=>n+snapshot.velocity[i]*I+(i===1?gravity*J:0));
+      position[0]+=sign*snapshot.radius*.35*flutter*Math.sin(tau*8);
+      const scale=snapshot.scale+snapshot.scaleRate*I,theta=snapshot.angle+snapshot.angleRate*I,matrix=rotation(theta,roll,tilt).map(n=>n*scale),rotated=apply(matrix,snapshot.root);
+      return {matrix,offset:position.map((n,i)=>n-rotated[i]),scale,angle:theta,roll,tilt,root:position,detached:true,release:snapshot.release};
+    });
+    return {parts,viewport:layout.viewport,gravity};
+  }
+  const api={buildGeometry,periodicSkin,stage,partPose,rotation,transformPoint,frameAt,attachedTransform,flightScene,releaseTimes};if(typeof module==='object'&&module.exports)module.exports=api;
   if(!root?.document)return;
   function pixels(image){const c=document.createElement('canvas');c.width=image.naturalWidth||image.width;c.height=image.naturalHeight||image.height;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,0,0);return {data:ctx.getImageData(0,0,c.width,c.height).data,width:c.width,height:c.height};}
   const preparedBases=new Map(),preparedTextures=new WeakMap();
@@ -210,28 +256,32 @@
     if(variant.skin){const surface=materialPixels(variant.skin);skin=surface.periodic||(surface.periodic=periodicSkin(surface.data,surface.width,surface.height,'green'));}
     return variant.model={geometry:base.geometry,base:base.source,detailPixels:variant.detail?materialPixels(variant.detail):base.source,skin,detail:variant.detail};
   }
-  function renderer(canvas){
-    const gl=canvas.getContext('webgl',{alpha:true,antialias:true,premultipliedAlpha:true,preserveDrawingBuffer:true,powerPreference:'low-power'});if(!gl)throw Error('WebGL unavailable');
+  function renderer(canvas,{preserveDrawingBuffer=true,antialias=true}={}){
+    const gl=canvas.getContext('webgl',{alpha:true,antialias,premultipliedAlpha:true,preserveDrawingBuffer,powerPreference:'low-power'});if(!gl)throw Error('WebGL unavailable');
     const vertex=`
 attribute vec3 a_position;attribute vec2 a_uv;attribute vec3 a_normal;attribute vec2 a_local;attribute float a_kind;attribute vec2 a_flat;
-uniform mediump float u_shape;uniform float u_angle;uniform vec2 u_pivot;uniform vec2 u_center;uniform vec4 u_view;uniform vec3 u_offset;uniform vec2 u_root;uniform float u_partTurn;
+uniform mediump float u_shape;uniform vec2 u_center;uniform vec4 u_view;uniform mat3 u_transform;uniform vec3 u_translation;
 varying mediump vec2 v_uv;varying mediump vec2 v_local;varying mediump vec2 v_surface;varying mediump vec3 v_normal;varying mediump vec3 v_object;varying mediump float v_kind;
 void main(){
- vec3 p=vec3(a_flat,a_position.z*u_shape);float c=cos(u_angle),s=sin(u_angle),lc=cos(u_partTurn),ls=sin(u_partTurn);
- mat3 turn=mat3(c,0.,-s,0.,1.,0.,s,0.,c),localTurn=mat3(lc,ls,0.,-ls,lc,0.,0.,0.,1.);
- p=localTurn*vec3(p.xy-u_root,p.z);p.xy+=u_root;p+=u_offset;p=turn*vec3(p.xy-u_pivot,p.z);p.xy+=u_pivot;
- // A flat projection must retain a meaningful depth order. Normalize only
- // clip-space depth; x/y still use the exact requested zero-depth geometry.
+ vec3 p=vec3(a_flat,a_position.z*u_shape);
+ p=u_transform*p+u_translation;
  float depthScale=max(u_shape,.01);
- float orderedDepth=(p.z+a_position.z*(depthScale-u_shape)*c)/depthScale;
- gl_Position=vec4(p.xy*u_view.xy+u_view.zw,-orderedDepth/2400.,1.);v_uv=a_uv;v_local=a_local;v_surface=vec2(a_position.x-u_center.x,a_position.z);
- v_normal=turn*localTurn*a_normal;v_object=a_normal;v_kind=a_kind;
+ float orderedDepth=(p.z+(u_transform*vec3(0.,0.,a_position.z*(depthScale-u_shape))).z)/depthScale;
+ gl_Position=vec4(p.xy*u_view.xy+u_view.zw,clamp(-orderedDepth/2400.,-.95,.95),1.);v_uv=a_uv;v_local=a_local;v_surface=vec2(a_position.x-u_center.x,a_position.z);
+ v_normal=u_transform*a_normal;v_object=a_normal;v_kind=a_kind;
 }`;
     const fragment=`precision mediump float;
-uniform sampler2D u_base;uniform sampler2D u_detail;uniform sampler2D u_skin;uniform mediump float u_shape;uniform float u_detailAmount;uniform float u_reveal;uniform float u_green;uniform float u_opacity;
+uniform sampler2D u_base;uniform sampler2D u_detail;uniform sampler2D u_skin;uniform mediump float u_shape;uniform float u_detailAmount;uniform float u_reveal;uniform float u_green;uniform float u_opacity;uniform float u_connector;
 varying mediump vec2 v_uv;varying mediump vec2 v_local;varying mediump vec2 v_surface;varying mediump vec3 v_normal;varying mediump vec3 v_object;varying mediump float v_kind;
 void main(){
- vec4 base=texture2D(u_base,v_uv),detail=texture2D(u_detail,v_uv);float coverage=mix(base.a,detail.a,u_detailAmount);
+ vec4 base=texture2D(u_base,v_uv),detail=texture2D(u_detail,v_uv);
+ // The retained hero/handle connector bridges a gap in the original painting.
+ // Keep its bark opaque while optional photographs are loading or unavailable.
+ if(u_connector>.5&&base.a<.5)base=vec4(101./255.,87./255.,38./255.,1.);
+ float coverage=mix(base.a,detail.a,u_detailAmount);
+ // Concave blades retain their original alpha outline at every angle; radial
+ // interior rings may cross the empty notch beside a root.
+ if(u_green>.5&&v_kind>.5&&v_kind<1.5&&coverage<.5)discard;
  if(u_reveal<.001&&(u_green<.5||u_detailAmount<.001)&&coverage<.5)discard;
  vec3 front=base.rgb;if(base.a<.5)front=v_kind>1.5?vec3(.30,.24,.12):v_kind>.5?vec3(.24,.31,.10):texture2D(u_skin,v_uv*2.).rgb;
  vec3 n=normalize(v_normal),objectNormal=normalize(v_object),light=normalize(vec3(-.55,-.45,1.));
@@ -283,7 +333,7 @@ void main(){
 }`;
     function shader(type,code){const s=gl.createShader(type);gl.shaderSource(s,code);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
     const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program);
-    const uniform=Object.fromEntries(['shape','angle','pivot','center','view','detailAmount','reveal','green','base','detail','skin','offset','root','partTurn','opacity'].map(k=>[k,gl.getUniformLocation(program,'u_'+k)])),resources=new Map();
+    const uniform=Object.fromEntries(['shape','center','view','detailAmount','reveal','green','base','detail','skin','transform','translation','opacity','connector'].map(k=>[k,gl.getUniformLocation(program,'u_'+k)])),resources=new Map();
     function upload(variant){
       const model=prepare(variant),old=resources.get(variant);if(old?.model===model)return old;
       if(old){gl.deleteBuffer(old.vertices);gl.deleteBuffer(old.indices);old.textures.forEach(t=>gl.deleteTexture(t));}
@@ -292,33 +342,36 @@ void main(){
       const textures=[model.base,model.detailPixels,model.skin].map((source,i)=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,source.size||source.width,source.size||source.height,0,gl.RGBA,gl.UNSIGNED_BYTE,source.data);for(const axis of [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T])gl.texParameteri(gl.TEXTURE_2D,axis,i===2?gl.REPEAT:gl.CLAMP_TO_EDGE);for(const filter of [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER])gl.texParameteri(gl.TEXTURE_2D,filter,gl.LINEAR);return t;});
       const resource={model,vertices,indices,textures};resources.set(variant,resource);return resource;
     }
-    function draw(variant,{shape=1,detail=1,angle=0,geometry=null,singleLeaf=false,foliage=variant.colour==='green'?detail:0,leafShedding=null,padding=0}={}){
+    function draw(variant,{shape=1,detail=1,angle=0,geometry=null,leaves='all',flight=null,padding=0}={}){
       const resource=resources.get(variant);if(!resource)return false;const m=resource.model.geometry;
       gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,resource.vertices);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,resource.indices);
       for(const [name,size,offset] of [['position',3,0],['uv',2,12],['normal',3,20],['local',2,32],['kind',1,40],['flat',2,44]]){const loc=gl.getAttribLocation(program,'a_'+name);if(loc>=0){gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,size,gl.FLOAT,false,52,offset);}}
       resource.textures.forEach((t,i)=>{gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,t);gl.uniform1i(uniform[['base','detail','skin'][i]],i);});
       const span=1+padding*2;let view=[2/m.width/span,-2/m.height/span,-1/span,1/span];if(geometry){const scale=geometry.width/geometry.source.width;view=[scale/360,-scale/360,(geometry.x-geometry.source.x*scale)/360-1,1-(geometry.y-geometry.source.y*scale)/360];}
-      gl.uniform4fv(uniform.view,view);gl.uniform2fv(uniform.pivot,m.pivot);gl.uniform2fv(uniform.center,[(m.bodyBox.left+m.bodyBox.right)/2,(m.bodyBox.top+m.bodyBox.bottom)/2]);gl.uniform1f(uniform.shape,shape);gl.uniform1f(uniform.reveal,shape*smooth(Math.abs(Math.sin(angle/2))/.16));gl.uniform1f(uniform.detailAmount,detail);gl.uniform1f(uniform.angle,angle);gl.uniform1f(uniform.green,variant.colour==='green'?1:0);
+      if(flight)view=[2/flight.viewport.width,-2/flight.viewport.height,-1,1];
+      gl.uniform4fv(uniform.view,view);gl.uniform2fv(uniform.center,[(m.bodyBox.left+m.bodyBox.right)/2,(m.bodyBox.top+m.bodyBox.bottom)/2]);gl.uniform1f(uniform.shape,shape);gl.uniform1f(uniform.reveal,shape*smooth(Math.abs(Math.sin(angle/2))/.16));gl.uniform1f(uniform.detailAmount,detail);gl.uniform1f(uniform.green,variant.colour==='green'?1:0);
       gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(0,0,0,0);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-      for(const group of m.groups){
-        const part=variant.colour==='green'?partPose(group,{detail,foliage:singleLeaf?1:foliage,leafShedding},m.width,m.height):{detail,opacity:1,offset:[0,0,0],turn:0};
+      for(const [index,group] of m.groups.entries()){
+        const part=variant.colour==='green'?partPose(group,{detail,leaves}):{detail,opacity:1,offset:[0,0,0],turn:0};
         if(part.opacity<.001)continue;
-        gl.uniform1f(uniform.detailAmount,part.detail);gl.uniform1f(uniform.opacity,part.opacity);gl.uniform3fv(uniform.offset,part.offset);gl.uniform2fv(uniform.root,group.root||[0,0]);gl.uniform1f(uniform.partTurn,part.turn);
+        gl.uniform1f(uniform.connector,variant.colour==='green'&&group.kind==='petiole'&&(flight||leaves==='single')?1:0);
+        gl.uniform1f(uniform.detailAmount,part.detail);gl.uniform1f(uniform.opacity,part.opacity);const matrix=rotation(angle),pivot=[...m.pivot,0],rotated=apply(matrix,pivot),transform=flight?.parts[index]||{matrix,offset:pivot.map((n,i)=>n-rotated[i])};
+        gl.uniformMatrix3fv(uniform.transform,false,transform.matrix);gl.uniform3fv(uniform.translation,transform.offset);
         gl.drawElements(gl.TRIANGLES,group.count,gl.UNSIGNED_SHORT,group.offset*2);
       }return true;
     }
     return {upload,draw};
   }
   let endpointRenderer,endpointCanvas;
-  function endpoint(variant){
-    if(variant.endpointDetail===variant.detail&&variant.endpoint)return variant.endpoint;
+  function endpoint(variant,leaves='all'){
+    const cached=variant.endpoints?.[leaves];if(cached?.detail===variant.detail)return cached.image;
     if(!variant.detail)return variant.base;
     try{
       if(!endpointRenderer){endpointCanvas=document.createElement('canvas');endpointCanvas.width=594;endpointCanvas.height=654;endpointRenderer=renderer(endpointCanvas);}
-      endpointRenderer.upload(variant);endpointRenderer.draw(variant,{shape:1,detail:1,angle:0,singleLeaf:true});
-      const copy=document.createElement('canvas');copy.width=594;copy.height=654;copy.getContext('2d').drawImage(endpointCanvas,0,0);variant.endpoint=copy;
-    }catch{variant.endpoint=variant.detail;}
-    variant.endpointDetail=variant.detail;return variant.endpoint;
+      endpointRenderer.upload(variant);endpointRenderer.draw(variant,{shape:1,detail:1,angle:0,leaves});
+      const copy=document.createElement('canvas');copy.width=594;copy.height=654;copy.getContext('2d').drawImage(endpointCanvas,0,0);variant.endpoints??={};variant.endpoints[leaves]={detail:variant.detail,image:copy};
+    }catch{const copy=document.createElement('canvas');copy.width=594;copy.height=654;artwork.drawFrame(copy.getContext('2d'),variant,1,variant.detail,leaves);variant.endpoints??={};variant.endpoints[leaves]={detail:variant.detail,image:copy};}
+    if(leaves==='all')variant.endpoint=variant.endpoints[leaves].image;return variant.endpoints[leaves].image;
   }
   root.AppleModel={...api,prepare,renderer,endpoint};
 })(typeof window==='object'?window:null);
