@@ -118,7 +118,6 @@ html[data-scene=road] .imagine{background:transparent}
 
 /* Keep the surviving hero cue centered after removing the date. */
 @media(min-width:601px){.hero-bottom{display:grid;grid-template-columns:1fr auto 1fr}.hero-bottom .explore-link{grid-column:2}.hero-bottom .hero-note{grid-column:3;justify-self:end}}
-.hero-scroll-active.returning-selection:not(.experience-arrived) .handle-apple{visibility:visible}
 
 /* Every generated name occupies the same title box; only its bitmap changes. */
 .hero h1.reference-logo{position:relative;aspect-ratio:801/270}
@@ -192,3 +191,11 @@ main{background:#0a0e1177}
 .source-note{margin-top:2rem;font-size:var(--t-ui)}
 @media(max-width:600px){.imagine{padding-top:4rem;padding-bottom:2.5rem}.experiment-heading{max-width:390px}.gathering-intro{margin:0 1rem;padding:2.5rem .5rem 3.5rem}.gathering-fact{max-width:30ch}.gathering-formats{max-width:none}}
 @media(max-height:650px){.imagine{justify-content:flex-start}.apple-stage{width:min(220px,70vw)}}
+
+/* A short reading pause after the apple exercise. */
+.concept-space{padding-top:clamp(2.5rem,6svh,4rem);padding-bottom:clamp(2.5rem,6svh,4rem)}
+.concept-space-copy{width:min(100%,38rem);margin:0 auto;padding:clamp(1.5rem,4vw,2.5rem);border:1px solid var(--line);background:#10131566}
+.concept-space h2{font:400 var(--t-display)/1.08 var(--serif);letter-spacing:-.02em;margin:0 0 1.25rem}
+.concept-space p{font:400 1rem/1.7 var(--sans);color:var(--muted)}
+.concept-space p+p{margin-top:1rem}
+.concept-space .concept-space-lead{font:400 var(--t-text)/1.35 var(--serif);color:var(--ink)}

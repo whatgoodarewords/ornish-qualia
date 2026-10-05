@@ -141,9 +141,25 @@
     const stalk=new Path2D(paths[6]);stalk.addPath(new Path2D(petiolePath));ctx.clip(stalk);
     const bark=ctx.createLinearGradient(617,0,629,0);bark.addColorStop(0,'#493b1a');bark.addColorStop(.45,'#9a8548');bark.addColorStop(1,'#50471d');ctx.fillStyle=bark;ctx.fillRect(600,330,45,95);ctx.restore();return c;
   }
+  // @see https://github.com/whatgoodarewords/awf/issues/5
+  // Material is composed while opaque, then each foliage layer is faded once.
+  // Keeping this numeric path separate preserves strict hero/handle modes.
+  function drawFoliage(ctx,variant,t,source,foliage){
+    const base=variant.base,f=Math.max(0,Math.min(1,foliage)),w=base.width,h=base.height;
+    ctx.clearRect(0,0,w,h);if(t===0&&f===0){ctx.drawImage(base,0,0);return;}
+    const layers=variant.foliageLayers||(variant.foliageLayers=[canvas(w,h),canvas(w,h),canvas(w,h)]);
+    const [retained,extras,connector]=layers.map(layer=>{const g=layer.getContext('2d');g.clearRect(0,0,w,h);return g;});
+    function part(g,path,photo){g.save();g.scale(3,3);g.translate(-530,-312);g.clip(new Path2D(path));g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;g.drawImage(base,0,0);if(t){g.globalAlpha=t;g.drawImage(photo,0,0);}g.restore();}
+    const stems=paths[6].match(/M[^M]+/g),full=variant.endpoint||variant.detail||base;
+    for(const path of [paths[0],paths[2],stems[0]])part(retained,path,source||base);
+    for(const path of [...[1,3,4,5].map(index=>paths[index]),...stems.slice(1)])part(extras,path,full);
+    connector.save();connector.scale(3,3);connector.translate(-530,-312);connector.clip(new Path2D(petiolePath));connector.fillStyle='#655726';connector.fill(new Path2D(petiolePath));connector.setTransform(1,0,0,1,0,0);if(t){connector.globalAlpha=t;connector.drawImage(source||base,0,0);}connector.restore();
+    ctx.save();ctx.globalAlpha=1;ctx.drawImage(layers[0],0,0);ctx.globalAlpha=f;ctx.drawImage(layers[2],0,0);ctx.globalAlpha=1-f;ctx.drawImage(layers[1],0,0);ctx.restore();
+  }
   // Explicit foliage modes prevent a hero endpoint from replacing the survey.
-  function drawFrame(ctx,variant,detail=1,source=variant.endpoint||variant.detail,leaves='all'){
+  function drawFrame(ctx,variant,detail=1,source=variant.endpoint||variant.detail,leaves='all',foliage){
     const t=Math.max(0,Math.min(1,detail)),base=variant.base;
+    if(Number.isFinite(foliage)){drawFoliage(ctx,variant,t,source,foliage);return;}
     ctx.clearRect(0,0,base.width,base.height);
     if(t===0&&leaves==='all'){ctx.drawImage(base,0,0);return;}
     source=source||base;

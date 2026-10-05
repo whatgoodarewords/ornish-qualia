@@ -65,7 +65,8 @@
     // A single scroll interval owns position and scale. There is no waypoint
     // at the groin to restart easing, cancel scroll velocity or hold the fruit.
     const size=appleHandle?mix(g.scale,.7):g.scale;
-    const x=(g.centerX??g.faceX)-artwork.fruitX*size;
+    const center=g.centerX??g.faceX;
+    const x=(appleHandle?mix(center,g.targetX??center):center)-artwork.fruitX*size;
     const end=g.end??y;
     const finalPivot=appleHandle?g.targetY-end:viewportHeight+24+artwork.fruitY*g.scale;
     return {size,x,top:mix(g.faceY,finalPivot)-artwork.fruitY*size};
@@ -114,13 +115,13 @@
   options.hidden=false;
   options.addEventListener('keydown',event=>{if(event.key==='Escape'){options.open=false;options.querySelector('summary').focus();}});
   document.addEventListener('pointerdown',event=>{if(options.open&&!options.contains(event.target))options.open=false;});
-  let layout,frame=0,needsMeasure=true,inspectHash=true,previousY=window.scrollY;
+  let layout,frame=0,needsMeasure=true,targetDirty=false,inspectHash=true,previousY=window.scrollY;
   let roadRequested=readPreference('awf-scene','road')!=='original',roadAvailable=true,road=false,roadAttempt=0,sceneAnchor=null;
   let forceDock=Boolean(location.hash&&location.hash!=='#top'),journey=false,docked=false,connected=false,arrived=false;
   const written=new WeakMap();
   function style(node,key,value){let cache=written.get(node);if(!cache){cache={};written.set(node,cache);}if(cache[key]!==value){node.style[key]=value;cache[key]=value;}}
   function attribute(node,key,value){if(node.getAttribute(key)!==String(value))node.setAttribute(key,String(value));}
-  function connect(){if(!connected&&window.appleExperience){connected=true;window.appleExperience.subscribe(()=>{needsMeasure=true;schedule();});window.appleExperience.onSelection(()=>{if(!docked){needsMeasure=true;schedule();}});if(arrived)window.appleExperience.arrive();}}
+  function connect(){if(!connected&&window.appleExperience){connected=true;window.appleExperience.subscribe(()=>{needsMeasure=true;schedule();});window.appleExperience.onSelection(()=>{targetDirty=true;if(!docked)schedule();});if(arrived)window.appleExperience.arrive();}}
   function configure(){root.classList.add('site-enhanced');root.classList.toggle('hero-scroll-active',!reduced.matches);needsMeasure=true;schedule();}
   function chooseScene(){
     const next=roadRequested&&roadAvailable;
@@ -185,7 +186,7 @@
       targetX:target.left+target.width/2,targetY:target.top+y+target.height/2,targetWidth:target.width,targetHeight:target.height,
       navHeight,sectionTop:sectionBox.top+y,end:landingScrollEnd(target.top+y+target.height/2,window.innerHeight)};
     if(sceneAnchor!==null){window.scrollTo({top:Math.max(0,y+sectionBox.top-sceneAnchor),behavior:'instant'});sceneAnchor=null;}
-    needsMeasure=false;
+    needsMeasure=false;targetDirty=false;
   }
   function setDocked(value){
     if(docked===value)return;
@@ -194,7 +195,12 @@
     else{apple.disabled=false;style(apple,'willChange','transform');}
   }
   function paint(){
-    frame=0;connect();if(needsMeasure)measure();
+    frame=0;connect();
+    // Upward scrolling resumes the flight after a focused slider interaction.
+    if(window.scrollY<previousY)forceDock=false;
+    // A docked drag only invalidates the target; consume it before flight resumes.
+    if(targetDirty&&(!docked||layout&&window.scrollY<layout.end&&!forceDock&&!reduced.matches))needsMeasure=true;
+    if(needsMeasure)measure();
     if(inspectHash){inspectHash=false;redirectHiddenHash();}
     const g=layout,y=window.scrollY;
     if(y<g.start+1&&(previousY>y||!location.hash)){forceDock=false;if(previousY>y)journey=false;}
@@ -210,10 +216,8 @@
     const handHostTop=g.start-y+(g.road?0:Math.max(0,Math.min(g.run,y-g.start)));
     window.paintedHands?.update(clamp((y-g.start)/g.handTurnRun),handHostTop+g.handBottom>0&&handHostTop+g.handTop<window.innerHeight);
     if(docked){window.fallingAppleSpin?.update(1,false);return;}
-    const returning=Boolean(window.appleExperience?.hasSelection);
-    root.classList.toggle('returning-selection',returning);
     const progress=clamp((y-g.start)/Math.max(1,g.end-g.start));
-    const {size,x,top}=landingPose(g,artwork,{progress,y,viewportHeight:window.innerHeight,appleHandle:appleHandle&&!returning});
+    const {size,x,top}=landingPose(g,artwork,{progress,y,viewportHeight:g.viewport.height,appleHandle});
     // Keep the traveling fruit in the foreground until it docks or leaves view.
     const visible=top+artwork.height*size>0&&top<window.innerHeight;
     if(visible)style(apple,'transform',`translate3d(${x}px,${top}px,0) scale(${size})`);
@@ -222,8 +226,8 @@
     apple.classList.toggle('is-over-painting',overPainting);
     window.fallingAppleSpin?.update(progress,visible,{
       viewport:g.viewport,layoutVersion,
-      trajectory:`${appleHandle}:${returning}:${g.road}`,
-      fruitAt:p=>landingPose(g,artwork,{progress:p,y:g.start+p*(g.end-g.start),viewportHeight:g.viewport.height,appleHandle:appleHandle&&!returning})
+      trajectory:`${appleHandle}:${g.road}`,
+      fruitAt:p=>landingPose(g,artwork,{progress:p,y:g.start+p*(g.end-g.start),viewportHeight:g.viewport.height,appleHandle})
     });
     const interactive=visible&&y<=g.start+8;
     style(apple,'pointerEvents',interactive?'auto':'none');

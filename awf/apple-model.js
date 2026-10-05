@@ -181,9 +181,10 @@
       for(let c=0;c<3;c++)data[k+c]=Math.round((at(u,v,c)*a+at((u+.5)%1,v,c)*(1-a))*b+(at(u,(v+.5)%1,c)*a+at((u+.5)%1,(v+.5)%1,c)*(1-a))*(1-b));data[k+3]=255;
     }return {data,size};
   }
-  function partPose(group,{detail=1,leaves='all'}={}){
+  function partPose(group,{detail=1,leaves='all',foliage}={}){
     const extra=group.leaf!==undefined&&group.leaf!==null&&group.leaf!==1;
-    return {opacity:leaves==='single'&&extra?0:1,detail,offset:[0,0,0],turn:0};
+    const numeric=Number.isFinite(foliage),opacity=numeric?(group.kind==='petiole'?clamp(foliage):extra?1-clamp(foliage):1):leaves==='single'&&extra?0:1;
+    return {opacity,detail,offset:[0,0,0],turn:0};
   }
   const releaseTimes={0:.18,2:.235,3:.29,4:.345};
   const apply=(m,p)=>[0,1,2].map(i=>m[i]*p[0]+m[i+3]*p[1]+m[i+6]*p[2]);
@@ -257,7 +258,7 @@
     return variant.model={geometry:base.geometry,base:base.source,detailPixels:variant.detail?materialPixels(variant.detail):base.source,skin,detail:variant.detail};
   }
   function renderer(canvas,{preserveDrawingBuffer=true,antialias=true}={}){
-    const gl=canvas.getContext('webgl',{alpha:true,antialias,premultipliedAlpha:true,preserveDrawingBuffer,powerPreference:'low-power'});if(!gl)throw Error('WebGL unavailable');
+    const gl=canvas.getContext('webgl',{alpha:true,antialias,stencil:true,premultipliedAlpha:true,preserveDrawingBuffer,powerPreference:'low-power'});if(!gl)throw Error('WebGL unavailable');
     const vertex=`
 attribute vec3 a_position;attribute vec2 a_uv;attribute vec3 a_normal;attribute vec2 a_local;attribute float a_kind;attribute vec2 a_flat;
 uniform mediump float u_shape;uniform vec2 u_center;uniform vec4 u_view;uniform mat3 u_transform;uniform vec3 u_translation;
@@ -342,7 +343,7 @@ void main(){
       const textures=[model.base,model.detailPixels,model.skin].map((source,i)=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,source.size||source.width,source.size||source.height,0,gl.RGBA,gl.UNSIGNED_BYTE,source.data);for(const axis of [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T])gl.texParameteri(gl.TEXTURE_2D,axis,i===2?gl.REPEAT:gl.CLAMP_TO_EDGE);for(const filter of [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER])gl.texParameteri(gl.TEXTURE_2D,filter,gl.LINEAR);return t;});
       const resource={model,vertices,indices,textures};resources.set(variant,resource);return resource;
     }
-    function draw(variant,{shape=1,detail=1,angle=0,geometry=null,leaves='all',flight=null,padding=0}={}){
+    function draw(variant,{shape=1,detail=1,angle=0,geometry=null,leaves='all',flight=null,padding=0,foliage}={}){
       const resource=resources.get(variant);if(!resource)return false;const m=resource.model.geometry;
       gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,resource.vertices);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,resource.indices);
       for(const [name,size,offset] of [['position',3,0],['uv',2,12],['normal',3,20],['local',2,32],['kind',1,40],['flat',2,44]]){const loc=gl.getAttribLocation(program,'a_'+name);if(loc>=0){gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,size,gl.FLOAT,false,52,offset);}}
@@ -351,14 +352,34 @@ void main(){
       if(flight)view=[2/flight.viewport.width,-2/flight.viewport.height,-1,1];
       gl.uniform4fv(uniform.view,view);gl.uniform2fv(uniform.center,[(m.bodyBox.left+m.bodyBox.right)/2,(m.bodyBox.top+m.bodyBox.bottom)/2]);gl.uniform1f(uniform.shape,shape);gl.uniform1f(uniform.reveal,shape*smooth(Math.abs(Math.sin(angle/2))/.16));gl.uniform1f(uniform.detailAmount,detail);gl.uniform1f(uniform.green,variant.colour==='green'?1:0);
       gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(0,0,0,0);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-      for(const [index,group] of m.groups.entries()){
-        const part=variant.colour==='green'?partPose(group,{detail,leaves}):{detail,opacity:1,offset:[0,0,0],turn:0};
+      const numeric=variant.colour==='green'&&Number.isFinite(foliage);
+      const groups=Array.from(m.groups.entries());
+      if(numeric){
+        // Correct premultiplied storage: RGB uses source alpha, alpha uses one.
+        gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+        groups.sort((a,b)=>Number(partPose(a[1],{detail,leaves,foliage}).opacity<1)-Number(partPose(b[1],{detail,leaves,foliage}).opacity<1));
+      }
+      try{for(const [index,group] of groups){
+        const part=variant.colour==='green'?partPose(group,{detail,leaves,foliage}):{detail,opacity:1,offset:[0,0,0],turn:0};
         if(part.opacity<.001)continue;
+        if(numeric){
+          const translucent=part.opacity<1;gl.depthMask(!translucent);
+          // A closed blade must contribute one facing surface, not both skins.
+          if(translucent){
+            gl.enable(gl.CULL_FACE);gl.cullFace(gl.FRONT);
+            // Concave radial fans can overlap on the same facing skin. Count
+            // one covered fragment per group without writing translucent depth.
+            gl.enable(gl.STENCIL_TEST);gl.stencilMask(255);gl.clearStencil(0);gl.clear(gl.STENCIL_BUFFER_BIT);
+            gl.stencilFunc(gl.EQUAL,0,255);gl.stencilOp(gl.KEEP,gl.KEEP,gl.INCR);
+          }else{gl.disable(gl.CULL_FACE);gl.disable(gl.STENCIL_TEST);}
+        }
         gl.uniform1f(uniform.connector,variant.colour==='green'&&group.kind==='petiole'&&(flight||leaves==='single')?1:0);
         gl.uniform1f(uniform.detailAmount,part.detail);gl.uniform1f(uniform.opacity,part.opacity);const matrix=rotation(angle),pivot=[...m.pivot,0],rotated=apply(matrix,pivot),transform=flight?.parts[index]||{matrix,offset:pivot.map((n,i)=>n-rotated[i])};
         gl.uniformMatrix3fv(uniform.transform,false,transform.matrix);gl.uniform3fv(uniform.translation,transform.offset);
         gl.drawElements(gl.TRIANGLES,group.count,gl.UNSIGNED_SHORT,group.offset*2);
-      }return true;
+      }
+      }finally{if(numeric){gl.depthMask(true);gl.disable(gl.CULL_FACE);gl.disable(gl.STENCIL_TEST);}}
+      return true;
     }
     return {upload,draw};
   }

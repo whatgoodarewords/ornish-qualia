@@ -182,7 +182,7 @@
 
   const $ = id => document.getElementById(id);
   const canvas = $('apple');
-  const BUILD = 'apple-leaves-20261005-1';
+  const BUILD = 'apple-single-landing-20261005-1';
   canvas.setAttribute('data-build',BUILD);
   const ctx = canvas.getContext('2d', { alpha: true });
   const slider = $('imagination');
@@ -413,9 +413,10 @@
     }
     if(s.flat>.001) {ctx.globalAlpha=s.flat*.79;ctx.drawImage(flat,0,0);}
     const detail=activeVariant?.detailActive&&activeVariant.artwork?.detailPhoto&&state.progress>.9?smooth(.9,.92,state.progress):0;
-    if(detail&&root.AppleArtwork.drawFrame){
+    const foliage=smooth(.9,.92,state.progress);
+    if(foliage&&root.AppleArtwork?.drawFrame){
       const record=activeVariant.artwork,g=record.geometry;
-      root.AppleArtwork.drawFrame(record.transitionPhoto.getContext('2d'),activeVariant,detail,undefined,'all');
+      root.AppleArtwork.drawFrame(record.transitionPhoto.getContext('2d'),activeVariant,detail,detail?record.singleEndpoint:activeVariant.base,'single',foliage);
       ctx.globalAlpha=1;ctx.drawImage(record.transitionPhoto,g.source.x,g.source.y,g.source.width,g.source.height,g.x,g.y,g.width,g.height);
     }else if(s.photo>.001){ctx.globalAlpha=s.photo;ctx.drawImage(detail?activeVariant.artwork.detailPhoto:photo,0,0);}
     if(s.connections>0) {
@@ -633,7 +634,7 @@
   function capture(){return {photo,flat,contour,contourPath,wordTracks,geometry,tendrils,blobs};}
   function prepared(variant){
     const previous=capture();
-    try{cacheArtwork(variant.base,variant.colour);variant.artwork=capture();variantRecords.set(variant.colour,variant);}
+    try{cacheArtwork(variant.base,variant.colour);variant.artwork=capture();variant.artwork.transitionPhoto=surface(variant.base.width,variant.base.height);variantRecords.set(variant.colour,variant);}
     finally{install(previous);}
     return variant;
   }
@@ -665,9 +666,9 @@
     base.then(variant=>root.AppleArtwork.loadDetail(variant)).then(variant=>{
       const record=variant.artwork;if(!record)return;
       const g=record.geometry,c=surface(),ctx=c.getContext('2d');
-      const endpoint=root.AppleModel?.endpoint(variant,'all')||variant.detail;
+      const endpoint=root.AppleModel?.endpoint(variant,'single')||variant.detail;
+      root.AppleModel?.endpoint(variant,'all');record.singleEndpoint=endpoint;
       ctx.drawImage(endpoint,g.source.x,g.source.y,g.source.width,g.source.height,g.x,g.y,g.width,g.height);record.detailPhoto=c;
-      record.transitionPhoto=surface(variant.base.width,variant.base.height);
       if(activeVariant===variant&&state.progress<=.9)variant.detailActive=true;
       artworkListeners.forEach(listener=>listener(activeVariant));
     }).catch(()=>{});
