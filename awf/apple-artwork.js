@@ -1,5 +1,6 @@
 (function(root){
   'use strict';
+  // @see https://github.com/whatgoodarewords/awf/issues/3
   // These are the painting's original clip paths, in its unchanged image space.
   const paths=[
     'M613 415 C597 408 578 415 565 428 C553 439 554 459 557 478 C561 500 579 516 600 521 C620 526 644 517 658 501 C671 486 674 466 670 448 C667 429 655 418 641 413 C631 409 622 414 613 415 Z',
@@ -25,6 +26,59 @@
   }
   const greenParts=paths.slice(0,6).map(path=>samplePath(path).map(([x,y])=>[x-530,y-312]));
   const greenStems=paths[6].match(/M[^M]+/g).map(path=>samplePath(path).map(([x,y])=>[x-530,y-312]));
+  const leafRoots=[[86,44],[102,40],[77,57],[102,51],[98,59]];
+  function leafAxis(index,scale=1){
+    const root=leafRoots[index].map(n=>n*scale),poly=greenParts[index+1].map(p=>p.map(n=>n*scale));
+    const tip=poly.reduce((a,b)=>Math.hypot(b[0]-root[0],b[1]-root[1])>Math.hypot(a[0]-root[0],a[1]-root[1])?b:a);
+    return {root,tip};
+  }
+  function materialAxis(source){
+    const {data,width,height}=source;let root,tip,lo=Infinity,hi=-Infinity;
+    for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(data[(y*width+x)*4+3]>127){
+      const along=x-y;if(along<lo){lo=along;root=[x,y];}if(along>hi){hi=along;tip=[x,y];}
+    }
+    if(!root||hi===lo)throw Error('Empty leaf material');
+    const dx=tip[0]-root[0],dy=tip[1]-root[1],length=Math.hypot(dx,dy),axis=[dx/length,dy/length],profiles=Array.from({length:512},()=>[Infinity,-Infinity]);
+    const light=[0,0],counts=[0,0];
+    for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+      const k=(y*width+x)*4;if(data[k+3]<128)continue;
+      const s=((x-root[0])*axis[0]+(y-root[1])*axis[1])/length,t=-(x-root[0])*axis[1]+(y-root[1])*axis[0];
+      const bin=Math.max(0,Math.min(511,Math.round(s*511)));profiles[bin][0]=Math.min(profiles[bin][0],t);profiles[bin][1]=Math.max(profiles[bin][1],t);
+      if(s>.2&&s<.85){const side=t<0?0:1;light[side]+=(data[k]+data[k+1]+data[k+2])/3;counts[side]++;}
+    }
+    for(let i=0;i<512;i++)if(!Number.isFinite(profiles[i][0]))profiles[i]=i?profiles[i-1].slice():[0,0];
+    const widest=Math.max(...profiles.map(([lo,hi])=>hi-lo)),junction=Math.max(.08,profiles.findIndex(([lo,hi],i)=>i>12&&hi-lo>widest*.22)/511);
+    return {root,tip,axis,length,profiles,junction,highlight:light[1]/Math.max(1,counts[1])>=light[0]/Math.max(1,counts[0])?1:-1};
+  }
+  function leafMaterialMap(sourceAxis,index,scale=3){
+    const {root,tip}=leafAxis(index,scale),dx=tip[0]-root[0],dy=tip[1]-root[1],length=Math.hypot(dx,dy),axis=[dx/length,dy/length];
+    const lightSide=(-axis[1]*-.55+axis[0]*-.45)>=0?1:-1;
+    const reflection=lightSide*sourceAxis.highlight;
+    return {root,tip,axis,length,reflection,lightSide,sourceAxis};
+  }
+  // Sample across the midrib in longitudinal slices. This keeps the actual
+  // petiole and tip at their corresponding mask ends, including reversed blades.
+  function registeredLeaf(source,width,height,index,analysis=materialAxis(source)){
+    const map=leafMaterialMap(analysis,index,width/198),poly=greenParts[index+1].map(p=>p.map(n=>n*width/198));
+    const local=poly.map(([x,y])=>[((x-map.root[0])*map.axis[0]+(y-map.root[1])*map.axis[1])/map.length,-(x-map.root[0])*map.axis[1]+(y-map.root[1])*map.axis[0]]);
+    const spans=Array.from({length:512},(_,i)=>{const s=(i+.5)/512,hits=[];for(let j=0;j<local.length;j++){const a=local[j],b=local[(j+1)%local.length];if((a[0]>s)!==(b[0]>s))hits.push(a[1]+(s-a[0])/(b[0]-a[0])*(b[1]-a[1]));}return hits.length?[Math.min(...hits),Math.max(...hits)]:[0,0];});
+    const out=new Uint8ClampedArray(width*height*4),{data,width:sw,height:sh}=source;
+    const left=Math.max(0,Math.floor(Math.min(...poly.map(p=>p[0])))),right=Math.min(width,Math.ceil(Math.max(...poly.map(p=>p[0])))),top=Math.max(0,Math.floor(Math.min(...poly.map(p=>p[1])))),bottom=Math.min(height,Math.ceil(Math.max(...poly.map(p=>p[1]))));
+    for(let y=top;y<bottom;y++)for(let x=left;x<right;x++){
+      const dx=x+.5-map.root[0],dy=y+.5-map.root[1],s=Math.max(.001,Math.min(.999,(dx*map.axis[0]+dy*map.axis[1])/map.length)),t=-dx*map.axis[1]+dy*map.axis[0],i=Math.min(511,Math.floor(s*512)),span=spans[i];
+      // The exact Path2D supplies coverage. Never cut it again with a sampled
+      // span: roots can sit just outside a longitudinal slice and leave wedges.
+      // Compress the photographed petiole into the narrow mask root so brown
+      // stalk pixels cannot stretch into the broad green blade.
+      const sourceS=s<.018?s/.018*analysis.junction:analysis.junction+(s-.018)/.982*(1-analysis.junction);
+      const sourceSpan=analysis.profiles[Math.min(511,Math.floor(sourceS*512))],center=Math.max(span[0],Math.min(span[1],0)),fraction=Math.max(-.97,Math.min(.97,(t-center)/Math.max(.001,t<center?center-span[0]:span[1]-center)))*map.reflection;
+      const sourceCenter=Math.max(sourceSpan[0],Math.min(sourceSpan[1],0)),cross=sourceCenter+fraction*(fraction<0?sourceCenter-sourceSpan[0]:sourceSpan[1]-sourceCenter),px=Math.max(0,Math.min(sw-1.001,analysis.root[0]+analysis.axis[0]*analysis.length*sourceS-analysis.axis[1]*cross)),py=Math.max(0,Math.min(sh-1.001,analysis.root[1]+analysis.axis[1]*analysis.length*sourceS+analysis.axis[0]*cross));
+      const ix=Math.floor(px),iy=Math.floor(py),fx=px-ix,fy=py-iy,k=(y*width+x)*4;
+      for(let c=0;c<3;c++)out[k+c]=data[(iy*sw+ix)*4+c]*(1-fx)*(1-fy)+data[(iy*sw+ix+1)*4+c]*fx*(1-fy)+data[((iy+1)*sw+ix)*4+c]*(1-fx)*fy+data[((iy+1)*sw+ix+1)*4+c]*fx*fy;
+      out[k+3]=255;
+    }
+    return out;
+  }
   function createChoice({load,save=()=>{},preferred='green',changed=()=>{},failed=()=>{}}){
     const items={green:{status:'loading'},red:{status:'loading'}};let wanted=preferred==='red'?'red':'green',active=null;
     function reconcile(){
@@ -55,7 +109,7 @@
       src[i]=Math.max(.01,distance-.006);
     }
     const out=new Uint8ClampedArray(width*height*4);
-    for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+    for(let y=Math.max(0,Math.floor(box.t));y<Math.min(height,Math.ceil(box.b));y++)for(let x=Math.max(0,Math.floor(box.l));x<Math.min(width,Math.ceil(box.r));x++){
       const nx=(x+.5-cx)/rx,ny=(y+.5-cy)/ry,a=(Math.atan2(ny,nx)+Math.PI*2)%(Math.PI*2),i=Math.floor(a/Math.PI/2*rays)%rays,d=Math.min(.995,Math.hypot(nx,ny)/dst[i])*src[i];
       const px=Math.max(0,Math.min(sw-1.001,sx+Math.cos(a)*d*srx)),py=Math.max(0,Math.min(sh-1.001,sy+Math.sin(a)*d*sry)),ix=Math.floor(px),iy=Math.floor(py),fx=px-ix,fy=py-iy,k=(y*width+x)*4;
       for(let c=0;c<3;c++)out[k+c]=data[(iy*sw+ix)*4+c]*(1-fx)*(1-fy)+data[(iy*sw+ix+1)*4+c]*fx*(1-fy)+data[((iy+1)*sw+ix)*4+c]*(1-fx)*fy+data[((iy+1)*sw+ix+1)*4+c]*fx*fy;
@@ -63,7 +117,7 @@
     }
     return out;
   }
-  const api={paths,greenParts,greenStems,petiolePath,samplePath,createChoice,registeredPixels};
+  const api={paths,greenParts,greenStems,leafRoots,leafAxis,materialAxis,leafMaterialMap,registeredLeaf,petiolePath,samplePath,createChoice,registeredPixels};
   if(typeof module==='object'&&module.exports)module.exports=api;
   if(!root?.document)return;
   const cache=new Map();
@@ -75,30 +129,29 @@
   }
   function register(front,base,leaf){
     const c=canvas(base.width,base.height),ctx=c.getContext('2d');
+    const inputs=new Map();
     function part(source,index){
-      const input=canvas(source.naturalWidth,source.naturalHeight),g=input.getContext('2d',{willReadFrequently:true});g.drawImage(source,0,0);
-      const data=g.getImageData(0,0,input.width,input.height),warped=canvas(c.width,c.height),w=warped.getContext('2d'),pixels=w.createImageData(c.width,c.height);
-      pixels.data.set(registeredPixels({data:data.data,width:input.width,height:input.height},c.width,c.height,greenParts[index].map(([x,y])=>[x*3,y*3])));w.putImageData(pixels,0,0);
+      if(!inputs.has(source)){const input=canvas(source.naturalWidth,source.naturalHeight),g=input.getContext('2d',{willReadFrequently:true});g.drawImage(source,0,0);const value={data:g.getImageData(0,0,input.width,input.height).data,width:input.width,height:input.height};if(index)value.axis=materialAxis(value);inputs.set(source,value);}
+      const data=inputs.get(source),warped=canvas(c.width,c.height),w=warped.getContext('2d'),pixels=w.createImageData(c.width,c.height);
+      pixels.data.set(index?registeredLeaf(data,c.width,c.height,index-1,data.axis):registeredPixels(data,c.width,c.height,greenParts[index].map(([x,y])=>[x*3,y*3])));w.putImageData(pixels,0,0);
       ctx.save();ctx.scale(3,3);ctx.translate(-530,-312);ctx.clip(new Path2D(paths[index]));ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(warped,0,0);ctx.restore();
     }
-    part(front,0);part(leaf,2);
+    part(front,0);for(let index=1;index<=5;index++)part(leaf,index);
     ctx.save();ctx.scale(3,3);ctx.translate(-530,-312);
-    const stalk=new Path2D(paths[6].match(/M[^M]+/g)[0]);stalk.addPath(new Path2D(petiolePath));ctx.clip(stalk);
-    const bark=ctx.createLinearGradient(617,0,629,0);bark.addColorStop(0,'#493b1a');bark.addColorStop(.45,'#9a8548');bark.addColorStop(1,'#50471d');ctx.fillStyle=bark;ctx.fillRect(610,330,30,95);ctx.restore();return c;
+    const stalk=new Path2D(paths[6]);stalk.addPath(new Path2D(petiolePath));ctx.clip(stalk);
+    const bark=ctx.createLinearGradient(617,0,629,0);bark.addColorStop(0,'#493b1a');bark.addColorStop(.45,'#9a8548');bark.addColorStop(1,'#50471d');ctx.fillStyle=bark;ctx.fillRect(600,330,45,95);ctx.restore();return c;
   }
-  // Composite each material inside the same body mask: the body stays opaque
-  // while the four extra leaves disappear. Also serves the no-WebGL fallback.
-  function drawFrame(ctx,variant,detail=1,source=variant.endpoint||variant.detail,foliage=detail){
+  // Explicit foliage modes prevent a hero endpoint from replacing the survey.
+  function drawFrame(ctx,variant,detail=1,source=variant.endpoint||variant.detail,leaves='all'){
     const t=Math.max(0,Math.min(1,detail)),base=variant.base;
     ctx.clearRect(0,0,base.width,base.height);
-    if(t===0&&foliage===0){ctx.drawImage(base,0,0);return;}
+    if(t===0&&leaves==='all'){ctx.drawImage(base,0,0);return;}
     source=source||base;
     function part(path,amount,photo){ctx.save();ctx.scale(3,3);ctx.translate(-530,-312);ctx.clip(new Path2D(path));ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=amount;ctx.drawImage(photo,0,0);ctx.restore();}
     for(const index of [0,2]){part(paths[index],1,base);part(paths[index],t,source);}
     part(paths[6].match(/M[^M]+/g)[0],1,base);part(paths[6].match(/M[^M]+/g)[0],t,source);
-    for(const index of [1,3,4,5])part(paths[index],1-foliage,base);
-    for(const path of paths[6].match(/M[^M]+/g).slice(1))part(path,1-foliage,base);
-    ctx.save();ctx.scale(3,3);ctx.translate(-530,-312);ctx.globalAlpha=foliage;ctx.fillStyle='#655726';ctx.fill(new Path2D(petiolePath));ctx.restore();
+    if(leaves==='all')for(const path of [...[1,3,4,5].map(index=>paths[index]),...paths[6].match(/M[^M]+/g).slice(1)]){part(path,1,base);part(path,t,source);}
+    ctx.save();ctx.scale(3,3);ctx.translate(-530,-312);ctx.globalAlpha=leaves==='single'?1:t;ctx.fillStyle='#655726';ctx.fill(new Path2D(petiolePath));ctx.restore();
     part(petiolePath,t,source);
   }
   function loadBase(colour){

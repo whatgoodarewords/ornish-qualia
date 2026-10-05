@@ -1,5 +1,6 @@
 (function () {
   'use strict';
+  // @see https://github.com/whatgoodarewords/awf/issues/3
   const EVENT_NAMES=Object.freeze([
     {id:'world-aphantasia-week',label:'World Aphantasia Week',bounds:[156,121,2046,626]},
     {id:'aphantasia-world-forum',label:'Aphantasia World Forum',bounds:[101,100,2089,619]},
@@ -154,7 +155,9 @@
   }
   loadRoadArtwork();
   chooseScene();
+  let layoutVersion=0;
   function measure(){
+    layoutVersion++;
     const navHeight=nav.getBoundingClientRect().height;
     root.style.setProperty('--nav-height',`${navHeight}px`);
     const y=window.scrollY,box=hero.getBoundingClientRect();
@@ -178,7 +181,7 @@
     const preferredTop=box.height*(window.innerWidth<=600?.11:.08);
     root.style.setProperty('--title-top',`${Math.max(12,Math.min(preferredTop,hatY-titleHeight-12))}px`);
     const start=wrapper.top+y,run=road?Math.min(box.height*.38,Math.max(1,wrapper.height-box.height)):Math.max(0,wrapper.height-box.height);
-    layout={start,run,road,handTop:offsetY+838*scale,handBottom:offsetY+954*scale,handTurnRun:handTurnDuration(offsetY+850*scale,window.innerHeight),faceX,centerX:box.left+box.width/2,faceY:geometry.faceY,groinY:road?geometry.groinY:Math.min(box.height-48,geometry.groinY),scale:2.3*scale,
+    layout={viewport:{width:root.clientWidth||window.innerWidth,height:window.innerHeight,dpr:window.devicePixelRatio||1},start,run,road,handTop:offsetY+838*scale,handBottom:offsetY+954*scale,handTurnRun:handTurnDuration(offsetY+850*scale,window.innerHeight),faceX,centerX:box.left+box.width/2,faceY:geometry.faceY,groinY:road?geometry.groinY:Math.min(box.height-48,geometry.groinY),scale:2.3*scale,
       targetX:target.left+target.width/2,targetY:target.top+y+target.height/2,targetWidth:target.width,targetHeight:target.height,
       navHeight,sectionTop:sectionBox.top+y,end:landingScrollEnd(target.top+y+target.height/2,window.innerHeight)};
     if(sceneAnchor!==null){window.scrollTo({top:Math.max(0,y+sectionBox.top-sceneAnchor),behavior:'instant'});sceneAnchor=null;}
@@ -213,11 +216,15 @@
     const {size,x,top}=landingPose(g,artwork,{progress,y,viewportHeight:window.innerHeight,appleHandle:appleHandle&&!returning});
     // Keep the traveling fruit in the foreground until it docks or leaves view.
     const visible=top+artwork.height*size>0&&top<window.innerHeight;
-    window.fallingAppleSpin?.update(clamp((y-g.start)/Math.max(1,g.end-g.start)),visible);
     if(visible)style(apple,'transform',`translate3d(${x}px,${top}px,0) scale(${size})`);
     style(apple,'visibility',visible?'visible':'hidden');
     const overPainting=y<=g.start+g.run;
     apple.classList.toggle('is-over-painting',overPainting);
+    window.fallingAppleSpin?.update(progress,visible,{
+      viewport:g.viewport,layoutVersion,
+      trajectory:`${appleHandle}:${returning}:${g.road}`,
+      fruitAt:p=>landingPose(g,artwork,{progress:p,y:g.start+p*(g.end-g.start),viewportHeight:g.viewport.height,appleHandle:appleHandle&&!returning})
+    });
     const interactive=visible&&y<=g.start+8;
     style(apple,'pointerEvents',interactive?'auto':'none');
     attribute(apple,'aria-hidden',!interactive);apple.inert=!interactive;
