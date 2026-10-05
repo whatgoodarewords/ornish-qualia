@@ -34,13 +34,13 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
 <button id="dc-fit" type="button" hidden></button>
 <div id="dc-error" role="alert" hidden></div>
 <script type="text/x-dc-template" id="dc-template">
-<div style="width: 1880px; height: 1360px; box-sizing: border-box; padding: 20px 24px; background: #E9EAE6; color: #1E2420; font-family: 'IBM Plex Sans', sans-serif; display: flex; flex-direction: column; gap: 16px; overflow: hidden;">
+<div style="width: 1880px; height: 1500px; box-sizing: border-box; padding: 20px 24px; background: #E9EAE6; color: #1E2420; font-family: 'IBM Plex Sans', sans-serif; display: flex; flex-direction: column; gap: 16px; overflow: hidden;">
 
   <header style="height: 52px; flex: none; display: flex; align-items: center; justify-content: space-between;">
     <div>
       <div style="font-size: 24px; font-weight: 600; line-height: 1.15; letter-spacing: -0.01em;">Garden Watch</div>
     </div>
-    <div style="font-size: 13px; color: #4A524C;">Clock {{ clock }}.</div>
+    <div style="font-size: 15px; color: #4A524C;">Clock {{ clock }}.</div>
   </header>
 
   <div style="flex: 1; min-height: 0; position: relative;">
@@ -56,7 +56,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
               <div style="font-size: 18px; font-weight: 600; line-height: 1.2;">{{ w.colTitle }}</div>
             </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 14px; font-size: 13px; color: #3A423C;">
+          <div style="display: flex; align-items: center; gap: 14px; font-size: 15px; color: #3A423C;">
             <span style="display: inline-flex; align-items: center; gap: 5px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ w.sigIcon }}"></path></svg>{{ w.sigName }}</span>
             <span>{{ w.battText }}</span>
           </div>
@@ -144,9 +144,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
                           <sc-if value="{{ r.hasOver }}" hint-placeholder-val="{{ false }}">
                             <span style="font-size: 20px; color: {{ r.subFg }}; line-height: 1.2; white-space: nowrap;">{{ r.over }}</span>
                           </sc-if>
-                          <span style="font-size: {{ r.labelSize }}px; font-weight: 600; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.label }}</span>
+                          <span style="font-size: {{ r.labelSize }}px; font-weight: 600; line-height: 1.1; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;">{{ r.label }}</span>
                           <sc-if value="{{ r.hasSub }}" hint-placeholder-val="{{ false }}">
-                            <span style="font-size: 22px; color: {{ r.subFg }}; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.sub }}</span>
+                            <span style="font-size: 20px; color: {{ r.subFg }}; line-height: 1.15; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;">{{ r.sub }}</span>
                           </sc-if>
                         </span>
                         <sc-if value="{{ r.hasTrail }}" hint-placeholder-val="{{ false }}">
@@ -262,6 +262,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
                       </div>
                     </sc-if>
 
+                    <sc-if value="{{ r.isToast }}" hint-placeholder-val="{{ false }}">
+                      <div role="status" style="max-width: 320px; box-sizing: border-box; padding: 12px 24px; border-radius: 26px; background: #2B332E; color: #F1F4F1; font-size: 22px; line-height: 28px; text-align: center; animation: gwFade 0.2s ease-out;">{{ r.text }}</div>
+                    </sc-if>
+
                     <sc-if value="{{ r.isState }}" hint-placeholder-val="{{ false }}">
                       <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 352px;">
                         <div style="box-sizing: border-box; min-height: 56px; padding: 12px 22px; border-radius: 28px; background: #1E2622; color: #EEF2EF; font-size: 22px; line-height: 29px; text-align: center;">
@@ -342,8 +346,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
                     <span>{{ fp.name }}</span>
                   </div>
                 </sc-for>
-                <div aria-hidden="true" style="position: absolute; left: 216px; top: 312px; width: 20px; height: 20px; border-radius: 50%; background: #EEF2EF; box-shadow: 0 0 0 6px rgba(238,242,239,0.18);"></div>
-                <div aria-hidden="true" style="position: absolute; left: 176px; top: 336px; width: 100px; text-align: center; font-size: 18px; font-weight: 600; color: #EEF2EF;">You</div>
+                <div aria-hidden="true" style="position: absolute; left: 216px; top: 268px; width: 20px; height: 20px; border-radius: 50%; background: #EEF2EF; box-shadow: 0 0 0 6px rgba(238,242,239,0.18);"></div>
+                <div aria-hidden="true" style="position: absolute; left: 246px; top: 265px; font-size: 18px; line-height: 26px; font-weight: 600; color: #EEF2EF;">You</div>
                 <sc-if value="{{ w.arrow.hasPin }}" hint-placeholder-val="{{ false }}">
                   <div aria-hidden="true" style="position: absolute; left: 352px; top: 270px; width: 44px; height: 44px; border-radius: 50%; background: {{ w.arrow.pinBg }}; color: {{ w.arrow.pinFg }}; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600;">{{ w.arrow.pinLabel }}</div>
                 </sc-if>
@@ -383,9 +387,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
                 </sc-if>
               </div>
               <sc-if value="{{ w.arrow.bad }}" hint-placeholder-val="{{ false }}">
-                <div role="group" aria-label="Other ways to find" style="position: absolute; left: 0; top: 368px; width: 480px; display: flex; justify-content: center; gap: 8px;">
+                <div role="group" aria-label="Other ways to find" style="position: absolute; left: 0; top: 322px; width: 480px; display: flex; justify-content: center; gap: 6px;">
                   <sc-for list="{{ w.arrow.fallbacks }}" as="fb" hint-placeholder-count="3">
-                    <button onClick="{{ fb.pick }}" aria-label="{{ fb.label }}" aria-pressed="{{ fb.pressed }}" style="height: 44px; padding: 0 14px; border: none; border-radius: 22px; background: {{ fb.bg }}; color: {{ fb.fg }}; font-size: 18px; font-weight: 600;">{{ fb.label }}</button>
+                    <button onClick="{{ fb.pick }}" aria-label="{{ fb.label }}" aria-pressed="{{ fb.pressed }}" style="height: 44px; padding: 0 12px; border: none; border-radius: 22px; background: {{ fb.bg }}; color: {{ fb.fg }}; font-size: 17px; font-weight: 600; white-space: nowrap;">{{ fb.label }}</button>
                   </sc-for>
                 </div>
               </sc-if>
@@ -497,7 +501,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
                 <ellipse cx="322" cy="128" rx="66" ry="34" fill="#173444"></ellipse>
                 <path d="M242 400 C 238 330 214 280 202 190 M202 190 C 250 170 290 150 318 132 M202 190 C 240 230 280 262 298 290 M202 190 C 172 240 158 270 152 300 M298 290 C 330 262 352 240 368 220" stroke="#25342B" stroke-width="10" fill="none" stroke-linecap="round"></path>
               </svg>
-              <div style="position: absolute; left: 0; top: 76px; width: 480px; text-align: center; font-size: 20px; color: #B4BEB7;">Garden map</div>
+              <div style="position: absolute; left: 0; top: 76px; width: 480px; text-align: center; font-size: 20px; color: {{ w.mapTitleFg }};">{{ w.mapTitle }}</div>
               <sc-for list="{{ w.map.places }}" as="pl" hint-placeholder-count="6">
                 <button onClick="{{ pl.pick }}" aria-label="{{ pl.aria }}" style="position: absolute; left: {{ pl.x }}px; top: {{ pl.y }}px; height: 44px; padding: 0 14px; border: none; border-radius: 22px; background: {{ pl.bg }}; color: {{ pl.fg }}; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
                   <sc-if value="{{ pl.flag }}" hint-placeholder-val="{{ false }}">
@@ -507,7 +511,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
                 </button>
               </sc-for>
               <div role="img" aria-label="You are here" style="position: absolute; left: 222px; top: 334px; width: 20px; height: 20px; border-radius: 50%; background: #EEF2EF; box-shadow: 0 0 0 6px rgba(238,242,239,0.18);"></div>
-              <div aria-hidden="true" style="position: absolute; left: 202px; top: 362px; width: 60px; text-align: center; font-size: 18px; font-weight: 600; color: #EEF2EF;">You</div>
+              <div aria-hidden="true" style="position: absolute; left: 252px; top: 331px; font-size: 18px; line-height: 26px; font-weight: 600; color: #EEF2EF;">You</div>
               <sc-if value="{{ w.map.hasFriend }}" hint-placeholder-val="{{ false }}">
                 <div role="img" aria-label="{{ w.map.friendAria }}" style="position: absolute; left: 382px; top: 286px; width: 36px; height: 36px; border-radius: 50%; background: {{ w.map.friendBg }}; color: {{ w.map.friendFg }}; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600;">{{ w.map.friendInitial }}</div>
               </sc-if>
@@ -619,7 +623,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
 
             <!-- Confirmation overlay -->
             <sc-if value="{{ w.hasToast }}" hint-placeholder-val="{{ false }}">
-              <div role="status" style="position: absolute; left: 90px; top: 60px; width: 300px; display: flex; justify-content: center; z-index: 6; pointer-events: none; animation: gwFade 0.2s ease-out;">
+              <div role="status" style="position: absolute; left: 90px; top: {{ w.toastTop }}px; width: 300px; display: flex; justify-content: center; z-index: 6; pointer-events: none; animation: gwFade 0.2s ease-out;">
                 <div style="background: #2B332E; color: #F1F4F1; border-radius: 28px; padding: 12px 24px; font-size: 22px; line-height: 1.3; text-align: center;">{{ w.toast }}</div>
               </div>
             </sc-if>
@@ -632,7 +636,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
         </div>
 
         <div style="height: 44px; display: flex; align-items: center; gap: 14px; padding: 0 18px; border-radius: 22px; background: #F5F5F2;">
-          <span style="font-size: 13px; font-weight: 600; color: #2F3631; width: 72px;">Vibration</span>
+          <span style="font-size: 15px; font-weight: 600; color: #2F3631; width: 84px;">Vibration</span>
           <div aria-hidden="true" style="width: 220px; height: 28px; display: flex; align-items: center;">
             <sc-if value="{{ w.hapNone }}" hint-placeholder-val="{{ false }}">
               <span style="width: 180px; height: 0; border-top: 2px dashed #8A918B;"></span>
@@ -641,26 +645,26 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
               <span style="width: {{ hb.w }}px; height: {{ hb.h }}px; border-radius: 3px; background: {{ hb.bg }}; flex: none;"></span>
             </sc-for>
           </div>
-          <span style="font-size: 13px; color: #2F3631;">{{ w.hapLabel }}</span>
+          <span style="font-size: 15px; color: #2F3631;">{{ w.hapLabel }}</span>
         </div>
 
         <div style="background: #F5F5F2; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 12px; font-weight: 600; color: #4A524C; width: 54px;">Signal</span>
+            <span style="font-size: 15px; font-weight: 600; color: #4A524C; width: 64px;">Signal</span>
             <div role="group" aria-label="{{ w.sigGroupAria }}" style="display: flex; gap: 6px;">
               <sc-for list="{{ w.sigOpts }}" as="o" hint-placeholder-count="3">
-                <button onClick="{{ o.pick }}" aria-pressed="{{ o.pressed }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: {{ o.bg }}; color: {{ o.fg }}; font-size: 13px; font-weight: 600;">{{ o.label }}</button>
+                <button onClick="{{ o.pick }}" aria-pressed="{{ o.pressed }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: {{ o.bg }}; color: {{ o.fg }}; font-size: 15px; font-weight: 600;">{{ o.label }}</button>
               </sc-for>
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 12px; font-weight: 600; color: #4A524C; width: 54px;">Demo</span>
+            <span style="font-size: 15px; font-weight: 600; color: #4A524C; width: 64px;">Demo</span>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
               <sc-for list="{{ w.toggles }}" as="g" hint-placeholder-count="3">
-                <button onClick="{{ g.pick }}" aria-pressed="{{ g.pressed }}" style="height: 44px; padding: 0 14px; border: none; border-radius: 22px; background: {{ g.bg }}; color: {{ g.fg }}; font-size: 13px; font-weight: 600;">{{ g.label }}: {{ g.state }}</button>
+                <button onClick="{{ g.pick }}" aria-pressed="{{ g.pressed }}" style="height: 44px; padding: 0 14px; border: none; border-radius: 22px; background: {{ g.bg }}; color: {{ g.fg }}; font-size: 15px; font-weight: 600;">{{ g.label }}: {{ g.state }}</button>
               </sc-for>
               <sc-if value="{{ w.showReader }}" hint-placeholder-val="{{ false }}">
-                <button onClick="{{ w.tapReader }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: #1D5B37; color: #FFFFFF; font-size: 13px; font-weight: 600;">Tap reader</button>
+                <button onClick="{{ w.tapReader }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: #1D5B37; color: #FFFFFF; font-size: 15px; font-weight: 600;">Tap reader</button>
               </sc-if>
             </div>
           </div>
@@ -668,9 +672,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
 
         <div style="padding: 0 10px; display: flex; flex-direction: column; gap: 4px;">
           <sc-if value="{{ w.hasHint }}" hint-placeholder-val="{{ false }}">
-            <div style="font-size: 13px; color: #2F3631; line-height: 1.4;">{{ w.hint }}</div>
+            <div style="font-size: 15px; color: #2F3631; line-height: 1.4;">{{ w.hint }}</div>
           </sc-if>
-          <div style="font-size: 12px; color: #4A524C; line-height: 1.4;">Keys: Home, Quick (orange, hold to talk), Back. Press Back twice for Wallet.</div>
+          <div style="font-size: 15px; color: #4A524C; line-height: 1.4;">Keys: Home, Quick (orange, hold to talk), Back. Press Back twice for Wallet.</div>
         </div>
       </section>
     </sc-for>
@@ -680,14 +684,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
       <div style="background: #F5F5F2; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; flex: none;">
         <div>
           <div style="font-size: 18px; font-weight: 600;">Try it</div>
-          <div style="font-size: 13px; color: #4A524C;">Pick a story, press Start, then follow the steps on both watches.</div>
+          <div style="font-size: 15px; color: #4A524C;">Pick a story, then follow the steps on both watches.</div>
         </div>
         <sc-for list="{{ groups }}" as="gr" hint-placeholder-count="4">
           <div style="display: flex; flex-direction: column; gap: 6px;">
-            <div style="font-size: 12px; font-weight: 600; color: #4A524C; letter-spacing: 0.02em;">{{ gr.name }}</div>
+            <div style="font-size: 15px; font-weight: 600; color: #4A524C; letter-spacing: 0.02em;">{{ gr.name }}</div>
             <div role="group" aria-label="{{ gr.name }}" style="display: flex; flex-wrap: wrap; gap: 6px;">
               <sc-for list="{{ gr.items }}" as="st" hint-placeholder-count="4">
-                <button data-story="{{ st.n }}" onClick="{{ st.pick }}" aria-pressed="{{ st.pressed }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: {{ st.bg }}; color: {{ st.fg }}; font-size: 13px; font-weight: 600; white-space: nowrap;">{{ st.short }}</button>
+                <button data-story="{{ st.n }}" onClick="{{ st.pick }}" aria-pressed="{{ st.pressed }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: {{ st.bg }}; color: {{ st.fg }}; font-size: 15px; font-weight: 600; white-space: nowrap;">{{ st.short }}</button>
               </sc-for>
             </div>
           </div>
@@ -695,10 +699,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
         <div style="background: #FFFFFF; border-radius: 14px; padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px;">
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
             <div style="font-size: 15px; font-weight: 600;">{{ story.title }}</div>
-            <button data-start="1" onClick="{{ story.start }}" style="flex: none; height: 44px; padding: 0 22px; border: none; border-radius: 22px; background: #1D5B37; color: #FFFFFF; font-size: 13px; font-weight: 600;">Start</button>
           </div>
-          <div style="font-size: 12.5px; color: #4A524C; line-height: 1.4;">{{ story.who }}</div>
-          <ol style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 3px; font-size: 13px; line-height: 1.4; color: #2F3631;">
+          <div style="font-size: 15px; color: #4A524C; line-height: 1.4;">{{ story.who }}</div>
+          <ol style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 3px; font-size: 15px; line-height: 1.4; color: #2F3631;">
             <sc-for list="{{ story.steps }}" as="sp" hint-placeholder-count="5">
               <li>{{ sp.text }}</li>
             </sc-for>
@@ -709,23 +712,23 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
       <div style="background: #F5F5F2; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: none;">
         <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px;">
           <div style="font-size: 15px; font-weight: 600; margin-right: auto;">Demo controls</div>
-          <button onClick="{{ advance }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: #FFFFFF; color: #2F3631; font-size: 13px; font-weight: 600;">+30 min</button>
-          <button onClick="{{ holdTogether }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: #FFFFFF; color: #2F3631; font-size: 13px; font-weight: 600;">Hold watches together</button>
-          <button onClick="{{ callMum }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: #FFFFFF; color: #2F3631; font-size: 13px; font-weight: 600;">Call from Mum</button>
-          <button onClick="{{ callUnknown }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: #FFFFFF; color: #2F3631; font-size: 13px; font-weight: 600;">Call from unknown number</button>
-          <button onClick="{{ reset }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: #FFFFFF; color: #2F3631; font-size: 13px; font-weight: 600;">Reset</button>
+          <button onClick="{{ advance }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: #FFFFFF; color: #2F3631; font-size: 15px; font-weight: 600;">+30 min</button>
+          <button onClick="{{ holdTogether }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: #FFFFFF; color: #2F3631; font-size: 15px; font-weight: 600;">Hold watches together</button>
+          <button onClick="{{ callMum }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: #FFFFFF; color: #2F3631; font-size: 15px; font-weight: 600;">Call from Mum</button>
+          <button onClick="{{ callUnknown }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: #FFFFFF; color: #2F3631; font-size: 15px; font-weight: 600;">Call from unknown number</button>
+          <button onClick="{{ reset }}" style="height: 44px; padding: 0 16px; border: none; border-radius: 22px; background: #FFFFFF; color: #2F3631; font-size: 15px; font-weight: 600;">Reset</button>
         </div>
         <sc-if value="{{ hasCallNote }}" hint-placeholder-val="{{ false }}">
-          <div role="status" style="font-size: 13px; color: #2F3631; line-height: 1.4;">{{ callNote }}</div>
+          <div role="status" style="font-size: 15px; color: #2F3631; line-height: 1.4;">{{ callNote }}</div>
         </sc-if>
         <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
           <div style="display: flex; flex-direction: column; gap: 4px;">
-            <label for="dn-you" style="font-size: 12px; color: #3A423C;">Your name</label>
-            <input id="dn-you" type="text" maxlength="20" value="{{ nameYou }}" onChange="{{ setNameYou }}" style="height: 44px; box-sizing: border-box; border-radius: 10px; border: 1px solid #C2C7BF; padding: 0 10px; font-size: 14px; background: #FFFFFF; color: #1E2420;">
+            <label for="dn-you" style="font-size: 15px; color: #3A423C;">Your name</label>
+            <input id="dn-you" type="text" maxlength="20" value="{{ nameYou }}" onChange="{{ setNameYou }}" style="height: 44px; box-sizing: border-box; border-radius: 10px; border: 1px solid #C2C7BF; padding: 0 10px; font-size: 15px; background: #FFFFFF; color: #1E2420;">
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px;">
-            <label for="dn-maya" style="font-size: 12px; color: #3A423C;">Friend's name</label>
-            <input id="dn-maya" type="text" maxlength="20" value="{{ nameMaya }}" onChange="{{ setNameMaya }}" style="height: 44px; box-sizing: border-box; border-radius: 10px; border: 1px solid #C2C7BF; padding: 0 10px; font-size: 14px; background: #FFFFFF; color: #1E2420;">
+            <label for="dn-maya" style="font-size: 15px; color: #3A423C;">Friend's name</label>
+            <input id="dn-maya" type="text" maxlength="20" value="{{ nameMaya }}" onChange="{{ setNameMaya }}" style="height: 44px; box-sizing: border-box; border-radius: 10px; border: 1px solid #C2C7BF; padding: 0 10px; font-size: 15px; background: #FFFFFF; color: #1E2420;">
           </div>
         </div>
       </div>
@@ -743,7 +746,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
                   <span style="width: {{ pb.w }}px; height: {{ pb.h }}px; border-radius: 3px; background: {{ pb.bg }}; flex: none;"></span>
                 </sc-for>
               </div>
-              <div style="min-width: 0; font-size: 12px; line-height: 1.3; color: #2F3631;"><b style="font-weight: 600;">{{ pt.name }}</b>, {{ pt.desc }}</div>
+              <div style="min-width: 0; font-size: 15px; line-height: 1.3; color: #2F3631;"><b style="font-weight: 600;">{{ pt.name }}</b>, {{ pt.desc }}</div>
             </div>
           </sc-for>
         </div>
@@ -754,22 +757,22 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
       <div style="display: flex; align-items: center; justify-content: space-between; flex: none;">
         <span style="font-size: 15px; font-weight: 600; color: #F1F4F1;">What the server sees</span>
         <div role="group" aria-label="Log style" style="display: flex; gap: 4px; background: #232A26; border-radius: 25px; padding: 3px;">
-          <button onClick="{{ logPlain }}" aria-pressed="{{ logPlainPressed }}" style="height: 44px; padding: 0 14px; border: none; border-radius: 22px; background: {{ logPlainBg }}; color: {{ logPlainFg }}; font-size: 12px; font-weight: 600;">Plain</button>
-          <button onClick="{{ logTech }}" aria-pressed="{{ logTechPressed }}" style="height: 44px; padding: 0 14px; border: none; border-radius: 22px; background: {{ logTechBg }}; color: {{ logTechFg }}; font-size: 12px; font-weight: 600;">Technical</button>
+          <button onClick="{{ logPlain }}" aria-pressed="{{ logPlainPressed }}" style="height: 44px; padding: 0 14px; border: none; border-radius: 22px; background: {{ logPlainBg }}; color: {{ logPlainFg }}; font-size: 15px; font-weight: 600;">Plain</button>
+          <button onClick="{{ logTech }}" aria-pressed="{{ logTechPressed }}" style="height: 44px; padding: 0 14px; border: none; border-radius: 22px; background: {{ logTechBg }}; color: {{ logTechFg }}; font-size: 15px; font-weight: 600;">Technical</button>
         </div>
       </div>
       <div style="flex: 0 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin;">
         <sc-if value="{{ logEmpty }}" hint-placeholder-val="{{ true }}">
-          <div style="font-size: 12.5px; color: #A9B3AC; padding: 14px 2px;">Nothing yet</div>
+          <div style="font-size: 15px; color: #A9B3AC; padding: 14px 2px;">Nothing yet</div>
         </sc-if>
         <sc-for list="{{ logRows }}" as="lr" hint-placeholder-count="6">
           <div style="padding: 8px 2px; border-bottom: 1px solid #26302A; display: flex; flex-direction: column; gap: 3px;">
             <div style="display: flex; gap: 10px; align-items: baseline;">
-              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8C9890; flex: none;">{{ lr.t }}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #8C9890; flex: none;">{{ lr.t }}</span>
               <span style="font-size: {{ lr.size }}px; font-family: {{ lr.font }}; color: #E6ECE7; line-height: 1.4;">{{ lr.main }}</span>
             </div>
             <sc-if value="{{ lr.hasInside }}" hint-placeholder-val="{{ false }}">
-              <div style="padding-left: 66px; font-size: 11.5px; color: #8C9890; line-height: 1.35;">{{ lr.inside }}</div>
+              <div style="padding-left: 66px; font-size: 15px; color: #8C9890; line-height: 1.35;">{{ lr.inside }}</div>
             </sc-if>
           </div>
         </sc-for>
@@ -778,7 +781,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid #4FA877; outline-
   </div>
 </div>
 </script>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1880,"height":1360}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1880,"height":1500}}'>
 class Component extends DCLogic {
   /* All constants live here; read them through this.K (set first in the constructor). */
   consts() {
@@ -879,7 +882,7 @@ class Component extends DCLogic {
       walk: { name: 'Morning walk', offline: true, tracks: [['Cedar Steps', 'Moss Lantern'], ['Slow Ferry', 'Ida Kestrel'], ['Kettle on the Porch', 'North Porch']] },
       radio: { name: 'Evening radio', offline: false, tracks: [['Field Notes', 'Ida Kestrel'], ['Window Light', 'North Porch'], ['Pine Hour', 'Moss Lantern']] },
     };
-    const DEST = [['Village café', '1.4 km', 17], ['Bus stop, Mill Road', '2.1 km', 26], ['Pharmacy, Orchard Lane', '1.8 km', 22]];
+    const DEST = [['Village café', '1.4 km', 17], ['Bus stop', 'Mill Road, 2.1 km', 26], ['Pharmacy', 'Orchard Lane, 1.8 km', 22]];
     const ROUTE = [['Head south on Garden Lane', 220, 0], ['Turn left onto Mill Road', 400, -90], ['Turn right onto Orchard Lane', 350, 90], ['Keep left at the old well', 300, -30]];
     const EXP = ['30 min', '2 h', 'Tonight'];
     const ENDS = ['Tonight 23:00', 'In 30 min', 'In 2 hours'];
@@ -893,7 +896,7 @@ class Component extends DCLogic {
     // Summary times a watch can pick from (at most 3), and the people who may call it (at most 5).
     const SUMTIMES = [8 * 60, 10 * 60, 12 * 60, 15 * 60, 17 * 60, 19 * 60, 21 * 60];
     const CONTACTS = ['Mum', 'Dad', 'Grandma', 'Lena', 'Tomas', 'Aunt Rosa'];
-    const HANG_LEN = 90;
+    const HANG_LEN = 60;
     const WHEN = [[0, 'Now'], [15, 'In 15 min'], [30, 'In 30 min'], [-1, 'Pick a time']];
     const COLORS = [['#8FE3B0', '#062012', 'Green'], ['#E9C46A', '#1E1A0A', 'Yellow'], ['#8FB8DE', '#0B1A28', 'Blue'], ['#F2A7A0', '#2A0E0B', 'Pink'], ['#C9B6E4', '#1E1430', 'Lilac']];
     const TRANSCRIPT = { you: 'On my way to the lake. Save me a spot.', maya: 'Running late. At the car in 5 min.' };
@@ -918,9 +921,9 @@ class Component extends DCLogic {
     const STORIES = {
       1: { short: 'Meet at the lake', title: 'Meet at the lake', who: "Starts on Meet on Maya's watch. Host can send one the same way.", steps: ['Maya: The Lake > Now > Send.', 'Host: "Maya wants to meet at The Lake, now." On my way.', "Host's distance drops for about 10 s. Then I'm here at the bottom.", "Maya: the I'm here vibration and \"Host: here\" with the time."] },
       2: { short: 'Where are you?', title: 'Where are you?', who: "Starts on Maya's card on Host's watch. Maya can ask Host the same way.", steps: ['Host: Where. Maya is not sharing, so it asks.', 'Maya: Share 30 min.', "Host: the arrow opens. Below Host's watch, tap Compass bad.", 'Host: Map.', 'Maya: Stop sharing. Host sees when Maya stopped.'] },
-      3: { short: 'Sauna, four spots', title: 'Sauna, four spots', who: "Starts on Plan a hang on Host's watch. Maya can plan one too.", steps: ['Host: Sauna > The Lake > Today 18:00 > 4 spots > Everyone listed > Send invite.', 'Maya: Join. Maya waits for Host to confirm.', 'Host: Confirm Maya.', "Maya: You're in, spot 2 of 4."] },
+      3: { short: 'Sauna, four spots', title: 'Sauna, four spots', who: "Starts on Plan a hang on Host's watch. Maya can plan one too.", steps: ['Host: Sauna > The Lake > Today 18:00 > 4 spots > Everyone listed > Send invite.', "Maya: Join. She's in; Host's watch confirms by itself.", 'Host sees "Maya is in. 2 of 4".', "Maya: You're in, spot 2 of 4."] },
       4: { short: 'Memo, no signal', title: 'A memo from the dead zone', who: "Starts on Host's card on Maya's watch. Maya has no signal.", steps: ['Maya: Memo. Hold the mic, let go, wait for the text, tap Now, then Send.', 'Maya sees Queued. The server log stays empty.', "Below Maya's watch: Signal > LTE.", 'Host: the memo opens on its own. Play.', 'Maya sees Played.'] },
-      5: { short: 'Quiet hours', title: 'Quiet hours', who: "Maya's quiet hours run 17:00 to 07:30, so they are on now.", steps: ['Host: Nudge > Come here. Host sees Delivered and "No buzz".', "Maya's watch stays still. Her strip shows Quiet delivery.", 'Host: Back key > Where. Host sees Requests paused.', 'Host: Home key > tap the time > Plans > Announce > Dinner at 8.', 'Maya: Home key > Garden > Inbox.'] },
+      5: { short: 'Quiet hours', title: 'Quiet hours', who: "Maya's quiet hours run 17:00 to 07:30, so they are on now.", steps: ['Host: Nudge > Come here. Host sees Delivered and "No buzz".', "Maya's watch stays still. Her strip shows Quiet delivery.", 'Host: Back key > Where. Host sees Requests paused.', 'Host: Home key > tap the time > Plans > scroll to Announce > Dinner at 8.', 'Maya: Home key > Garden > Inbox > Open summary > Next > Next > Close.'] },
       6: { short: 'Dinner poll', title: 'Dinner poll', who: "Starts on Poll on Maya's watch. Host can run a poll too.", steps: ['Maya: Dinner at 8? > Next > Everyone listed.', 'Maya: Now > Send poll.', 'Host: the poll opens on its own. Late.', 'Maya: the tally fills in. Sam, Ana and Leo vote too.'] },
       7: { short: 'Push to talk', title: 'Cabin 3 on the Quick button', who: 'Starts on both faces. Either watch can talk.', steps: ['Host: tap the orange Quick button. A tap talks for 4 s.', 'Maya: Cabin 3 opens with "Host is talking".', "After Host's 4 s, Maya: tap her Quick button to answer.", "Host: tap the Quick button while Maya talks. It won't take the turn."] },
       8: { short: 'Record a meeting', title: 'Record the meeting', who: "Starts on Record on Host's watch. Either watch can record.", steps: ['Host: Start. A red ring circles the screen.', 'Host: Bookmark. The line under the buttons shows Bookmark 1.', 'Host: press and hold the stop button. The watch says Saved, then opens Recordings with the new one on top.', 'The server log shows nothing for the recording.'] },
@@ -931,9 +934,9 @@ class Component extends DCLogic {
       13: { short: 'Recordings', title: "This morning's meeting", who: "Starts on Recordings on Host's watch.", steps: ['Host: the top recording, Today 09:10.', 'Host: Bookmark 1. Then scroll down to Export and tap it.', 'Host: Back key > the second recording > Delete from watch > Delete.'] },
       14: { short: 'Lake walk group', title: 'A group for the lake walk', who: "Starts on New group on Host's watch.", steps: ['Host: Lake walk > In 30 min > With Maya > Now > Create group.', 'Maya: Join.', 'Host: Talk. The channel is Lake walk.', 'Demo controls: +30 min. The group ends on both watches.'] },
       15: { short: 'Add a friend', title: 'Add a friend', who: "Host and Maya aren't friends yet. Both watches show Add a friend.", steps: ['Demo controls: Hold watches together.', 'Host: Add. The Back key cancels.', "Maya: Add. Both watches say you're friends."] },
-      16: { short: 'Invite runs out', title: 'An invite that runs out', who: "Starts on Meet on Host's watch. It expires in 30 min.", steps: ['Host: The Lake > Now > Send.', 'Demo controls: +30 min.', 'Maya: the meeting point turns grey.', 'Maya: Back key > tap the time > Inbox.'] },
-      18: { short: 'With friends', title: 'With friends', who: "Starts on Maya's card on Host's watch. Maya's watch shows its face.", steps: ['Maya: tap Present · Off on her face.', 'Host: Memo. Hold the mic, let go, wait for the text, then Send. It goes as Later.', 'Host: Back key > Nudge > Come here. Delivered, with "Present. Things wait." Maya feels nothing.', "Maya: tap Present · On. The nudge shows now. The memo waits for her summary."] },
-      19: { short: 'Evening summary', title: 'Evening summary', who: "It's 18:35. Starts on Maya's card on Host's watch.", steps: ['Host: Memo. Hold the mic, let go, wait for the text, then Send. It goes as Later.', 'Host: Home key > tap the time > Plans > Poll > Dinner at 8? > Next > Everyone listed > Send poll. Maya feels nothing.', 'Demo controls: +30 min. At 19:00 one summary arrives with the Reminder vibration.', 'Maya: Open > Play > Back key > Next > Vote > Late > Back key > Next > Close.'] },
+      16: { short: 'Invite runs out', title: 'An invite that runs out', who: "Starts on Meet on Host's watch. It expires in 30 min.", steps: ['Host: The Lake > Now > Send.', 'Demo controls: +30 min.', 'Maya: the meeting point turns grey.', 'Maya: Back key > tap the time > Inbox. Nothing waits.'] },
+      18: { short: 'With friends', title: 'With friends', who: "Starts on Maya's card on Host's watch. Maya's watch shows its face.", steps: ['Maya: tap Present · Off on her face.', 'Host: Memo. Hold the mic, let go, wait for the text, then Send. It goes as Later.', 'Host: Back key > Nudge > Come here. Delivered, with "Maya is present. It waits." Maya feels nothing.', "Maya: tap Present · On. The nudge shows now. The memo waits for her summary."] },
+      19: { short: 'Evening summary', title: 'Evening summary', who: "It's 18:35. Starts on Maya's card on Host's watch.", steps: ['Host: Memo. Hold the mic, let go, wait for the text, then Send. It goes as Later.', 'Host: Home key > tap the time > Plans > Poll > Dinner at 8? > Next > Everyone listed > Send poll. Maya feels nothing.', 'Demo controls: +30 min. At 19:00 one summary arrives with the Reminder vibration.', 'Maya: Open > Play. After the memo, the next item opens by itself: Vote > Late. Then Close.'] },
       20: { short: 'Mum calls', title: 'Mum calls', who: "Maya's favourites are Mum and Dad. Both watches show their faces.", steps: ['Demo controls: Call from Mum. Maya: Answer, then End.', 'Demo controls: Call from unknown number. Maya\'s watch stays still.'] },
       17: { short: 'Tap to pay', title: 'Tap to pay at the kitchen', who: 'Starts on both faces.', steps: ['Maya: press the Back key twice, quickly.', "Below Maya's watch: Tap reader.", 'Maya sees €4.50, Kitchen.'] },
     };
@@ -984,7 +987,7 @@ class Component extends DCLogic {
     const poll = () => ({ q: 'Dinner at 8?', opts: ['Yes', 'No', 'Late'], to: 'all', exp: -1, now: false });
     return {
       sec: 0,
-      story: 1,
+      story: 0,
       friends: true,
       grp: {},
       names: { you: 'Host', maya: 'Maya' },
@@ -1025,8 +1028,8 @@ class Component extends DCLogic {
       recSel: '', recPlay: { playing: false, pos: 0 },
       channel: 'cabin', groupSel: '', groupDraft: { name: 0, title: 'Lake walk', withPeer: true, end: 0, now: false },
       wallet: 'ready', walletAt: '', friendState: 'idle',
-      memoText: true, nowFriends: true, held: [], sumIdx: 0, picked: {}, present: false, presentWas: false, sumTimes: [12 * 60, 19 * 60], pending: [], summary: null, sumDue: false, lastMin: null,
-      favs: ['Mum', 'Dad'], favRing: false, favQuiet: false, call: null,
+      memoText: true, nowFriends: true, fromSum: false, held: [], sumIdx: 0, picked: {}, present: false, presentWas: false, sumTimes: [12 * 60, 19 * 60], pending: [], summary: null, sumDue: false, lastMin: null,
+      favs: ['Mum', 'Dad'], favQuiet: false, call: null,
       levels: [0.2, 0.3, 0.25, 0.4, 0.3, 0.2, 0.35, 0.3, 0.2, 0.25, 0.3, 0.2, 0.3, 0.25],
     };
   }
@@ -1053,7 +1056,7 @@ class Component extends DCLogic {
   }
 
   commit() {
-    if (this.m && this.m.w) ['you', 'maya'].forEach(id => this.presentCheck(id));
+    if (this.m && this.m.w) ['you', 'maya'].forEach(id => { this.presentCheck(id); this.prunePending(id); });
     this.ver += 1;
     this.setState({ v: this.ver });
   }
@@ -1186,7 +1189,7 @@ class Component extends DCLogic {
         this.holdForSummary(id, { key: h.key, owner: h.owner, title: h.title, from: this.nm(h.owner), screen: h.screen, gid: h.gid || '' });
         return;
       }
-      if (this.isQuiet(id)) { this.haptic(id, 'quiet'); return; }
+      if (this.isQuiet(id)) { this.haptic(id, 'quiet'); this.holdForSummary(id, { key: h.key, owner: h.owner, title: h.title, from: h.key === 'ann' ? 'The Garden' : this.nm(h.owner), screen: h.screen, gid: h.gid || '' }); return; }
       this.haptic(id, h.pattern);
       if (h.gid) w.groupSel = h.gid;
       this.go(id, h.screen);
@@ -1395,7 +1398,7 @@ class Component extends DCLogic {
               const it = t.key === 'grp' ? this.m.grp[t.owner] : (this.m[t.key] || {})[t.owner];
               const pending = !!(job.later && it && it.held);
               const present = this.heardPresent(job.from);
-              this.track(job, { state: 'delivered', quiet: quiet || !!job.later || present, wait: pending ? `In ${B}'s next summary` : present ? 'Present. Things wait.' : quiet ? `No buzz. ${qs}.` : '' });
+              this.track(job, { state: 'delivered', quiet: quiet || !!job.later || present, wait: pending ? `In ${B}'s next summary` : present ? `${B} is present. It waits.` : quiet ? `No buzz. ${qs}.` : '' });
               if (job.onDelivered) job.onDelivered();
               this.receiptTick(job.from, job.track.key);
               this.commit();
@@ -1444,21 +1447,66 @@ class Component extends DCLogic {
       this.m.w[id].held.push({ key, owner, title, screen, pattern, gid: key === 'group' ? this.m.w[id].groupSel : '' });
       return;
     }
-    if (quiet) { this.haptic(id, 'quiet'); return; }
+    if (quiet) {
+      this.haptic(id, 'quiet');
+      this.holdForSummary(id, { key, owner, title, from, screen, gid: key === 'group' ? this.m.w[id].groupSel : '' });
+      return;
+    }
     this.haptic(id, pattern);
     this.go(id, screen);
   }
 
   // A Later item reaches the watch silently and waits for the next summary.
   holdForSummary(id, item) {
-    this.m.w[id].pending.push(Object.assign({ time: this.now() }, item));
+    const it = item.key === 'group' ? this.m.grp[item.gid] : this.inboxItem(item);
+    this.m.w[id].pending.push(Object.assign({ time: this.now(), iid: it && it.id !== undefined ? it.id : null, dismissed: false }, item));
     this.commit();
+  }
+
+  // F11: an item leaves pending only when it is played, answered or dismissed. Paging a
+  // snapshot with Next, the Back key or Close changes nothing. A replaced or expired item is gone.
+  itemDone(x) {
+    if (x.dismissed) return true;
+    const it = x.key === 'group' ? this.m.grp[x.gid] : this.inboxItem(x);
+    if (x.key === 'call' || x.key === 'remind' || x.key === 'ann') return false;
+    if (!it || (x.iid !== null && it.id !== x.iid)) return true;
+    if (this.isExp(it) && !this.inboxAnswered(x, it)) return true;
+    if (x.key === 'memo') return !!it.heard;
+    if (x.key === 'poll') return !!it.peerVote;
+    if (x.key === 'group') return it.peerState !== 'invited';
+    if (x.key === 'ping' || x.key === 'meet') return !!it.back;
+    if (x.key === 'hang') return !!it.answer;
+    if (x.key === 'loc') return !!it.peerChoice;
+    return false;
+  }
+
+  prunePending(id) {
+    const w = this.m.w[id];
+    if (w.pending.some(x => this.itemDone(x))) w.pending = w.pending.filter(x => !this.itemDone(x));
+  }
+
+  // After a vote, a reply or a played memo opened from a snapshot, go back to it and move on.
+  sumReturn(id) {
+    const w = this.m.w[id];
+    if (!w.fromSum) return;
+    w.fromSum = false;
+    this.later(1200, () => {
+      const top = w.stack[w.stack.length - 1];
+      if (top !== 'sumItem') return;
+      this.back(id);
+      this.sumNext(id);
+    });
+  }
+
+  sumDismiss(id, x) {
+    x.dismissed = true;
+    this.sumNext(id);
   }
 
   // The summary notification names what waited, with no numbers.
   sumText(items) {
     const has = (k) => items.filter(x => x.key === k).length;
-    const KIND = [['memo', 'a memo', 'memos'], ['poll', 'a poll', 'polls'], ['group', 'a group invite', 'group invites'], ['remind', 'a reminder', 'reminders'], ['call', 'a missed call', 'missed calls']];
+    const KIND = [['ping', 'a nudge', 'nudges'], ['meet', 'a meeting point', 'meeting points'], ['hang', 'an invite', 'invites'], ['ann', 'an announcement', 'announcements'], ['memo', 'a memo', 'memos'], ['poll', 'a poll', 'polls'], ['group', 'a group invite', 'group invites'], ['remind', 'a reminder', 'reminders'], ['call', 'a missed call', 'missed calls']];
     const parts = KIND.filter(k => has(k[0])).map(k => (has(k[0]) === 1 ? k[1] : k[2]));
     const txt = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : (parts[0] || '');
     return txt.charAt(0).toUpperCase() + txt.slice(1);
@@ -1469,13 +1517,14 @@ class Component extends DCLogic {
     const w = this.m.w[id];
     if (!w.pending.length) return;
     if (!manual && (this.isPresent(id) || this.isQuiet(id))) { w.sumDue = true; return; }
-    const items = w.pending;
-    w.pending = [];
+    this.prunePending(id);
+    if (!w.pending.length) return;
+    // A fixed snapshot: its members stay put while it is open; the items themselves stay pending until done.
+    const items = w.pending.slice();
     items.forEach(x => {
       const it = x.key === 'group' ? this.m.grp[x.gid] : this.inboxItem(x);
       if (it) it.held = false;
       if (it && it.out) it.out.wait = '';
-      if (x.screen) this.m.inbox[id].unshift({ key: x.key, owner: x.owner, title: x.title, from: x.from, screen: x.screen, time: x.time, unread: false, quiet: true, gid: x.gid || '' });
     });
     w.summary = { at: manual ? this.now() : (w.sumAt || this.now()), items, text: this.sumText(items) };
     w.sumIdx = 0;
@@ -1563,7 +1612,7 @@ class Component extends DCLogic {
       return;
     }
     this.m.callNote = '';
-    if ((this.isPresent(id) && !w.favRing) || (this.isQuiet(id) && !w.favQuiet)) {
+    if (this.isPresent(id) || (this.isQuiet(id) && !w.favQuiet)) {
       this.holdForSummary(id, { key: 'call', owner: id, title: `Missed call, ${name}`, from: name, screen: '' });
       return;
     }
@@ -1644,6 +1693,7 @@ class Component extends DCLogic {
 
   back(id) {
     const w = this.m.w[id];
+    w.fromSum = false;
     // Back on the memo review discards the memo.
     if (w.screen === 'memoReview') this.m.draft[id] = null;
     if (w.screen === 'sumItem' && w.sumIdx > 0) { w.sumIdx -= 1; this.commit(); return; }
@@ -1752,7 +1802,7 @@ class Component extends DCLogic {
     this.send({ from: id, to, what: `status: ${words}`, ttl: 1440, prio: 'normal', receipt: false, onArrive: () => {
       this.m.heard[to] = snap;
       // Present ended on the other watch: its "Things wait" line on my sent items goes away.
-      if (!snap.present) ['ping', 'memo', 'meet', 'hang', 'poll'].forEach(k => { const it = this.m[k][to]; if (it && it.out && it.out.wait === 'Present. Things wait.') it.out.wait = ''; });
+      if (!snap.present) ['ping', 'memo', 'meet', 'hang', 'poll'].forEach(k => { const it = this.m[k][to]; if (it && it.out && it.out.wait === `${this.nm(id)} is present. It waits.`) it.out.wait = ''; });
       this.commit();
     } });
   }
@@ -1877,6 +1927,7 @@ class Component extends DCLogic {
   reply(id, ctx, r) {
     if (ctx === 'meet') this.meetReply(id, r);
     else this.pingReply(id, r);
+    this.sumReturn(id);
   }
 
   pingReply(id, r) {
@@ -2047,7 +2098,7 @@ class Component extends DCLogic {
     const start = Date.now() - mm.progress * total;
     this.playIds[id] = setInterval(() => {
       mm.progress = Math.min(1, (Date.now() - start) / total);
-      if (mm.progress >= 1) { mm.playing = false; this.stopPlayTimer(id); this.musicResume(id, 'memo'); }
+      if (mm.progress >= 1) { mm.playing = false; this.stopPlayTimer(id); this.musicResume(id, 'memo'); this.sumReturn(id); }
       this.commit();
     }, 100);
     this.commit();
@@ -2270,7 +2321,7 @@ class Component extends DCLogic {
     const skipped = this.skipsPeer(id, d.to);
     const H = this.m.hang[id] = {
       id: iid, from: id, to: peer, title: d.title, place: d.place, time: d.time, spots: d.spots, toAll, skipped, taken: 1, spot: 0, expSec: this.m.sec + this.expSecs(d.exp),
-      out: { state: 'none' }, back: null, conf: null, answer: null, pending: false, confirmed: false, passed: false, withdrawn: false, peerLeft: false, askedSent: '', arrived: '',
+      out: { state: 'none' }, back: null, conf: null, answer: null, waitlisted: false, confirmed: false, passed: false, withdrawn: false, peerLeft: false, askedSent: '', arrived: '',
     };
     this.endFlow(id, 'hangHost');
     const what = `hang invite: ${d.title}, ${this.fmtMin(d.time)}, ${d.place}, ${d.spots} spots`;
@@ -2296,27 +2347,33 @@ class Component extends DCLogic {
     H.answer = choice;
     H.back = { state: 'none' };
     H.askedSent = this.now();
+    this.sumReturn(id);
     this.send({
       from: id, to: peer, what: choice === 'in' ? 'hang answer: yes' : 'hang answer: pass', ttl: 60, track: { key: 'hang', owner: peer, id: H.id, slot: 'back' },
       onArrive: () => {
         if (this.m.hang[peer] !== H) return;
         H.arrived = this.now();
-        if (choice === 'in') H.pending = true;
-        else H.passed = true;
         this.receiptTick(peer, 'hang');
-        if (this.m.w[peer].screen !== 'hangHost') this.toast(peer, choice === 'in' ? `${this.nm(id)} asked to join` : `${this.nm(id)} passed`);
-        this.commit();
+        if (choice === 'in') this.hangAuto(peer);
+        else { H.passed = true; this.commit(); }
       },
     });
     this.haptic(id, 'tick');
     this.commit();
   }
 
-  hangConfirm(id) {
+  // D51: the host's watch signs the confirmation itself, in order of arrival while spots last.
+  // Nobody approves a Join twice. With no spot left, the joiner goes on the waitlist.
+  hangAuto(id) {
     const peer = this.other(id);
     const H = this.m.hang[id];
-    if (!H || !H.pending) return;
-    H.pending = false;
+    if (!H || H.conf || H.waitlisted) return;
+    if (H.taken >= H.spots) {
+      H.waitlisted = true;
+      this.send({ from: id, to: peer, what: 'hang answer: waitlist, signed by the host', ttl: 60, receipt: false, onArrive: () => this.commit() });
+      this.commit();
+      return;
+    }
     H.taken += 1;
     H.spot = H.taken;
     H.conf = { state: 'none' };
@@ -2325,12 +2382,10 @@ class Component extends DCLogic {
       onArrive: () => {
         if (this.m.hang[id] !== H) return;
         H.confirmed = true;
-        this.haptic(peer, 'reply');
-        if (this.m.w[peer].screen !== 'hangIn') this.toast(peer, `You're in: ${H.title}`);
+        this.receiptTick(peer, 'hang');
         this.commit();
       },
     });
-    this.haptic(id, 'tick');
     this.commit();
   }
 
@@ -2439,6 +2494,7 @@ class Component extends DCLogic {
       },
     });
     this.haptic(id, 'tick');
+    this.sumReturn(id);
     this.commit();
   }
 
@@ -2477,6 +2533,8 @@ class Component extends DCLogic {
 
   annSeen(id) {
     // Got it only dismisses. Nothing goes back to the sender.
+    this.m.w[id].pending.forEach(x => { if (x.key === 'ann') x.dismissed = true; });
+    if (this.m.w[id].fromSum) { this.m.w[id].fromSum = false; this.back(id); this.sumNext(id); return; }
     this.back(id);
   }
 
@@ -2921,6 +2979,7 @@ class Component extends DCLogic {
       },
     });
     this.haptic(id, 'tick');
+    this.sumReturn(id);
     this.commit();
   }
 
@@ -3163,7 +3222,7 @@ class Component extends DCLogic {
       label, sub: opt.sub || '', hasSub: !!opt.sub, d: opt.icon ? this.K.I[opt.icon] : '', hasIcon: !!opt.icon,
       over: opt.over || '', hasOver: !!opt.over,
       trail: opt.trail || '', hasTrail: !!opt.trail, trailFg: opt.trailFg || T[2], selected: !!opt.selected,
-      bg: T[0], fg: T[1], subFg: T[2], labelSize: opt.sub || opt.over ? 28 : 30, aria: opt.aria || (opt.over ? `${opt.over}: ${label}` : opt.sub ? `${label}, ${opt.sub}` : label),
+      bg: T[0], fg: T[1], subFg: T[2], labelSize: opt.labelSize || (opt.sub || opt.over ? 28 : 30), aria: opt.aria || (opt.over ? `${opt.over}: ${label}` : opt.sub ? `${label}, ${opt.sub}` : label),
       pick: opt.pick || this.noop, h: 88, disabled: tone === 'off' && !opt.pick ? 'true' : 'false',
       chipOp: tone === 'off' && !opt.pick ? '0.4' : '1', cursor: tone === 'off' && !opt.pick ? 'default' : 'pointer',
     });
@@ -3313,7 +3372,7 @@ class Component extends DCLogic {
   }
 
   peerLine(id) {
-    if (this.heardPresent(id)) return 'Present. Things wait.';
+    if (this.heardPresent(id)) return `${this.nm(this.other(id))} is present. It waits.`;
     const q = this.heardQuiet(id);
     if (q) return q;
     const L = this.m.loc[id];
@@ -3460,13 +3519,10 @@ class Component extends DCLogic {
     }
 
     if (sc === 'memos') {
-      const mm = m.memo[peer];
       const mine = m.memo[id];
-      const inShown = !!(mm && mm.arrived && !mm.held);
-      add(this.H('Memos'));
-      if (inShown) add(this.C(`${P}, ${this.dur(mm.dur)}`, { icon: 'mic', sub: mm.arrivedAt, trail: mm.heard ? 'Played' : '', pick: go('memoIn') }));
+      add(this.H('Memos', 'You sent'));
       if (mine) add(this.C(`To ${P}, ${this.dur(mine.dur)}`, { icon: 'mic', sub: this.chipOf(mine.out).label, pick: go('memoOut') }));
-      if (!inShown && !mine) add(this.T('No memos yet', { fg: sec }));
+      else add(this.T('No memos sent', { fg: sec }));
       edge = this.E('New memo', go('memoRec'));
     }
 
@@ -3571,9 +3627,9 @@ class Component extends DCLogic {
 
     if (sc === 'meetOut') {
       const M = m.meet[id];
-      add(this.H(`Meet ${P}`, M && this.isExp(M) && !M.reply ? this.expText(M) : ''));
+      add(this.H(`Meet ${P}`, !M ? '' : this.isExp(M) && !M.reply ? this.expText(M) : `${M.place}, ${M.whenTxt === 'Now' ? 'now' : M.whenTxt.replace('At', 'at')}`));
       if (M) {
-        add(this.ST(`You: ${M.place}, ${M.whenTxt === 'Now' ? 'now' : M.whenTxt.replace('At', 'at')}`, M.out));
+        add(this.ST('You: meeting point', M.out));
         if (M.reply || !this.isExp(M)) add(this.T(M.reply ? `${P}: ${M.reply}` : 'No reply yet', { size: 24, fg: M.reply ? green : sec }));
         if (M.here) add(this.T(`${P}: here ${M.hereAt}`, { size: 24, fg: green }));
       }
@@ -3655,12 +3711,10 @@ class Component extends DCLogic {
         add(this.H(`Your ${Hh.title}`, `${Hh.place}, ${this.fmtMin(Hh.time)}`));
         add(this.ST('You: invite', Hh.out));
         add(this.B(left > 0 ? `${left} ${left === 1 ? 'spot' : 'spots'} left` : 'Full', { size: 36, fg: green }));
-        if (Hh.pending) add(this.T(`${P} asked to join`, { size: 24, fg: '#EEF2EF' }));
+        if (Hh.conf && !Hh.peerLeft) add(this.T(`${P} is in. ${Hh.taken} of ${Hh.spots}`, { size: 24, fg: '#EEF2EF' }));
+        if (Hh.waitlisted) add(this.T(`${P} is on the waitlist`, { size: 22, fg: sec }));
         if (Hh.skipped) add(this.T(`Not sent to ${P}`, { size: 22, fg: sec }));
-        if (!Hh.pending && !Hh.conf && !Hh.passed) add(this.T(this.isExp(Hh) ? this.expText(Hh) : 'Waiting for answers', { size: 22, fg: sec }));
-        if (Hh.pending) edge = this.E(`Confirm ${P}`, () => this.hangConfirm(id));
-        if (Hh.conf && !Hh.confirmed) add(this.ST(`You: confirm ${P}`, Hh.conf));
-        add(this.T(Hh.confirmed && !Hh.peerLeft ? `In: you, ${P}` : 'In: you', { size: 22, fg: sec }));
+        if (!Hh.conf && !Hh.passed && !Hh.waitlisted) add(this.T(this.isExp(Hh) ? this.expText(Hh) : 'Waiting for answers', { size: 22, fg: sec }));
         if (Hh.passed) add(this.T(`${P} passed`, { size: 22, fg: sec }));
         if (Hh.peerLeft) add(this.T(`${P} can't make it`, { size: 22, fg: sec }));
       }
@@ -3694,7 +3748,7 @@ class Component extends DCLogic {
         } else {
           add(this.H(`${Hh.title}, ${this.fmtMin(Hh.time)}`));
           add(this.ST('You: Join', Hh.back));
-          add(this.T(`Waiting for ${P} to confirm`, { size: 24, fg: '#EEF2EF' }));
+          if (Hh.waitlisted) add(this.T("Full. You're on the waitlist.", { size: 24, fg: '#EEF2EF' }));
         }
       }
     }
@@ -3841,22 +3895,13 @@ class Component extends DCLogic {
       list.forEach(p => add(this.C(p.name, { icon: 'user', sub: p.sub, pick: p.pick })));
     }
 
+    // Inbox: only what waits now, as a finite snapshot. No browsable history of received items.
     if (sc === 'inbox') {
-      const box = m.inbox[id];
       add(this.H('Inbox'));
       if (w.pending.length) add(this.C('Open summary', { icon: 'inbox', sub: this.sumText(w.pending), pick: () => this.fireSummary(id, true) }));
-      else if (w.summary) add(this.C('Last summary', { icon: 'inbox', sub: w.summary.at, pick: () => { w.sumIdx = 0; this.go(id, 'sumItem'); } }));
-      add(this.C('Memos', { icon: 'mic', pick: go('memos') }));
-      box.forEach(e => {
-        const it = this.inboxItem(e);
-        const gone = !!(it && this.isExp(it) && !this.inboxAnswered(e, it));
-        add(this.C(e.title, {
-          icon: ({ ping: 'nudge', memo: 'mic', meet: 'flag', loc: 'where', hang: 'plan', poll: 'poll', ann: 'announce', group: 'group' })[e.key] || 'inbox',
-          tone: gone ? 'off' : 'tonal',
-          sub: gone ? this.expText(it) : `${e.quiet ? 'Quiet, ' : ''}${e.from}, ${e.time}`,
-          pick: go(e.screen),
-        }));
-      });
+      else add(this.T('Nothing waiting', { size: 22, fg: sec }));
+      if (w.summary) add(this.C('Replay last summary', { icon: 'reply', sub: w.summary.at, pick: () => { w.sumIdx = 0; this.go(id, 'sumItem'); } }));
+      add(this.C('Memos', { icon: 'mic', sub: 'You sent', pick: go('memos') }));
     }
 
     if (sc === 'lowOffer') {
@@ -3876,10 +3921,13 @@ class Component extends DCLogic {
 
     if (sc === 'place') {
       const pl = K.PLACES.find(x => x[0] === w.placeSel) || K.PLACES[0];
-      const here = ['you', 'maya'].some(o => m.meet[o] && m.meet[o].place === pl[0] && !this.isExp(m.meet[o]));
+      const mine = m.meet[id] && m.meet[id].place === pl[0] && !this.isExp(m.meet[id]) ? m.meet[id] : null;
+      const theirs = m.meet[peer] && m.meet[peer].place === pl[0] && !this.isExp(m.meet[peer]) ? m.meet[peer] : null;
+      const when = (M) => (M.whenTxt === 'Now' ? 'now' : M.whenTxt.replace('At', 'at'));
       add(this.H(pl[0], `${pl[1]} m from you`));
-      if (here) add(this.T('Meeting point', { size: 22, fg: green }));
-      add(this.C('Meet here', { icon: 'flag', pick: () => this.placeMeet(id) }));
+      if (mine) add(this.C(`Meeting ${P} here, ${when(mine)}`, { icon: 'flag', labelSize: 24, sub: mine.reply ? `${P}: ${mine.reply}` : this.chipOf(mine.out).label, pick: go('meetOut') }));
+      else if (theirs) add(this.C(`Meeting ${P} here, ${when(theirs)}`, { icon: 'flag', labelSize: 24, sub: theirs.back ? `You: ${theirs.replyText}` : `From ${P}`, pick: go('meetIn') }));
+      else add(this.C('Meet here', { icon: 'flag', pick: () => this.placeMeet(id) }));
       add(this.C('Navigate', { icon: 'nav', pick: () => this.placeNav(id) }));
     }
 
@@ -3924,9 +3972,9 @@ class Component extends DCLogic {
       const r = this.recById(id);
       if (r) {
         const RP = w.recPlay;
-        add(this.H(r.when));
-        add(this.PROG(RP.pos));
-        add(this.T(`${this.dur(RP.pos * r.len)} of ${this.dur(r.len)}`, { size: 20, fg: sec }));
+        const started = RP.playing || RP.pos > 0;
+        add(this.H(r.when, started ? `${this.dur(RP.pos * r.len)} of ${this.dur(r.len)}` : ''));
+        if (started) add(this.PROG(RP.pos));
         r.marks.forEach((at, i) => add(this.C(`Bookmark ${i + 1}`, { icon: 'bookmark', sub: this.dur(at), pick: () => this.recJump(id, at) })));
         if (r.exp === 'done') {
           // The export status rides on the Delete chip so Delete ends at 298 px, clear of the 300 px fade.
@@ -4028,7 +4076,6 @@ class Component extends DCLogic {
     if (sc === 'favPick') {
       add(this.H('Favourites'));
       K.CONTACTS.forEach(c => add(this.C(c, { icon: 'user', selected: w.favs.indexOf(c) >= 0, pick: () => this.favToggle(id, c) })));
-      add(this.G('When present', w.favRing, () => { w.favRing = !w.favRing; this.commit(); }, 'Favourites ring'));
       add(this.G('In quiet hours', w.favQuiet, () => { w.favQuiet = !w.favQuiet; this.commit(); }, 'Favourites ring'));
     }
 
@@ -4047,13 +4094,21 @@ class Component extends DCLogic {
       const S = w.summary;
       const x = S && S.items[w.sumIdx];
       if (x) {
-        const say = { memo: `${x.from} sent you a memo.`, poll: `${x.from} asks: ${x.title}`, group: `${x.from} invites you to ${x.title.replace('Group: ', '')}.`, remind: `${x.title}, ${x.from}.`, call: `${x.title}.` }[x.key] || `${x.title}.`;
-        const act = { memo: ['Play', 'play'], poll: ['Vote', 'poll'], group: ['Answer', 'group'] }[x.key];
+        const say = { ping: `${x.from}: ${x.title}.`, meet: `${x.from} wants to meet: ${x.title.replace('Meet: ', '')}.`, hang: `${x.from} invites you: ${x.title}.`, ann: `The Garden: ${x.title}.`, memo: `${x.from} sent you a memo.`, poll: `${x.from} asks: ${x.title}`, group: `${x.from} invites you to ${x.title.replace('Group: ', '')}.`, remind: `${x.title}, ${x.from}.`, call: `${x.title}.` }[x.key] || `${x.title}.`;
+        const it = this.inboxItem(x);
+        const gone = !!(it && this.isExp(it) && !this.inboxAnswered(x, it));
+        const act = gone ? null : { ping: ['Reply', 'reply'], meet: ['Open', 'flag'], hang: ['Answer', 'plan'], ann: ['Open', 'announce'], memo: ['Play', 'play'], poll: ['Vote', 'poll'], group: ['Answer', 'group'] }[x.key];
         add(this.H('Summary', S.at));
-        add(this.T(say, { size: 26, fg: '#EEF2EF' }));
-        const close = this.pill('Close', () => this.sumClose(id));
-        if (act && x.screen) add(this.OPT([this.pill(act[0], () => { if (x.gid) w.groupSel = x.gid; if (x.key === 'memo') { this.go(id, 'memoIn'); this.memoPlay(id); } else this.go(id, x.screen); }), close], 'Summary item'));
-        else add(this.OPT([close], 'Summary item'));
+        add(this.T(say, { size: 26, fg: gone ? '#7F8A83' : '#EEF2EF' }));
+        if (gone) add(this.T(this.expText(it), { size: 20, fg: sec }));
+        const open = act && x.screen ? this.pill(act[0], () => {
+          if (x.gid) w.groupSel = x.gid;
+          w.fromSum = true;
+          if (x.key === 'memo') { this.go(id, 'memoIn'); this.memoPlay(id); } else this.go(id, x.screen);
+        }) : null;
+        const dismiss = !gone && (x.key === 'call' || x.key === 'remind' || x.key === 'ann') ? this.pill('Dismiss', () => this.sumDismiss(id, x)) : null;
+        const pills = [open, dismiss].filter(Boolean);
+        if (pills.length) add(this.OPT(pills, 'Summary item'));
         edge = this.E('Next', () => this.sumNext(id));
       }
     }
@@ -4098,7 +4153,7 @@ class Component extends DCLogic {
     // The last row rests above the bottom fade: it ends at 316 px with an edge button, 404 px without.
     const padBottom = hasEdge ? 164 : 92;
     const SAFE = 216;
-    const WD = { state: 352, header: 340, chip: 384, big: 384, text: 352, status: 352, toggle: 384, stepper: 336, pair: 384, swatches: 368, options: 384, progress: 300, bar: 352, arrow: 220, avatar: 160, person: 320, actions: 304 };
+    const WD = { toast: 300, state: 352, header: 340, chip: 384, big: 384, text: 352, status: 352, toggle: 384, stepper: 336, pair: 384, swatches: 368, options: 384, progress: 300, bar: 352, arrow: 220, avatar: 160, person: 320, actions: 304 };
     const maskEnd = hasEdge ? 316 : 404;
     const maskStop = hasEdge ? 362 : 452;
     // Short content sits centred above the edge button (or the fade), so no void opens above it.
@@ -4127,7 +4182,7 @@ class Component extends DCLogic {
         isHeader: r.kind === 'header', isChip: r.kind === 'chip', isBig: r.kind === 'big', isText: r.kind === 'text',
         isToggle: r.kind === 'toggle', isStepper: r.kind === 'stepper', isPair: r.kind === 'pair', isSwatches: r.kind === 'swatches',
         isOptions: r.kind === 'options', isProgress: r.kind === 'progress', isBar: r.kind === 'bar', isArrow: r.kind === 'arrow', isAvatar: r.kind === 'avatar',
-        isPerson: r.kind === 'person', isActions: r.kind === 'actions', isState: r.kind === 'state',
+        isPerson: r.kind === 'person', isActions: r.kind === 'actions', isState: r.kind === 'state', isToast: r.kind === 'toast',
       });
     });
     const total = y - gap + padBottom;
@@ -4249,15 +4304,24 @@ class Component extends DCLogic {
     if (!special) model = this.screenModel(id);
     let edge = model.edge;
     const arrow = this.arrowVals(id);
+    if (w.toast && w.screen === 'arrow') arrow.title = w.toast;
     if (w.screen === 'arrow' && !w.navTarget && (arrow.stale || arrow.stopped || arrow.none)) edge = this.E('Ask where', () => this.askWhere(id));
     if (w.screen === 'torch') edge = this.E('Off', () => this.back(id), { bg: '#141414', fg: '#FFFFFF' });
     if (w.screen === 'record' && !w.rec) edge = this.E('Recordings', () => { if (w.stack[w.stack.length - 1] === 'recordings') this.back(id); else this.replace(id, 'recordings'); }, { bg: '#1E2622', fg: '#EEF2EF' });
     const G = w.gm;
     const gmNo = G.active && !G.arrived && w.signal === 'none';
     if (w.screen === 'gmaps' && G.active && !gmNo) edge = this.E('End', () => this.gmEnd(id));
+    // On a list screen the toast joins the content flow right under the title, so it covers nothing.
+    if (!special && w.toast) {
+      const hi = model.rows.findIndex(r => r.kind === 'header');
+      model.rows.splice(hi + 1, 0, this.row('toast', { text: w.toast, h: 52 }));
+    }
     const lay = this.layout(id, model.rows, !!edge);
-    // A toast sits where the screen title is, so the title steps aside while it shows.
-    if (w.toast) lay.rows.forEach(r => { if (r.isHeader) r.o = '0'; });
+    // Elsewhere it floats just below the screen's own title. On a map it takes the title line, so no label is covered.
+    const onMap = w.screen === 'map' || w.screen === 'arrow';
+    let toastTop = 126;
+    if (w.screen === 'talk') toastTop = 134;
+    else if (w.screen === 'record' || w.screen === 'wallet' || w.screen === 'gmaps' || w.screen === 'music') toastTop = 124;
     const noEdge = { show: false, label: '', pick: this.noop, disabled: 'false', bg: '', fg: '' };
 
     // Memo recorder
@@ -4274,7 +4338,8 @@ class Component extends DCLogic {
     // Talk
     const p = m.ptt;
     const selfT = p === id;
-    const otherT = p === peer;
+    // Without the turn reaching this watch, it must not claim the other person is talking.
+    const otherT = p === peer && this.m.pttHeard;
     const ch = this.chanOf(id);
     const chName = this.chanName(ch);
     const peerIn = ch === 'cabin' || this.isMember(peer, m.grp[ch]);
@@ -4391,7 +4456,8 @@ class Component extends DCLogic {
       draft, arrow, talk, record, torch, music, map, gm, wallet, call,
       memoDown: () => this.memoDown(id), memoUp: () => this.memoUp(id),
       showCurved: w.screen !== 'torch' && w.screen !== 'face', curvedText, curvedColor, arcId: `arc-${id}`,
-      hasToast: !!w.toast, toast: w.toast, recOn: !!w.rec,
+      hasToast: !!w.toast && special && !onMap, toast: w.toast, recOn: !!w.rec, toastTop,
+      mapTitle: w.toast && w.screen === 'map' ? w.toast : 'Garden map', mapTitleFg: w.toast && w.screen === 'map' ? '#EEF2EF' : '#B4BEB7',
       hapBars, hapNone, hapLabel,
       sigGroupAria: id === 'you' ? 'Signal for your watch' : `Signal for ${me}'s watch`,
       sigOpts, toggles,
@@ -4409,21 +4475,21 @@ class Component extends DCLogic {
     const tech = m.logMode === 'tech';
     const logRows = m.log.filter(r => tech || r.plain).map(r => ({
       t: r.t, main: tech ? r.tech : r.plain, inside: r.inside, hasInside: tech && !!r.inside,
-      font: tech ? "'IBM Plex Mono', monospace" : "'IBM Plex Sans', sans-serif", size: tech ? 11.5 : 13,
+      font: tech ? "'IBM Plex Mono', monospace" : "'IBM Plex Sans', sans-serif", size: 15,
     }));
     const patterns = K.PAT_ORDER.map(k => {
       const pt = K.PAT[k];
       return { name: pt.name, desc: pt.desc, none: pt.seq.length === 0, bars: this.bars(pt.seq, '#1D5B37', 0.044) };
     });
-    const cur = K.STORIES[m.story] || K.STORIES[1];
+    const cur = K.STORIES[m.story] || { title: 'Pick a story.', who: '', steps: [] };
     const groups = K.GROUPS.map(g => ({
       name: g[0],
       items: g[1].map(n => {
         const on = m.story === n;
-        return { n: String(n), short: K.STORIES[n].short, pressed: on ? 'true' : 'false', bg: on ? '#1E2420' : '#FFFFFF', fg: on ? '#FFFFFF' : '#2F3631', pick: () => { this.m.story = n; this.commit(); } };
+        return { n: String(n), short: K.STORIES[n].short, pressed: on ? 'true' : 'false', bg: on ? '#1E2420' : '#FFFFFF', fg: on ? '#FFFFFF' : '#2F3631', pick: () => this.startStory(n) };
       }),
     }));
-    const story = { n: String(m.story), title: cur.title, who: cur.who, steps: cur.steps.map(t => ({ text: t })), start: () => this.startStory(this.m.story) };
+    const story = { n: String(m.story), title: cur.title, who: cur.who, steps: cur.steps.map(t => ({ text: t })) };
     return {
       watches, logRows, logEmpty: logRows.length === 0, patterns, groups, story,
       clock: this.fmt(m.sec), ic: K.I,
