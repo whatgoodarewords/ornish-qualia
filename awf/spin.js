@@ -23,8 +23,8 @@
     if(animated()&&last!==null)elapsed+=Math.max(0,Math.min(100,now-last));last=now;
     if(api.value<940)elapsed=0;
     if(dirty||now-lastDraw>=1000/30){
-      const pose=root.AppleModel.stage(v.colour,api.value,v.detailActive);
-      if(renderer.draw(v,{...pose,angle:elapsed*Math.PI*2/24000,geometry:v.artwork.geometry})){
+      const pose=root.AppleModel.stage(v.colour,api.value,v.detailActive),q=Math.max(0,Math.min(1,(api.value-900)/20)),foliage=q*q*(3-2*q);
+      if(renderer.draw(v,{...pose,angle:elapsed*Math.PI*2/24000,geometry:v.artwork.geometry,leaves:'single',foliage})){
         // One fully painted replacement is exposed atomically. Input never hides
         // the previous complete image while it is waiting for the next frame.
         canvas.hidden=false;canvas.style.opacity='1';photo.style.opacity='0';canvas.dataset.colour=v.colour;canvas.dataset.source=v.baseId;
