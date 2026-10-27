@@ -192,3 +192,16 @@ main{background:#0a0e1177}
 .source-note{margin-top:2rem;font-size:var(--t-ui)}
 @media(max-width:600px){.imagine{padding-top:4rem;padding-bottom:2.5rem}.experiment-heading{max-width:390px}.gathering-intro{margin:0 1rem;padding:2.5rem .5rem 3.5rem}.gathering-fact{max-width:30ch}.gathering-formats{max-width:none}}
 @media(max-height:650px){.imagine{justify-content:flex-start}.apple-stage{width:min(220px,70vw)}}
+
+/* A research note for future versions, separate from the survey itself. */
+.future-consideration{position:relative;max-width:960px;margin:0 auto;padding:3rem clamp(1.5rem,4vw,3rem) 4rem;text-align:left}
+.future-consideration::before{content:"";position:absolute;top:0;left:0;right:0;border-top:1px solid #eceae23d}
+.future-consideration h2{margin:0;font:400 clamp(1.75rem,3.6vw,2.75rem)/1.1 var(--serif);letter-spacing:-.02em;color:var(--ink)}
+.future-consideration p,.future-consideration ul{max-width:70ch;margin:1.25rem 0 0;font:400 1rem/1.65 var(--sans);letter-spacing:0;color:var(--ink);overflow-wrap:break-word}
+.future-consideration ul{padding-left:1.25rem}
+.future-consideration li+li{margin-top:.5rem}
+.future-consideration strong{font-weight:600}
+.future-consideration-source a{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em}
+.future-consideration-source a:hover{color:#fff}
+.future-consideration-source a:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+@media(max-width:600px){.future-consideration{margin:0 1rem;padding:2.5rem .5rem 3.5rem}}
